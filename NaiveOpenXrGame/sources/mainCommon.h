@@ -10,6 +10,7 @@
 #define XR_USE_GRAPHICS_API_VULKAN
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
+#include "../external/xr_linear.h"
 #include <openxr/openxr_platform.h>
 #include <openxr/openxr.hpp>
 

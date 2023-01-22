@@ -7,6 +7,11 @@ namespace Noxg
 {
 	class VulkanInstance
 	{
+	public:
+		struct PushConstantData
+		{
+			XrMatrix4x4f projectionView;
+		};
 	public: // public functions.
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 

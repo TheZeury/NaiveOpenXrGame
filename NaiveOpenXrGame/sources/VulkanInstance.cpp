@@ -147,6 +147,7 @@ void Noxg::VulkanInstance::PickPhysicalDevice()
 	LOG_SUCCESS();
 	auto properties = physicalDevice.getProperties();
 	LOG_INFO("Vulkan", ("Physical Device Name : " + static_cast<std::string>(properties.deviceName.data())), 0);
+	LOG_INFO("Vulkan", std::format("Push Constant Limit : {}", properties.limits.maxPushConstantsSize), 0);
 	auto features = physicalDevice.getFeatures();
 }
 
@@ -316,8 +317,12 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineColorBlendStateCreateInfo colorBlendInfo{ }; colorBlendInfo.attachmentCount = 1; colorBlendInfo.pAttachments = &colorBlendAttachment;
 
+	std::vector<vk::PushConstantRange> pushConstantRanges = {
+		{ vk::ShaderStageFlagBits::eVertex, 0, sizeof(PushConstantData) }
+	};
+
 	LOG_STEP("Vulkan", "Creating Pipeline Layout");
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ };
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo({ }, { }, pushConstantRanges);
 	pipelineLayout = device.createPipelineLayout(pipelineLayoutInfo);
 	LOG_SUCCESS();
 
@@ -412,7 +417,19 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	commandBuffers[view].setScissor(0, scissors);		// <======== Set Scissors.
 
 	// Draw something.
+	auto pose = projectionView.pose.get();
+	XrMatrix4x4f matProjection;
+	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, 0.05f, 100.f);
+	XrMatrix4x4f invView;
+	XrVector3f identity{ 1.f, 1.f, 1.f };
+	XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
+	XrMatrix4x4f matView;
+	XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+	std::vector<PushConstantData> data(1);
+	XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjection, &matView);
+	commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
 	commandBuffers[view].draw(3, 1, 0, 0);
+	// End Draw.
 
 	commandBuffers[view].endRenderPass();		// <========= Render Pass End.
 

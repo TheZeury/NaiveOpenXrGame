@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="external\xr_linear.h" />
     <ClInclude Include="sources\mainCommon.h" />
     <ClInclude Include="sources\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame.h" />
@@ -143,7 +144,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\cjrsacred\Documents\Engine Projects\NaiveOpenXrGame\NaiveOpenXrGame\external;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalModuleDependencies>$(VCToolsInstallDir)\modules\;%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
       <EnableModules>true</EnableModules>
     </ClCompile>
