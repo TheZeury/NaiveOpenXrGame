@@ -1,5 +1,7 @@
 #include "mainCommon.h"
 #include "VulkanInstance.h"
+#include "MeshModel.h"
+#include "Utils.h"
 
 Noxg::VulkanInstance::VulkanInstance()
 {
@@ -7,13 +9,16 @@ Noxg::VulkanInstance::VulkanInstance()
 
 Noxg::VulkanInstance::~VulkanInstance()
 {
+	models.clear();
 	for (auto& fences : inFlights)
 	{
 		for (auto& fence : fences)
 		{
 			device.destroyFence(fence);
+			vkDestroyFence(device, fence, nullptr);
 		}
 	}
+	device.freeCommandBuffers(commandPool, commandBuffers);
 	device.destroyCommandPool(commandPool);
 	for (auto& framebuffers : frameBuffers)
 	{
@@ -256,6 +261,19 @@ void Noxg::VulkanInstance::InitializeSession()
 	CreateFrameBuffers();
 	CreateCommandPool();
 	AllocateCommandBuffers();
+	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
+	std::vector<MeshModel::Vertex> vertices = {
+		MeshModel::Vertex{ { 0.0f, -0.5f, -5.f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+		MeshModel::Vertex{ { 0.5f, 0.5f, -5.f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+		MeshModel::Vertex{ { -0.5f, 0.5f, -5.f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
+	};
+	std::vector<uint32_t> indices = {
+		0, 1, 2,
+	};
+	auto triangle = std::make_shared<MeshModel>(vertices, indices);
+	models.push_back(
+		triangle
+	);
 }
 
 void Noxg::VulkanInstance::CreateRenderPass()
@@ -303,7 +321,10 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo({ }, dynamicStates);
 
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ };
+	auto vertexBindingDescriptions = MeshModel::Vertex::getBindingDescriptions();
+	auto vertexAttributeDescriptions = MeshModel::Vertex::getAttributeDescriptions();
+
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ { }, vertexBindingDescriptions, vertexAttributeDescriptions };
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo({}, vk::PrimitiveTopology::eTriangleList, VK_FALSE);
 
@@ -419,7 +440,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	// Draw something.
 	auto pose = projectionView.pose.get();
 	XrMatrix4x4f matProjection;
-	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, 0.05f, 100.f);
+	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
 	XrMatrix4x4f invView;
 	XrVector3f identity{ 1.f, 1.f, 1.f };
 	XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
@@ -428,7 +449,11 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	std::vector<PushConstantData> data(1);
 	XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjection, &matView);
 	commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
-	commandBuffers[view].draw(3, 1, 0, 0);
+	for (auto& model : models)
+	{
+		model->bind(commandBuffers[view]);
+		model->draw(commandBuffers[view]);
+	}
 	// End Draw.
 
 	commandBuffers[view].endRenderPass();		// <========= Render Pass End.

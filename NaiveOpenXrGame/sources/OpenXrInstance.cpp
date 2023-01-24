@@ -301,7 +301,7 @@ void Noxg::OpenXrInstance::Update()
 
 				projectionLayerViews[i] = xr::CompositionLayerProjectionView{ views[i].pose, views[i].fov, { swapChain, swapChainRects[i], 0 } };
 
-				graphics.RenderView(projectionLayerViews[i], i, imageIndex, swapChainFormat); // incomplete now.
+				graphics.RenderView(projectionLayerViews[i], i, imageIndex, swapChainFormat); // Renderer.
 
 				swapChain.releaseSwapchainImage({ });
 			}

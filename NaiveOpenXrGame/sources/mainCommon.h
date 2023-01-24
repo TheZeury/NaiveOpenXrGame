@@ -10,9 +10,11 @@
 #define XR_USE_GRAPHICS_API_VULKAN
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
-#include "../external/xr_linear.h"
+#include "..\external\xr_linear.h"
 #include <openxr/openxr_platform.h>
 #include <openxr/openxr.hpp>
+#define GLFW_INCLUDE_VULKAN
+#include "GLFW/glfw3.h"
 
 #if !defined(NDEBUG)
 #define LOG_STEP(INSTANCE, STEP) LogStep(INSTANCE, STEP)

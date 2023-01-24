@@ -1,7 +1,7 @@
 #pragma once
 
-#define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
+#include "mainCommon.h"
+#include "MeshModel.h"
 
 namespace Noxg
 {
@@ -12,6 +12,7 @@ namespace Noxg
 		{
 			XrMatrix4x4f projectionView;
 		};
+
 	public: // public functions.
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -55,6 +56,7 @@ namespace Noxg
 		vk::Format swapChainFormat;
 		std::vector<xr::Rect2Di> swapChainRects;
 		xr::DispatchLoaderDynamic dispather;
+		std::vector<std::shared_ptr<MeshModel>> models;
 	
 	private: // Not Owning. Don't try to destroy them. (But it's ok to destruct since they are handle classes instead of pointers.)
 		xr::Instance xrInstance;
