@@ -12,6 +12,8 @@ namespace Noxg
 		~OpenXrInstance();
 
 		void Initialize();
+		void CleanUpInstance();
+		void CleanUpSession();
 		void CreateInstance();
 		void InitializeSystem();
 		void InitializeSession();

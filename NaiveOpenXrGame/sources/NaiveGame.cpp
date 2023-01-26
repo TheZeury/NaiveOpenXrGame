@@ -26,4 +26,9 @@ void Noxg::NaiveGame::run()
 	}
 
 	LOG_INFO("GAME", "Exited from Game Loop.", 0);
+
+	vulkanInstance.CleanUpSession();
+	openXrInstance.CleanUpSession();
+	openXrInstance.CleanUpInstance();
+	//vulkanInstance.CleanUpInstance();
 }

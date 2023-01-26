@@ -2,6 +2,7 @@
 
 #include "mainCommon.h"
 #include "MeshModel.h"
+#include "Texture.h"
 
 namespace Noxg
 {
@@ -20,6 +21,8 @@ namespace Noxg
 		~VulkanInstance();
 
 		void Initialize(const xr::Instance& xrInstance, const xr::SystemId& xrSystemId);
+		void CleanUpInstance();
+		void CleanUpSession();
 		void CreateWindow();
 		void CreateInstance();
 		void PickPhysicalDevice();
@@ -27,6 +30,7 @@ namespace Noxg
 		void CreateSwapChainImageViews(std::vector<std::vector<xr::SwapchainImageVulkanKHR>>& swapChainImages, vk::Format format, std::vector<xr::Rect2Di> rects);
 		void InitializeSession();
 		void CreateRenderPass();
+		void CreateDescriptors();
 		void CreateGraphicsPipeline();
 		void CreateFrameBuffers();
 		void CreateCommandPool();
@@ -45,6 +49,9 @@ namespace Noxg
 		uint32_t queueFamilyIndex;
 		vk::Queue queue;
 		vk::RenderPass renderPass;
+		vk::DescriptorSetLayout descriptorSetLayout;
+		vk::DescriptorPool descriptorPool;
+		std::vector<vk::DescriptorSet> descriptorSets;
 		vk::PipelineLayout pipelineLayout;
 		vk::Pipeline pipeline;
 		std::vector<std::vector<vk::Framebuffer>> frameBuffers;
@@ -57,6 +64,7 @@ namespace Noxg
 		std::vector<xr::Rect2Di> swapChainRects;
 		xr::DispatchLoaderDynamic dispather;
 		std::vector<std::shared_ptr<MeshModel>> models;
+		std::vector<std::shared_ptr<Texture>> textures;
 	
 	private: // Not Owning. Don't try to destroy them. (But it's ok to destruct since they are handle classes instead of pointers.)
 		xr::Instance xrInstance;

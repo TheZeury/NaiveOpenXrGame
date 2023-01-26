@@ -5,17 +5,21 @@
 #include <format>
 #include <set>
 #include <fstream>
+#include <exception>
 
 #define XR_KHR_vulkan_enable2
 #define XR_USE_GRAPHICS_API_VULKAN
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_raii.hpp>
 #include "..\external\xr_linear.h"
 #include <openxr/openxr_platform.h>
 #include <openxr/openxr.hpp>
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
+namespace stb
+{
+#include "..\external\stb_image.h"
+}
 #if !defined(NDEBUG)
 #define LOG_STEP(INSTANCE, STEP) LogStep(INSTANCE, STEP)
 #define LOG_SUCCESS() LogSuccess()

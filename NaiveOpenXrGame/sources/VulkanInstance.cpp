@@ -9,39 +9,7 @@ Noxg::VulkanInstance::VulkanInstance()
 
 Noxg::VulkanInstance::~VulkanInstance()
 {
-	models.clear();
-	for (auto& fences : inFlights)
-	{
-		for (auto& fence : fences)
-		{
-			device.destroyFence(fence);
-			vkDestroyFence(device, fence, nullptr);
-		}
-	}
-	device.freeCommandBuffers(commandPool, commandBuffers);
-	device.destroyCommandPool(commandPool);
-	for (auto& framebuffers : frameBuffers)
-	{
-		for (auto& framebuffer : framebuffers)
-		{
-			device.destroyFramebuffer(framebuffer);
-		}
-	}
-	device.destroyPipeline(pipeline);
-	device.destroyPipelineLayout(pipelineLayout);
-	device.destroyRenderPass(renderPass);
-	for (auto& views : swapChainImageViews)
-	{
-		for (auto& view : views)
-		{
-			device.destroyImageView(view);
-		}
-	}
-	device.destroy();
-	instance.destroy();
-
-	glfwDestroyWindow(window);
-	glfwTerminate();
+	
 }
 
 void Noxg::VulkanInstance::Initialize(const xr::Instance& xrInst, const xr::SystemId& xrSysId)
@@ -53,6 +21,100 @@ void Noxg::VulkanInstance::Initialize(const xr::Instance& xrInst, const xr::Syst
 	CreateInstance();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
+}
+
+void Noxg::VulkanInstance::CleanUpInstance()
+{
+	queue.waitIdle();
+
+	LOG_STEP("Vulkan", "Destroying Logical Device");
+	device.destroy();
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Vulkan Instance");
+	instance.destroy();
+	LOG_SUCCESS();
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
+}
+
+void Noxg::VulkanInstance::CleanUpSession()
+{
+	queue.waitIdle();
+
+	LOG_STEP("Vulkan", "Destroying Textures");
+	textures.clear();
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Models");
+	models.clear();
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Descriptor Pool");
+	device.destroyDescriptorPool(descriptorPool);
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Descriptor Set Layout");
+	device.destroyDescriptorSetLayout(descriptorSetLayout);
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Fences");
+	for (auto& fences : inFlights)
+	{
+		for (auto& fence : fences)
+		{
+			device.destroyFence(fence);
+			//vkDestroyFence(device, fence, nullptr);
+		}
+	}
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Command Buffers");
+	device.freeCommandBuffers(commandPool, commandBuffers);
+	LOG_SUCCESS();
+
+
+	LOG_STEP("Vulkan", "Destroying Command Pool");
+	device.destroyCommandPool(commandPool);
+	LOG_SUCCESS();
+
+
+	LOG_STEP("Vulkan", "Destroying Frame Buffers");
+	for (auto& framebuffers : frameBuffers)
+	{
+		for (auto& framebuffer : framebuffers)
+		{
+			device.destroyFramebuffer(framebuffer);
+		}
+	}
+	LOG_SUCCESS();
+
+
+	LOG_STEP("Vulkan", "Destroying Pipeline");
+	device.destroyPipeline(pipeline);
+	LOG_SUCCESS();
+
+
+	LOG_STEP("Vulkan", "Destroying Pipeline Layout");
+	device.destroyPipelineLayout(pipelineLayout);
+	LOG_SUCCESS();
+
+
+	LOG_STEP("Vulkan", "Destroying Render Pass");
+	device.destroyRenderPass(renderPass);
+	LOG_SUCCESS();
+
+
+	LOG_STEP("Vulkan", "Destroying Swap Chain Image Views");
+	for (auto& views : swapChainImageViews)
+	{
+		for (auto& view : views)
+		{
+			device.destroyImageView(view);
+		}
+	}
+	LOG_SUCCESS();
 }
 
 void Noxg::VulkanInstance::CreateWindow()
@@ -180,7 +242,7 @@ void Noxg::VulkanInstance::CreateLogicalDevice()
 	std::vector<float> queuePiorities(1, { 0.f });
 	vk::DeviceQueueCreateInfo queueInfo({ }, queueFamilyIndex, queuePiorities);
 
-	// Loging Device Extensions
+	// Logging Device Extensions
 	auto allExtensions = physicalDevice.enumerateDeviceExtensionProperties();
 	LOG_INFO("Vulkan", std::format("List of total {} Vulkan Device Extension(s): ", allExtensions.size()), 0);
 	for (auto& ext : allExtensions)
@@ -198,6 +260,7 @@ void Noxg::VulkanInstance::CreateLogicalDevice()
 	}
 
 	vk::PhysicalDeviceFeatures deviceFeatures{ };
+	deviceFeatures.samplerAnisotropy = VK_TRUE;
 	std::vector<vk::DeviceQueueCreateInfo> queueInfos(1, { queueInfo });
 
 	vk::DeviceCreateInfo deviceInfo(
@@ -256,24 +319,34 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 
 void Noxg::VulkanInstance::InitializeSession()
 {
+	CreateCommandPool();
+	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
+	LOG_STEP("Vulkan", "Loading textures");
+	textures.push_back(
+		std::make_shared<Texture>("textures/robert-lukeman-PH0HYjsf2n8-unsplash.jpg")
+	);
+	LOG_SUCCESS();
 	CreateRenderPass();
+	CreateDescriptors();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
-	CreateCommandPool();
 	AllocateCommandBuffers();
-	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
+	//Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
+	LOG_STEP("Vulkan", "Loading Models");
 	std::vector<MeshModel::Vertex> vertices = {
-		MeshModel::Vertex{ { 0.0f, -0.5f, -5.f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-		MeshModel::Vertex{ { 0.5f, 0.5f, -5.f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-		MeshModel::Vertex{ { -0.5f, 0.5f, -5.f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
+		MeshModel::Vertex{ { -0.5f, 0.5f, -5.f }, { 1.0f, 0.0f, 0.0f, 1.f }, { 0.0f, 0.0f } },
+		MeshModel::Vertex{ { 0.5f, 0.5f, -5.f }, { 0.0f, 1.0f, 0.0f, 1.f }, { 1.0f, 0.0f } },
+		MeshModel::Vertex{ { -0.5f, -0.5f, -5.f }, { 0.0f, 0.0f, 1.0f, 1.f }, { 0.0f, 1.0f } },
+		MeshModel::Vertex{ { 0.5f, -0.5f, -5.f }, { 1.0f, 1.0f, 1.0f, 1.f }, { 1.0f, 1.0f } },
 	};
 	std::vector<uint32_t> indices = {
-		0, 1, 2,
+		0, 2, 1, 1, 2, 3
 	};
 	auto triangle = std::make_shared<MeshModel>(vertices, indices);
 	models.push_back(
 		triangle
 	);
+	LOG_SUCCESS();
 }
 
 void Noxg::VulkanInstance::CreateRenderPass()
@@ -294,6 +367,37 @@ void Noxg::VulkanInstance::CreateRenderPass()
 	vk::RenderPassCreateInfo createInfo({ }, attachments, subpasses, dependencies);
 	renderPass = device.createRenderPass(createInfo);
 	LOG_SUCCESS();
+}
+
+void Noxg::VulkanInstance::CreateDescriptors()
+{
+	vk::DescriptorSetLayoutBinding samplerLayoutBinding(0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, { });
+	
+	std::array<vk::DescriptorSetLayoutBinding, 1> bindings = { samplerLayoutBinding };
+	vk::DescriptorSetLayoutCreateInfo layoutInfo({ }, bindings);
+	descriptorSetLayout = device.createDescriptorSetLayout(layoutInfo);
+
+	std::array<vk::DescriptorPoolSize, 1> poolSizes = {
+		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(swapChainImageViews.size() * MAX_FRAMES_IN_FLIGHT) }
+	};
+
+	vk::DescriptorPoolCreateInfo poolInfo({ }, static_cast<uint32_t>(swapChainImageViews.size() * MAX_FRAMES_IN_FLIGHT), poolSizes);
+	descriptorPool = device.createDescriptorPool(poolInfo);
+
+	std::vector<vk::DescriptorSetLayout> layouts(swapChainImageViews.size(), descriptorSetLayout);
+	vk::DescriptorSetAllocateInfo allocateInfo(descriptorPool, layouts);
+	descriptorSets = device.allocateDescriptorSets(allocateInfo);
+
+	for (size_t i = 0; i < swapChainImageViews.size(); ++i)
+	{
+		std::array<vk::DescriptorImageInfo, 1> imageInfos = {
+			vk::DescriptorImageInfo(textures[0]->textureSampler, textures[0]->textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal)
+		};
+		std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
+			vk::WriteDescriptorSet(descriptorSets[i], 0, 0, vk::DescriptorType::eCombinedImageSampler, imageInfos)
+		};
+		device.updateDescriptorSets(descriptorWrites, { });
+	}
 }
 
 void Noxg::VulkanInstance::CreateGraphicsPipeline()
@@ -338,12 +442,16 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineColorBlendStateCreateInfo colorBlendInfo{ }; colorBlendInfo.attachmentCount = 1; colorBlendInfo.pAttachments = &colorBlendAttachment;
 
+	std::array<vk::DescriptorSetLayout, 1> setLayouts = {
+		descriptorSetLayout
+	};
+
 	std::vector<vk::PushConstantRange> pushConstantRanges = {
 		{ vk::ShaderStageFlagBits::eVertex, 0, sizeof(PushConstantData) }
 	};
 
 	LOG_STEP("Vulkan", "Creating Pipeline Layout");
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo({ }, { }, pushConstantRanges);
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo({ }, setLayouts, pushConstantRanges);
 	pipelineLayout = device.createPipelineLayout(pipelineLayoutInfo);
 	LOG_SUCCESS();
 
@@ -449,6 +557,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	std::vector<PushConstantData> data(1);
 	XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjection, &matView);
 	commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+	commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { descriptorSets[view] }, { });
 	for (auto& model : models)
 	{
 		model->bind(commandBuffers[view]);

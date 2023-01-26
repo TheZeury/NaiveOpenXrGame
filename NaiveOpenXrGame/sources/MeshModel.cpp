@@ -9,13 +9,13 @@ Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> i
 	uint32_t vertexSize = sizeof(Vertex);
 
 	auto [stagingBuffer, stagingBufferMemory] = 
-		Utils::AllocateBuffer(vertexSize, vertexCount, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+		Utils::CreateBuffer(vertexSize, vertexCount, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 	void* mappingMemory = Utils::mapMemory(stagingBufferMemory);
 	std::memcpy(mappingMemory, vertices.data(), bufferSize);
 	Utils::unmapMemory(stagingBufferMemory);
 
 	std::tie(vertexBuffer, vertexBufferMemory) =
-		Utils::AllocateBuffer(vertexSize, vertexCount, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		Utils::CreateBuffer(vertexSize, vertexCount, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
 	
 	Utils::copyBuffer(vertexBuffer, stagingBuffer, bufferSize);
 	Utils::destroyBuffer(stagingBuffer, stagingBufferMemory);
@@ -26,13 +26,13 @@ Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> i
 	uint32_t indexSize = sizeof(indices[0]);
 
 	std::tie(stagingBuffer, stagingBufferMemory) = 
-		Utils::AllocateBuffer(indexSize, indexCount, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+		Utils::CreateBuffer(indexSize, indexCount, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 	mappingMemory = Utils::mapMemory(stagingBufferMemory);
 	std::memcpy(mappingMemory, indices.data(), bufferSize);
 	Utils::unmapMemory(stagingBufferMemory);
 
 	std::tie(indexBuffer, indexBufferMemory) = 
-		Utils::AllocateBuffer(vertexSize, vertexCount, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		Utils::CreateBuffer(vertexSize, vertexCount, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	Utils::copyBuffer(indexBuffer, stagingBuffer, bufferSize);
 	Utils::destroyBuffer(stagingBuffer, stagingBufferMemory);

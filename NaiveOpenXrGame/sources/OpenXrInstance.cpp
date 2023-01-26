@@ -6,13 +6,6 @@ Noxg::OpenXrInstance::OpenXrInstance(VulkanInstance& vulkan) : graphics(vulkan)
 
 Noxg::OpenXrInstance::~OpenXrInstance()
 {
-	for (auto& swapchain : swapChains)
-	{
-		swapchain.destroy();
-	}
-	if (appSpace != nullptr) appSpace.destroy();
-	if (session != nullptr) session.destroy();
-	if (instance != nullptr) instance.destroy();
 }
 
 void Noxg::OpenXrInstance::Initialize()
@@ -20,6 +13,23 @@ void Noxg::OpenXrInstance::Initialize()
 	CreateInstance();
 
 	InitializeSystem();	
+}
+
+void Noxg::OpenXrInstance::CleanUpInstance()
+{
+	if (instance != nullptr) instance.destroy();
+}
+
+void Noxg::OpenXrInstance::CleanUpSession()
+{
+	for (auto& swapchain : swapChains)
+	{
+		swapchain.destroy();
+	}
+
+	if (appSpace != nullptr) appSpace.destroy();
+
+	if (session != nullptr) session.destroy();
 }
 
 void Noxg::OpenXrInstance::CreateInstance()

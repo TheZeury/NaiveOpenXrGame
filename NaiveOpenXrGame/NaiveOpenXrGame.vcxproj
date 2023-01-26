@@ -19,19 +19,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="external\stb_image.h" />
     <ClInclude Include="external\xr_linear.h" />
     <ClInclude Include="sources\mainCommon.h" />
     <ClInclude Include="sources\MeshModel.h" />
     <ClInclude Include="sources\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame.h" />
+    <ClInclude Include="sources\Texture.h" />
     <ClInclude Include="sources\Utils.h" />
     <ClInclude Include="sources\VulkanInstance.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sources\MeshModel.cpp" />
     <ClCompile Include="sources\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame.cpp" />
+    <ClCompile Include="sources\Texture.cpp" />
     <ClCompile Include="sources\Utils.cpp" />
     <ClCompile Include="sources\VulkanInstance.cpp" />
   </ItemGroup>
