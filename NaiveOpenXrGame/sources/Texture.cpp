@@ -24,7 +24,6 @@ Noxg::Texture::~Texture()
 
 void Noxg::Texture::createTexture(stb::stbi_uc* pixels, int width, int height, int channels)
 {
-	std::cout << "width " << width << "  height " << height << "  channels " << channels << '\n';
 	vk::DeviceSize imageSize = sizeof(stb::stbi_uc) * width * height * 4;
 	auto [stagingBuffer, stagingBufferMemory] = 
 		Utils::CreateBuffer(sizeof(stb::stbi_uc), width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);

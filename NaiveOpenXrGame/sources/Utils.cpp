@@ -123,9 +123,9 @@ void Noxg::Utils::destroyImage(vk::Image& image, vk::DeviceMemory& memory)
 	vkDevice.freeMemory(memory);
 }
 
-vk::ImageView Noxg::Utils::createImageView(vk::Image& image, vk::Format format)
+vk::ImageView Noxg::Utils::createImageView(vk::Image& image, vk::Format format, vk::ImageAspectFlags aspectFlags)
 {
-	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, { }, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, { }, { aspectFlags, 0, 1, 0, 1 });
 	return vkDevice.createImageView(viewInfo);
 }
 
@@ -151,6 +151,33 @@ void Noxg::Utils::endSingleTimeCommandBuffer(vk::CommandBuffer& commandBuffer)
 	vkQueue.waitIdle();
 
 	vkDevice.freeCommandBuffers(vkCommandPool, commandBuffers);
+}
+
+vk::Format Noxg::Utils::findSupportedFormat(const std::vector<vk::Format> candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features)
+{
+	for(auto format : candidates)
+	{
+		auto properties = vkPhysicalDevice.getFormatProperties(format);
+		if (tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & features) == features)
+		{
+			return format;
+		}
+		if (tiling == vk::ImageTiling::eOptimal && (properties.optimalTilingFeatures & features) == features)
+		{
+			return format;
+		}
+	}
+	throw std::runtime_error("Failed to find supported format.");
+}
+
+vk::Format Noxg::Utils::findDepthFormat()
+{
+	return findSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint }, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+}
+
+bool Noxg::Utils::hasStencilComponent(vk::Format format)
+{
+	return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
 }
 
 inline vk::DeviceSize Noxg::Utils::getAlignment(vk::DeviceSize instanceSize, vk::DeviceSize minOffsetAlignment) {

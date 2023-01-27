@@ -19,9 +19,12 @@ namespace Noxg
 		static void transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 		static void destroyBuffer(vk::Buffer& buffer, vk::DeviceMemory& memory);
 		static void destroyImage(vk::Image& image, vk::DeviceMemory& memory);
-		static vk::ImageView createImageView(vk::Image& image, vk::Format format);
+		static vk::ImageView createImageView(vk::Image& image, vk::Format format, vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
 		static vk::CommandBuffer beginSingleTimeCommandBuffer();
 		static void endSingleTimeCommandBuffer(vk::CommandBuffer& commandBuffer);
+		static vk::Format findSupportedFormat(const std::vector<vk::Format> candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+		static vk::Format findDepthFormat();
+		static bool hasStencilComponent(vk::Format format);
 	private:
 		static vk::DeviceSize getAlignment(vk::DeviceSize instanceSize, vk::DeviceSize minOffsetAlignment);
 		static uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags memoryPropertyFlags);

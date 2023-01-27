@@ -326,6 +326,7 @@ void Noxg::VulkanInstance::InitializeSession()
 		std::make_shared<Texture>("textures/robert-lukeman-PH0HYjsf2n8-unsplash.jpg")
 	);
 	LOG_SUCCESS();
+	CreateDepthResources();
 	CreateRenderPass();
 	CreateDescriptors();
 	CreateGraphicsPipeline();
@@ -334,6 +335,12 @@ void Noxg::VulkanInstance::InitializeSession()
 	//Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
 	LOG_STEP("Vulkan", "Loading Models");
 	std::vector<MeshModel::Vertex> vertices = {
+		MeshModel::Vertex{ { -0.5f, 0.5f, -2.f }, { 1.0f, 0.0f, 0.0f, 1.f }, { 0.0f, 0.0f } },
+		MeshModel::Vertex{ { 0.5f, 0.5f, -2.f }, { 0.0f, 1.0f, 0.0f, 1.f }, { 1.0f, 0.0f } },
+		MeshModel::Vertex{ { -0.5f, -0.5f, -2.f }, { 0.0f, 0.0f, 1.0f, 1.f }, { 0.0f, 1.0f } },
+		MeshModel::Vertex{ { 0.5f, -0.5f, -2.f }, { 1.0f, 1.0f, 1.0f, 1.f }, { 1.0f, 1.0f } },
+	};
+	std::vector<MeshModel::Vertex> vertices2 = {
 		MeshModel::Vertex{ { -0.5f, 0.5f, -5.f }, { 1.0f, 0.0f, 0.0f, 1.f }, { 0.0f, 0.0f } },
 		MeshModel::Vertex{ { 0.5f, 0.5f, -5.f }, { 0.0f, 1.0f, 0.0f, 1.f }, { 1.0f, 0.0f } },
 		MeshModel::Vertex{ { -0.5f, -0.5f, -5.f }, { 0.0f, 0.0f, 1.0f, 1.f }, { 0.0f, 1.0f } },
@@ -346,22 +353,26 @@ void Noxg::VulkanInstance::InitializeSession()
 	models.push_back(
 		triangle
 	);
+	auto triangle2 = std::make_shared<MeshModel>(vertices2, indices);
+	models.push_back(triangle2);
 	LOG_SUCCESS();
 }
 
 void Noxg::VulkanInstance::CreateRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDescription({ }, swapChainFormat, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-	std::vector<vk::AttachmentDescription> attachments = { colorAttachmentDescription };
+	vk::AttachmentDescription depthAttachmentDescription({ }, Utils::findDepthFormat(), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eDontCare, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachmentDescription, depthAttachmentDescription };
 
 	vk::AttachmentReference colorAttachmentReference(0, vk::ImageLayout::eColorAttachmentOptimal);
-	std::vector<vk::AttachmentReference> colorReferences = { colorAttachmentReference };
+	std::array<vk::AttachmentReference, 1> colorReferences = { colorAttachmentReference };
+	vk::AttachmentReference depthAttachmentReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-	vk::SubpassDescription subpass({ }, vk::PipelineBindPoint::eGraphics, { }, colorReferences);
-	std::vector<vk::SubpassDescription> subpasses = { subpass };
+	vk::SubpassDescription subpass({ }, vk::PipelineBindPoint::eGraphics, { }, colorReferences, { }, &depthAttachmentReference);
+	std::array<vk::SubpassDescription, 1> subpasses = { subpass };
 
-	vk::SubpassDependency dependency(VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput, { }, vk::AccessFlagBits::eColorAttachmentWrite);
-	std::vector<vk::SubpassDependency> dependencies = { dependency };
+	vk::SubpassDependency dependency(VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests, vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests, { }, vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+	std::array<vk::SubpassDependency, 1> dependencies = { dependency };
 
 	LOG_STEP("Vulkan", "Creating Render Pass");
 	vk::RenderPassCreateInfo createInfo({ }, attachments, subpasses, dependencies);
@@ -438,6 +449,8 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineMultisampleStateCreateInfo multisampleInfo{ };
 
+	vk::PipelineDepthStencilStateCreateInfo depthStencilInfo({ }, VK_TRUE, VK_TRUE, vk::CompareOp::eLess, VK_FALSE, VK_FALSE);
+
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{ }; colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
 
 	vk::PipelineColorBlendStateCreateInfo colorBlendInfo{ }; colorBlendInfo.attachmentCount = 1; colorBlendInfo.pAttachments = &colorBlendAttachment;
@@ -456,7 +469,7 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Creating Graphics Pipeline");
-	vk::GraphicsPipelineCreateInfo createInfo({ }, stageInfos, &vertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &rasterizationInfo, &multisampleInfo, { }, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	vk::GraphicsPipelineCreateInfo createInfo({ }, stageInfos, &vertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &rasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
 	auto result = device.createGraphicsPipeline({ }, createInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
@@ -473,16 +486,18 @@ void Noxg::VulkanInstance::CreateFrameBuffers()
 {
 	LOG_STEP("Vulkan", "Creating Swap Chain Frame Buffers");
 	frameBuffers.clear();
+	int i = 0;
 	for (auto& swapChain : swapChainImageViews)
 	{
 		std::vector<vk::Framebuffer> framebuffers; framebuffers.clear();
 		for (auto& view : swapChain)
 		{
-			std::vector<vk::ImageView> attachments = { view };
-			vk::FramebufferCreateInfo createInfo({}, renderPass, attachments, swapChainRects[0].extent.width, swapChainRects[0].extent.height, 1);
+			std::array<vk::ImageView, 2> attachments = { view, depthImageViews[i] };
+			vk::FramebufferCreateInfo createInfo({ }, renderPass, attachments, swapChainRects[i].extent.width, swapChainRects[i].extent.height, 1);
 			framebuffers.push_back(device.createFramebuffer(createInfo));
 		}
 		frameBuffers.push_back(framebuffers);
+		++i;
 	}
 	LOG_SUCCESS();
 }
@@ -493,6 +508,23 @@ void Noxg::VulkanInstance::CreateCommandPool()
 	vk::CommandPoolCreateInfo createInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, queueFamilyIndex);
 	commandPool = device.createCommandPool(createInfo);
 	LOG_SUCCESS();
+}
+
+void Noxg::VulkanInstance::CreateDepthResources()
+{
+	auto depthFormat = Utils::findDepthFormat();
+	std::array<uint32_t, 1> queueFamilyIndices = { 0 };
+	
+	for (int i = 0; i < swapChainImageViews.size(); ++i)
+	{
+		vk::ImageCreateInfo imageInfo({ }, vk::ImageType::e2D, depthFormat, { static_cast<uint32_t>(swapChainRects[i].extent.width), static_cast<uint32_t>(swapChainRects[i].extent.height), 1}, 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, queueFamilyIndices, vk::ImageLayout::eUndefined);
+
+		auto [depthImage, depthImageMemory] = Utils::CreateImage(imageInfo, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		auto depthImageView = Utils::createImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
+		depthImages.push_back(depthImage);
+		depthImageMemories.push_back(depthImageMemory);
+		depthImageViews.push_back(depthImageView);
+	}
 }
 
 void Noxg::VulkanInstance::AllocateCommandBuffers()
@@ -526,9 +558,9 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	vk::CommandBufferBeginInfo beginInfo{ };
 	commandBuffers[view].begin(beginInfo);	// <======= Command Buffer Begin.
 
-	std::vector<vk::ClearValue> clearValues = {
-		/*{ { { 0.2f, 0.8f, 0.1f, 1.f } } }*/
-		{ { { 0.7f, 0.8f, 0.5f, 1.f } } }
+	std::array<vk::ClearValue, 2> clearValues = {
+		vk::ClearValue{ vk::ClearColorValue{ std::array<float, 4>{ 0.7f, 0.8f, 0.5f, 1.f } } },
+		vk::ClearValue{ vk::ClearDepthStencilValue{ 1.f, 0 } },
 	};
 	vk::RenderPassBeginInfo renderPassInfo(renderPass, frameBuffers[view][imageIndex], { { }, { static_cast<uint32_t>(swapChainRects[view].extent.width), static_cast<uint32_t>(swapChainRects[view].extent.height) } }, clearValues);
 	commandBuffers[view].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);		// <======= Render Pass Begin.

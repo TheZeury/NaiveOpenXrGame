@@ -34,6 +34,7 @@ namespace Noxg
 		void CreateGraphicsPipeline();
 		void CreateFrameBuffers();
 		void CreateCommandPool();
+		void CreateDepthResources();	
 		void AllocateCommandBuffers();
 		void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format);
 
@@ -52,6 +53,9 @@ namespace Noxg
 		vk::DescriptorSetLayout descriptorSetLayout;
 		vk::DescriptorPool descriptorPool;
 		std::vector<vk::DescriptorSet> descriptorSets;
+		std::vector<vk::Image> depthImages;
+		std::vector<vk::DeviceMemory> depthImageMemories;
+		std::vector<vk::ImageView> depthImageViews;
 		vk::PipelineLayout pipelineLayout;
 		vk::Pipeline pipeline;
 		std::vector<std::vector<vk::Framebuffer>> frameBuffers;
