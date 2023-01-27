@@ -6,8 +6,8 @@
 #include <set>
 #include <fstream>
 #include <exception>
+#include <unordered_map>
 
-#define XR_KHR_vulkan_enable2
 #define XR_USE_GRAPHICS_API_VULKAN
 #include <vulkan/vulkan.hpp>
 #include "..\external\xr_linear.h"
@@ -16,10 +16,15 @@
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
+#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 namespace stb
 {
 #include "..\external\stb_image.h"
 }
+#include "..\external\tiny_obj_loader.h"
 #if !defined(NDEBUG)
 #define LOG_STEP(INSTANCE, STEP) LogStep(INSTANCE, STEP)
 #define LOG_SUCCESS() LogSuccess()
@@ -33,6 +38,8 @@ namespace stb
 #define LOG_INFO(INSTANCE, INFO, TAB)
 #define LOG_ERRO(ERR)
 #endif
+
+#define MIRROR_WINDOW
 
 void inline LogStep(std::string instance, std::string step)
 {

@@ -4,7 +4,7 @@
 
 namespace Noxg
 {
-	static class Utils
+	class Utils
 	{
 	public:
 		static void passInGraphicsInformation(vk::Instance instance, vk::PhysicalDevice physicalDevice, vk::Device device, vk::CommandPool commandPool, vk::Queue queue);

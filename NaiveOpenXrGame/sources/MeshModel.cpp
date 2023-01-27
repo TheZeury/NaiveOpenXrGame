@@ -1,7 +1,82 @@
 #include "MeshModel.h"
 #include "Utils.h"
 
+namespace std
+{
+	template<>
+	struct hash<Noxg::MeshModel::Vertex>
+	{
+		size_t operator()(Noxg::MeshModel::Vertex const& vertex) const
+		{
+			return ((hash<glm::vec3>()(vertex.position) ^
+				(hash<glm::vec4>()(vertex.color) << 1)) >> 1) ^
+				(hash<glm::vec2>()(vertex.uv) << 1);
+		}
+	};
+}
+
+Noxg::MeshModel::MeshModel(std::string path)
+{
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str()))
+	{
+		throw std::runtime_error(warn + err);
+	}
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	std::unordered_map<Vertex, uint32_t> uniqueVertices;
+
+	for (const auto& shape : shapes)
+	{
+		for (const auto& index : shape.mesh.indices)
+		{
+			Vertex vertex{ };
+			
+			vertex.position = {
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2],
+			};
+
+			vertex.uv = {
+				attrib.texcoords[2 * index.texcoord_index + 0],
+				1.f - attrib.texcoords[2 * index.texcoord_index + 1],
+			};
+
+			vertex.color = {
+				1.f, 1.f, 1.f, 1.f
+			};
+
+			if (uniqueVertices.count(vertex) == 0)
+			{
+				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+				vertices.push_back(vertex);
+			}
+
+			indices.push_back(uniqueVertices[vertex]);
+		}
+	}
+
+	createMeshModel(vertices, indices);
+}
+
 Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices)
+{
+	createMeshModel(vertices, indices);
+}
+
+Noxg::MeshModel::~MeshModel()
+{
+	Utils::destroyBuffer(vertexBuffer, vertexBufferMemory);
+	Utils::destroyBuffer(indexBuffer, indexBufferMemory);
+}
+
+void Noxg::MeshModel::createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
 	// VertexBuffer
 	vertexCount = static_cast<uint32_t>(vertices.size());
@@ -21,7 +96,7 @@ Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> i
 	Utils::destroyBuffer(stagingBuffer, stagingBufferMemory);
 
 	// VertexBuffer
-	indexCount = indices.size();
+	indexCount = static_cast<uint32_t>(indices.size());
 	bufferSize = sizeof(indices[0]) * indexCount;
 	uint32_t indexSize = sizeof(indices[0]);
 
@@ -36,12 +111,6 @@ Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> i
 
 	Utils::copyBuffer(indexBuffer, stagingBuffer, bufferSize);
 	Utils::destroyBuffer(stagingBuffer, stagingBufferMemory);
-}
-
-Noxg::MeshModel::~MeshModel()
-{
-	Utils::destroyBuffer(vertexBuffer, vertexBufferMemory);
-	Utils::destroyBuffer(indexBuffer, indexBufferMemory);
 }
 
 void Noxg::MeshModel::bind(vk::CommandBuffer& commandBuffer)

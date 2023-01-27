@@ -9,9 +9,9 @@ namespace Noxg
 	public:
 		struct Vertex
 		{
-			XrVector3f position;
-			XrColor4f color;
-			XrVector2f uv;
+			glm::vec3 position;
+			glm::vec4 color;
+			glm::vec2 uv;
 
 			static std::array<vk::VertexInputBindingDescription, 1> getBindingDescriptions()
 			{
@@ -28,13 +28,21 @@ namespace Noxg
 					vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) },
 				};
 			}
+
+			bool operator==(const Vertex& other) const
+			{
+				return position == other.position && color == other.color && uv == other.uv;
+			}
 		};
 	public:
 		MeshModel(const MeshModel&) = delete;
 		MeshModel& operator=(const MeshModel&) = delete;
 
+		MeshModel(std::string path);
 		MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices);
 		~MeshModel();
+
+		void createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 
 		void bind(vk::CommandBuffer& commandBuffer);
 		void draw(vk::CommandBuffer& commandBuffer);

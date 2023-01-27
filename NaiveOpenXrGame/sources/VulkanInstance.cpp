@@ -17,7 +17,9 @@ void Noxg::VulkanInstance::Initialize(const xr::Instance& xrInst, const xr::Syst
 	xrInstance = xrInst;
 	xrSystemId = xrSysId;
 	dispather = xr::DispatchLoaderDynamic{ xrInstance };
+#ifdef MIRROR_WINDOW
 	CreateWindow();
+#endif
 	CreateInstance();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
@@ -35,8 +37,10 @@ void Noxg::VulkanInstance::CleanUpInstance()
 	instance.destroy();
 	LOG_SUCCESS();
 
+#ifdef MIRROR_WINDOW
 	glfwDestroyWindow(window);
 	glfwTerminate();
+#endif
 }
 
 void Noxg::VulkanInstance::CleanUpSession()
@@ -122,7 +126,7 @@ void Noxg::VulkanInstance::CreateWindow()
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	window = glfwCreateWindow(800, 600, "Hello", nullptr, nullptr);
+	window = glfwCreateWindow(1920, 1080, "Hello", nullptr, nullptr);
 }
 
 void Noxg::VulkanInstance::CreateInstance()
@@ -144,7 +148,7 @@ void Noxg::VulkanInstance::CreateInstance()
 	std::vector<const char*> extensions;
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-	for (int i = 0; i < glfwExtensionCount; ++i) extensions.push_back(glfwExtensions[i]);
+	for (uint32_t i = 0; i < glfwExtensionCount; ++i) extensions.push_back(glfwExtensions[i]);
 	LOG_INFO("Vulkan", std::format("List of total {} required Vulkan Instance Extension(s):", extensions.size()), 0);
 	for (const auto& ext : extensions)
 	{
@@ -315,6 +319,12 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 		swapChainImageViews.push_back(imageViews);
 	}
 	LOG_SUCCESS();
+
+#ifdef MIRROR_WINDOW
+	LOG_STEP("Vulkan", "Creating Mirror Window Swap Chain");
+	LOG_SUCCESS();
+#endif // MIRROR_WINDOW
+
 }
 
 void Noxg::VulkanInstance::InitializeSession()
@@ -323,7 +333,7 @@ void Noxg::VulkanInstance::InitializeSession()
 	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
 	LOG_STEP("Vulkan", "Loading textures");
 	textures.push_back(
-		std::make_shared<Texture>("textures/robert-lukeman-PH0HYjsf2n8-unsplash.jpg")
+		std::make_shared<Texture>("textures/Steed_baseColor.jpeg")
 	);
 	LOG_SUCCESS();
 	CreateDepthResources();
@@ -334,27 +344,9 @@ void Noxg::VulkanInstance::InitializeSession()
 	AllocateCommandBuffers();
 	//Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
 	LOG_STEP("Vulkan", "Loading Models");
-	std::vector<MeshModel::Vertex> vertices = {
-		MeshModel::Vertex{ { -0.5f, 0.5f, -2.f }, { 1.0f, 0.0f, 0.0f, 1.f }, { 0.0f, 0.0f } },
-		MeshModel::Vertex{ { 0.5f, 0.5f, -2.f }, { 0.0f, 1.0f, 0.0f, 1.f }, { 1.0f, 0.0f } },
-		MeshModel::Vertex{ { -0.5f, -0.5f, -2.f }, { 0.0f, 0.0f, 1.0f, 1.f }, { 0.0f, 1.0f } },
-		MeshModel::Vertex{ { 0.5f, -0.5f, -2.f }, { 1.0f, 1.0f, 1.0f, 1.f }, { 1.0f, 1.0f } },
-	};
-	std::vector<MeshModel::Vertex> vertices2 = {
-		MeshModel::Vertex{ { -0.5f, 0.5f, -5.f }, { 1.0f, 0.0f, 0.0f, 1.f }, { 0.0f, 0.0f } },
-		MeshModel::Vertex{ { 0.5f, 0.5f, -5.f }, { 0.0f, 1.0f, 0.0f, 1.f }, { 1.0f, 0.0f } },
-		MeshModel::Vertex{ { -0.5f, -0.5f, -5.f }, { 0.0f, 0.0f, 1.0f, 1.f }, { 0.0f, 1.0f } },
-		MeshModel::Vertex{ { 0.5f, -0.5f, -5.f }, { 1.0f, 1.0f, 1.0f, 1.f }, { 1.0f, 1.0f } },
-	};
-	std::vector<uint32_t> indices = {
-		0, 2, 1, 1, 2, 3
-	};
-	auto triangle = std::make_shared<MeshModel>(vertices, indices);
 	models.push_back(
-		triangle
+		std::make_shared<MeshModel>("models/steed.obj")
 	);
-	auto triangle2 = std::make_shared<MeshModel>(vertices2, indices);
-	models.push_back(triangle2);
 	LOG_SUCCESS();
 }
 
@@ -530,7 +522,7 @@ void Noxg::VulkanInstance::CreateDepthResources()
 void Noxg::VulkanInstance::AllocateCommandBuffers()
 {
 	LOG_STEP("Vulkan", "Allocating Command Buffers");
-	vk::CommandBufferAllocateInfo allocateInfo(commandPool, vk::CommandBufferLevel::ePrimary, swapChainImageViews.size());
+	vk::CommandBufferAllocateInfo allocateInfo(commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(swapChainImageViews.size()));
 	commandBuffers = device.allocateCommandBuffers(allocateInfo);
 	LOG_SUCCESS();
 
@@ -550,8 +542,14 @@ void Noxg::VulkanInstance::AllocateCommandBuffers()
 
 void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format)
 {
-	device.waitForFences(1, &inFlights[view][0], VK_TRUE, UINT64_MAX);
-	device.resetFences(1, &inFlights[view][0]);
+	if (device.waitForFences(1, &inFlights[view][0], VK_TRUE, UINT64_MAX) != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to wait for fences.");
+	}
+	if (device.resetFences(1, &inFlights[view][0]) != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to reset Fences.");
+	}
 
 	commandBuffers[view].reset();
 
@@ -584,10 +582,14 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	XrMatrix4x4f invView;
 	XrVector3f identity{ 1.f, 1.f, 1.f };
 	XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
+	XrMatrix4x4f matModel;
+	XrMatrix4x4f_CreateTranslation(&matModel, -100.f, -50.f, -200.f);
 	XrMatrix4x4f matView;
 	XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+	XrMatrix4x4f matViewModel;
+	XrMatrix4x4f_Multiply(&matViewModel, &matView, &matModel);
 	std::vector<PushConstantData> data(1);
-	XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjection, &matView);
+	XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjection, &matViewModel);
 	commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
 	commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { descriptorSets[view] }, { });
 	for (auto& model : models)

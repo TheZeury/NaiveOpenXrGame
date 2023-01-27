@@ -82,7 +82,7 @@ void Noxg::OpenXrInstance::CreateInstance()
 		appInfo,
 		0,
 		nullptr,
-		extensions.size(),
+		static_cast<uint32_t>(extensions.size()),
 		extensions.data()
 	);
 
@@ -324,7 +324,7 @@ void Noxg::OpenXrInstance::Update()
 		}
 	}
 
-	xr::FrameEndInfo endInfo(frameState.predictedDisplayTime, xr::EnvironmentBlendMode::Opaque, layers.size(), layers.data());
+	xr::FrameEndInfo endInfo(frameState.predictedDisplayTime, xr::EnvironmentBlendMode::Opaque, static_cast<uint32_t>(layers.size()), layers.data());
 	session.endFrame(endInfo);
 }
 
