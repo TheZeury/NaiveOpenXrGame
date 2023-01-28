@@ -3,6 +3,7 @@
 #include "mainCommon.h"
 #include "MeshModel.h"
 #include "Texture.h"
+#include "GameObject.h"
 
 namespace Noxg
 {
@@ -38,6 +39,8 @@ namespace Noxg
 		void AllocateCommandBuffers();
 		void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format);
 
+		void addTexture(Texture texture);
+		void addModel(MeshModel model);
 		xr::GraphicsBindingVulkanKHR getGraphicsBinding();
 	private: // help functions.
 		std::vector<uint32_t> readFile(const std::string& filepath);
@@ -50,9 +53,8 @@ namespace Noxg
 		uint32_t queueFamilyIndex;
 		vk::Queue queue;
 		vk::RenderPass renderPass;
-		vk::DescriptorSetLayout descriptorSetLayout;
+		vk::DescriptorSetLayout textureSetLayout;
 		vk::DescriptorPool descriptorPool;
-		std::vector<vk::DescriptorSet> descriptorSets;
 		std::vector<vk::Image> depthImages;
 		std::vector<vk::DeviceMemory> depthImageMemories;
 		std::vector<vk::ImageView> depthImageViews;
@@ -62,13 +64,19 @@ namespace Noxg
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;
 		vk::Semaphore drawDone;
-		std::vector<std::vector<vk::Fence>> inFlights;
+		std::vector<vk::Fence> inFlights;
 		std::vector<std::vector<vk::ImageView>> swapChainImageViews;
 		vk::Format swapChainFormat;
 		std::vector<xr::Rect2Di> swapChainRects;
 		xr::DispatchLoaderDynamic dispather;
-		std::vector<std::shared_ptr<MeshModel>> models;
-		std::vector<std::shared_ptr<Texture>> textures;
+		std::vector<MeshModel> models;
+		std::vector<Texture> textures;
+
+		std::vector<GameObject> gameObjects;
+
+#ifdef MIRROR_WINDOW
+		vk::SurfaceKHR mirrorSurface;
+#endif
 	
 	private: // Not Owning. Don't try to destroy them. (But it's ok to destruct since they are handle classes instead of pointers.)
 		xr::Instance xrInstance;

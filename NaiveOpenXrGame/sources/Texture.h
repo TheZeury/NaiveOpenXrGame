@@ -4,17 +4,20 @@
 
 namespace Noxg
 {
-	class Texture
+	class Texture_T
 	{
 	public:
-		Texture(const Texture&) = delete;
-		Texture& operator=(const Texture&) = delete;
+		Texture_T(const Texture_T&) = delete;
+		Texture_T& operator=(const Texture_T&) = delete;
 
-		Texture(std::string path);
-		Texture(stb::stbi_uc* pixels, int width, int height, int channels);
-		~Texture();
+		Texture_T(std::string path);
+		Texture_T(stb::stbi_uc* pixels, int width, int height, int channels);
+		~Texture_T();
 
 		void createTexture(stb::stbi_uc* pixels, int width, int height, int channels);
+
+	public:
+		std::vector<vk::DescriptorSet> descriptorSet;
 
 	public:
 		vk::ImageView textureImageView;
@@ -22,5 +25,7 @@ namespace Noxg
 		vk::Image textureImage;
 		vk::DeviceMemory textureImageMemory;
 	};
+
+	using Texture = std::shared_ptr<Texture_T>;
 }
 

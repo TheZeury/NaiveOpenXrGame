@@ -47,8 +47,16 @@ void Noxg::VulkanInstance::CleanUpSession()
 {
 	queue.waitIdle();
 
+#ifdef MIRROR_WINDOW
+	instance.destroySurfaceKHR(mirrorSurface);
+#endif
+
 	LOG_STEP("Vulkan", "Destroying Textures");
 	textures.clear();
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Game Objects");
+	gameObjects.clear();
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Models");
@@ -60,17 +68,13 @@ void Noxg::VulkanInstance::CleanUpSession()
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Descriptor Set Layout");
-	device.destroyDescriptorSetLayout(descriptorSetLayout);
+	device.destroyDescriptorSetLayout(textureSetLayout);
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Fences");
-	for (auto& fences : inFlights)
+	for (auto& fence : inFlights)
 	{
-		for (auto& fence : fences)
-		{
-			device.destroyFence(fence);
-			//vkDestroyFence(device, fence, nullptr);
-		}
+		device.destroyFence(fence);
 	}
 	LOG_SUCCESS();
 
@@ -322,6 +326,20 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 
 #ifdef MIRROR_WINDOW
 	LOG_STEP("Vulkan", "Creating Mirror Window Swap Chain");
+#ifndef MIDDLE_EYE_MIRRORING
+	glfwSetWindowSize(window, rects[0].extent.width * 1080 / rects[0].extent.height, 1080);
+#endif // !MIDDLE_EYE_MIRRORING
+	VkSurfaceKHR surface;
+	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Unable to create mirror window surface.");
+	}
+	mirrorSurface = surface;
+	if (physicalDevice.getSurfaceSupportKHR(queueFamilyIndex, surface) != VK_TRUE)
+	{
+		throw std::runtime_error("Presentation not supported.");
+	}
+
 	LOG_SUCCESS();
 #endif // MIRROR_WINDOW
 
@@ -331,23 +349,25 @@ void Noxg::VulkanInstance::InitializeSession()
 {
 	CreateCommandPool();
 	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
-	LOG_STEP("Vulkan", "Loading textures");
-	textures.push_back(
-		std::make_shared<Texture>("textures/Steed_baseColor.jpeg")
-	);
-	LOG_SUCCESS();
 	CreateDepthResources();
 	CreateRenderPass();
 	CreateDescriptors();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	AllocateCommandBuffers();
-	//Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
-	LOG_STEP("Vulkan", "Loading Models");
-	models.push_back(
-		std::make_shared<MeshModel>("models/steed.obj")
-	);
+	LOG_STEP("Vulkan", "Loading textures");
+	auto texture = make_new<Texture>("textures/Steed_baseColor.jpeg");
+	addTexture(texture);
 	LOG_SUCCESS();
+	LOG_STEP("Vulkan", "Loading Models");
+	auto model = make_new<MeshModel>("models/steed.obj", texture);
+	addModel(model);
+	LOG_SUCCESS();
+	GameObject obj = make_new<GameObject>();
+	obj->models.push_back(model);
+	obj->transform->setPosition({ -1.f, 0.f, -.5f });
+	obj->transform->setScale({ .01f, .01f, .01f });
+	gameObjects.push_back(obj);
 }
 
 void Noxg::VulkanInstance::CreateRenderPass()
@@ -378,7 +398,7 @@ void Noxg::VulkanInstance::CreateDescriptors()
 	
 	std::array<vk::DescriptorSetLayoutBinding, 1> bindings = { samplerLayoutBinding };
 	vk::DescriptorSetLayoutCreateInfo layoutInfo({ }, bindings);
-	descriptorSetLayout = device.createDescriptorSetLayout(layoutInfo);
+	textureSetLayout = device.createDescriptorSetLayout(layoutInfo);
 
 	std::array<vk::DescriptorPoolSize, 1> poolSizes = {
 		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(swapChainImageViews.size() * MAX_FRAMES_IN_FLIGHT) }
@@ -386,21 +406,6 @@ void Noxg::VulkanInstance::CreateDescriptors()
 
 	vk::DescriptorPoolCreateInfo poolInfo({ }, static_cast<uint32_t>(swapChainImageViews.size() * MAX_FRAMES_IN_FLIGHT), poolSizes);
 	descriptorPool = device.createDescriptorPool(poolInfo);
-
-	std::vector<vk::DescriptorSetLayout> layouts(swapChainImageViews.size(), descriptorSetLayout);
-	vk::DescriptorSetAllocateInfo allocateInfo(descriptorPool, layouts);
-	descriptorSets = device.allocateDescriptorSets(allocateInfo);
-
-	for (size_t i = 0; i < swapChainImageViews.size(); ++i)
-	{
-		std::array<vk::DescriptorImageInfo, 1> imageInfos = {
-			vk::DescriptorImageInfo(textures[0]->textureSampler, textures[0]->textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal)
-		};
-		std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
-			vk::WriteDescriptorSet(descriptorSets[i], 0, 0, vk::DescriptorType::eCombinedImageSampler, imageInfos)
-		};
-		device.updateDescriptorSets(descriptorWrites, { });
-	}
 }
 
 void Noxg::VulkanInstance::CreateGraphicsPipeline()
@@ -428,8 +433,8 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo({ }, dynamicStates);
 
-	auto vertexBindingDescriptions = MeshModel::Vertex::getBindingDescriptions();
-	auto vertexAttributeDescriptions = MeshModel::Vertex::getAttributeDescriptions();
+	auto vertexBindingDescriptions = MeshModel_T::Vertex::getBindingDescriptions();
+	auto vertexAttributeDescriptions = MeshModel_T::Vertex::getAttributeDescriptions();
 
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ { }, vertexBindingDescriptions, vertexAttributeDescriptions };
 
@@ -448,7 +453,7 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 	vk::PipelineColorBlendStateCreateInfo colorBlendInfo{ }; colorBlendInfo.attachmentCount = 1; colorBlendInfo.pAttachments = &colorBlendAttachment;
 
 	std::array<vk::DescriptorSetLayout, 1> setLayouts = {
-		descriptorSetLayout
+		textureSetLayout
 	};
 
 	std::vector<vk::PushConstantRange> pushConstantRanges = {
@@ -531,22 +536,18 @@ void Noxg::VulkanInstance::AllocateCommandBuffers()
 	inFlights.resize(swapChainImageViews.size());
 	for (int i = 0; i < swapChainImageViews.size(); ++i)
 	{
-		inFlights[i].resize(MAX_FRAMES_IN_FLIGHT);
-		for (int j = 0; j < MAX_FRAMES_IN_FLIGHT; ++j)
-		{
-			inFlights[i][j] = device.createFence(fenceInfo);
-		}
+		inFlights[i] = device.createFence(fenceInfo);
 	}
 	LOG_SUCCESS();
 }
 
 void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format)
 {
-	if (device.waitForFences(1, &inFlights[view][0], VK_TRUE, UINT64_MAX) != vk::Result::eSuccess)
+	if (device.waitForFences(1, &inFlights[view], VK_TRUE, UINT64_MAX) != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("Failed to wait for fences.");
 	}
-	if (device.resetFences(1, &inFlights[view][0]) != vk::Result::eSuccess)
+	if (device.resetFences(1, &inFlights[view]) != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("Failed to reset Fences.");
 	}
@@ -577,25 +578,27 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 
 	// Draw something.
 	auto pose = projectionView.pose.get();
-	XrMatrix4x4f matProjection;
+	XrMatrix4x4f matProjection;		// P
 	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
 	XrMatrix4x4f invView;
 	XrVector3f identity{ 1.f, 1.f, 1.f };
 	XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
-	XrMatrix4x4f matModel;
-	XrMatrix4x4f_CreateTranslation(&matModel, -100.f, -50.f, -200.f);
-	XrMatrix4x4f matView;
+	XrMatrix4x4f matView;		// V
 	XrMatrix4x4f_InvertRigidBody(&matView, &invView);
-	XrMatrix4x4f matViewModel;
-	XrMatrix4x4f_Multiply(&matViewModel, &matView, &matModel);
+	XrMatrix4x4f matProjectionView;	// PV
+	XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
 	std::vector<PushConstantData> data(1);
-	XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjection, &matViewModel);
-	commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
-	commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { descriptorSets[view] }, { });
-	for (auto& model : models)
+	for (auto& obj : gameObjects)
 	{
-		model->bind(commandBuffers[view]);
-		model->draw(commandBuffers[view]);
+		auto matTransform = obj->transform->getMatrix();	// M
+		XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+		commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+		for(auto& model : obj->models)
+		{
+			commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->texture->descriptorSet[view] }, { });
+			model->bind(commandBuffers[view]);
+			model->draw(commandBuffers[view]);
+		}
 	}
 	// End Draw.
 
@@ -604,7 +607,32 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	commandBuffers[view].end();		// <========= Command Buffer End.
 
 	vk::SubmitInfo submitInfo{ }; submitInfo.commandBufferCount = 1; submitInfo.pCommandBuffers = &commandBuffers[view];
-	queue.submit(submitInfo, inFlights[view][0]);
+	queue.submit(submitInfo, inFlights[view]);
+}
+
+void Noxg::VulkanInstance::addTexture(Texture texture)
+{
+	textures.push_back(texture);
+
+	std::vector<vk::DescriptorSetLayout> layouts(swapChainImageViews.size(), textureSetLayout);
+	vk::DescriptorSetAllocateInfo allocateInfo(descriptorPool, layouts);
+	texture->descriptorSet = device.allocateDescriptorSets(allocateInfo);
+
+	for (size_t i = 0; i < swapChainImageViews.size(); ++i)
+	{
+		std::array<vk::DescriptorImageInfo, 1> imageInfos = {
+			vk::DescriptorImageInfo(texture->textureSampler, texture->textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal)
+		};
+		std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
+			vk::WriteDescriptorSet(texture->descriptorSet[i], 0, 0, vk::DescriptorType::eCombinedImageSampler, imageInfos)
+		};
+		device.updateDescriptorSets(descriptorWrites, { });
+	}
+}
+
+void Noxg::VulkanInstance::addModel(MeshModel model)
+{
+	models.push_back(model);
 }
 
 xr::GraphicsBindingVulkanKHR Noxg::VulkanInstance::getGraphicsBinding()

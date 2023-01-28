@@ -4,9 +4,9 @@
 namespace std
 {
 	template<>
-	struct hash<Noxg::MeshModel::Vertex>
+	struct hash<Noxg::MeshModel_T::Vertex>
 	{
-		size_t operator()(Noxg::MeshModel::Vertex const& vertex) const
+		size_t operator()(Noxg::MeshModel_T::Vertex const& vertex) const
 		{
 			return ((hash<glm::vec3>()(vertex.position) ^
 				(hash<glm::vec4>()(vertex.color) << 1)) >> 1) ^
@@ -15,8 +15,9 @@ namespace std
 	};
 }
 
-Noxg::MeshModel::MeshModel(std::string path)
+Noxg::MeshModel_T::MeshModel_T(std::string path, Texture tex)
 {
+	texture = tex;
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
@@ -65,18 +66,19 @@ Noxg::MeshModel::MeshModel(std::string path)
 	createMeshModel(vertices, indices);
 }
 
-Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices)
+Noxg::MeshModel_T::MeshModel_T(std::vector<Vertex> vertices, std::vector<uint32_t> indices, Texture tex)
 {
+	texture = nullptr;
 	createMeshModel(vertices, indices);
 }
 
-Noxg::MeshModel::~MeshModel()
+Noxg::MeshModel_T::~MeshModel_T()
 {
 	Utils::destroyBuffer(vertexBuffer, vertexBufferMemory);
 	Utils::destroyBuffer(indexBuffer, indexBufferMemory);
 }
 
-void Noxg::MeshModel::createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+void Noxg::MeshModel_T::createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
 	// VertexBuffer
 	vertexCount = static_cast<uint32_t>(vertices.size());
@@ -113,7 +115,7 @@ void Noxg::MeshModel::createMeshModel(std::vector<Vertex>& vertices, std::vector
 	Utils::destroyBuffer(stagingBuffer, stagingBufferMemory);
 }
 
-void Noxg::MeshModel::bind(vk::CommandBuffer& commandBuffer)
+void Noxg::MeshModel_T::bind(vk::CommandBuffer& commandBuffer)
 {
 	std::array<vk::Buffer, 1> vertexBuffers = { vertexBuffer };
 	std::array<vk::DeviceSize, 1> offsets = { 0 };
@@ -122,7 +124,7 @@ void Noxg::MeshModel::bind(vk::CommandBuffer& commandBuffer)
 	commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 }
 
-void Noxg::MeshModel::draw(vk::CommandBuffer& commandBuffer)
+void Noxg::MeshModel_T::draw(vk::CommandBuffer& commandBuffer)
 {
 	commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
 }

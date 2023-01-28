@@ -16,8 +16,10 @@
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
-#include <glm/glm.hpp>
+#define GLM_FORCE_RADIANS
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
 namespace stb
@@ -39,7 +41,8 @@ namespace stb
 #define LOG_ERRO(ERR)
 #endif
 
-#define MIRROR_WINDOW
+//#define MIRROR_WINDOW
+//#define MIDDLE_EYE_MIRRORING
 
 void inline LogStep(std::string instance, std::string step)
 {
@@ -66,4 +69,14 @@ void inline LogInformation(std::string instance, std::string information, size_t
 void inline LogError(std::string errorMessage)
 {
 	std::cout << "\033[0m[\033[1;31mERRO\033[0m] " << errorMessage << std::endl;
+}
+
+namespace Noxg
+{
+	template<typename P> concept SharedPtr = requires (P ptr) { ptr.use_count(); };
+	template<typename P, typename... Types> requires SharedPtr<P>
+	P make_new(Types... args)
+	{
+		return std::make_shared<typename P::element_type>(args...);
+	}
 }

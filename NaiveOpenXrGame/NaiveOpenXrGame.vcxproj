@@ -22,11 +22,13 @@
     <ClInclude Include="external\stb_image.h" />
     <ClInclude Include="external\tiny_obj_loader.h" />
     <ClInclude Include="external\xr_linear.h" />
+    <ClInclude Include="sources\GameObject.h" />
     <ClInclude Include="sources\mainCommon.h" />
     <ClInclude Include="sources\MeshModel.h" />
     <ClInclude Include="sources\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame.h" />
     <ClInclude Include="sources\Texture.h" />
+    <ClInclude Include="sources\Transform.h" />
     <ClInclude Include="sources\Utils.h" />
     <ClInclude Include="sources\VulkanInstance.h" />
   </ItemGroup>
@@ -34,10 +36,12 @@
     <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="external\tiny_obj_loader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sources\GameObject.cpp" />
     <ClCompile Include="sources\MeshModel.cpp" />
     <ClCompile Include="sources\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame.cpp" />
     <ClCompile Include="sources\Texture.cpp" />
+    <ClCompile Include="sources\Transform.cpp" />
     <ClCompile Include="sources\Utils.cpp" />
     <ClCompile Include="sources\VulkanInstance.cpp" />
   </ItemGroup>
