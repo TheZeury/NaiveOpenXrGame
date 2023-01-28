@@ -1,20 +1,6 @@
 #include "MeshModel.h"
 #include "Utils.h"
 
-namespace std
-{
-	template<>
-	struct hash<Noxg::MeshModel_T::Vertex>
-	{
-		size_t operator()(Noxg::MeshModel_T::Vertex const& vertex) const
-		{
-			return ((hash<glm::vec3>()(vertex.position) ^
-				(hash<glm::vec4>()(vertex.color) << 1)) >> 1) ^
-				(hash<glm::vec2>()(vertex.uv) << 1);
-		}
-	};
-}
-
 Noxg::MeshModel_T::MeshModel_T(std::string path, Texture tex)
 {
 	texture = tex;
@@ -23,7 +9,7 @@ Noxg::MeshModel_T::MeshModel_T(std::string path, Texture tex)
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str()))
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), "models"))
 	{
 		throw std::runtime_error(warn + err);
 	}
@@ -68,7 +54,7 @@ Noxg::MeshModel_T::MeshModel_T(std::string path, Texture tex)
 
 Noxg::MeshModel_T::MeshModel_T(std::vector<Vertex> vertices, std::vector<uint32_t> indices, Texture tex)
 {
-	texture = nullptr;
+	texture = tex;
 	createMeshModel(vertices, indices);
 }
 

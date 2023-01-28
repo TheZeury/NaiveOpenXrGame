@@ -41,6 +41,7 @@ namespace Noxg
 
 		void addTexture(Texture texture);
 		void addModel(MeshModel model);
+		GameObject loadGameObjectFromFile(std::string path);	// May creates multiple textures and models, but only a single gameObject.
 		xr::GraphicsBindingVulkanKHR getGraphicsBinding();
 	private: // help functions.
 		std::vector<uint32_t> readFile(const std::string& filepath);

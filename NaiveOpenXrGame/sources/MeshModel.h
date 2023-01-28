@@ -60,4 +60,20 @@ namespace Noxg
 	};
 
 	using MeshModel = std::shared_ptr<MeshModel_T>;
+	using Vertex = MeshModel_T::Vertex;
+}
+
+
+namespace std
+{
+	template<>
+	struct hash<Noxg::MeshModel_T::Vertex>
+	{
+		size_t operator()(Noxg::MeshModel_T::Vertex const& vertex) const
+		{
+			return ((hash<glm::vec3>()(vertex.position) ^
+				(hash<glm::vec4>()(vertex.color) << 1)) >> 1) ^
+				(hash<glm::vec2>()(vertex.uv) << 1);
+		}
+	};
 }

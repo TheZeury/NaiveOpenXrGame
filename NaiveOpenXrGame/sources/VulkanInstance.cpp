@@ -355,16 +355,15 @@ void Noxg::VulkanInstance::InitializeSession()
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	AllocateCommandBuffers();
-	LOG_STEP("Vulkan", "Loading textures");
+	/*LOG_STEP("Vulkan", "Loading textures");
 	auto texture = make_new<Texture>("textures/Steed_baseColor.jpeg");
 	addTexture(texture);
 	LOG_SUCCESS();
 	LOG_STEP("Vulkan", "Loading Models");
 	auto model = make_new<MeshModel>("models/steed.obj", texture);
 	addModel(model);
-	LOG_SUCCESS();
-	GameObject obj = make_new<GameObject>();
-	obj->models.push_back(model);
+	LOG_SUCCESS();*/
+	GameObject obj = loadGameObjectFromFile("models/steed.obj");
 	obj->transform->setPosition({ -1.f, 0.f, -.5f });
 	obj->transform->setScale({ .01f, .01f, .01f });
 	gameObjects.push_back(obj);
@@ -401,10 +400,10 @@ void Noxg::VulkanInstance::CreateDescriptors()
 	textureSetLayout = device.createDescriptorSetLayout(layoutInfo);
 
 	std::array<vk::DescriptorPoolSize, 1> poolSizes = {
-		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(swapChainImageViews.size() * MAX_FRAMES_IN_FLIGHT) }
+		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(swapChainImageViews.size() * 10) },
 	};
 
-	vk::DescriptorPoolCreateInfo poolInfo({ }, static_cast<uint32_t>(swapChainImageViews.size() * MAX_FRAMES_IN_FLIGHT), poolSizes);
+	vk::DescriptorPoolCreateInfo poolInfo({ }, static_cast<uint32_t>(swapChainImageViews.size() * 10), poolSizes);
 	descriptorPool = device.createDescriptorPool(poolInfo);
 }
 
@@ -633,6 +632,99 @@ void Noxg::VulkanInstance::addTexture(Texture texture)
 void Noxg::VulkanInstance::addModel(MeshModel model)
 {
 	models.push_back(model);
+}
+
+Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFile(std::string path)
+{
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	LOG_STEP("Vulkan", "Loading Model File");
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), "models"))
+	{
+		throw std::runtime_error(warn + err);
+	}
+	LOG_SUCCESS();
+
+	std::vector<Texture> texs;
+	std::vector<MeshModel> modls;
+
+	LOG_STEP("Vurkan", "Creating Textures");
+	for (auto& material : materials)
+	{
+		texs.push_back(make_new<Texture>("textures/" + material.diffuse_texname));
+	}
+	LOG_SUCCESS();
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	std::unordered_map<Vertex, uint32_t> uniqueVertices;
+
+	int shapeCount = 0;
+	int materialId = shapes[0].mesh.material_ids[0];	// assume that all faces in a shape have the same material.
+
+	LOG_STEP("Vulkan", "Creating Models");
+	for (const auto& shape : shapes)
+	{
+		for (const auto& index : shape.mesh.indices)
+		{
+			Vertex vertex{ };
+
+			vertex.position = {
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2],
+			};
+
+			vertex.uv = {
+				attrib.texcoords[2 * index.texcoord_index + 0],
+				1.f - attrib.texcoords[2 * index.texcoord_index + 1],
+			};
+
+			vertex.color = {
+				1.f, 1.f, 1.f, 1.f
+			};
+
+			if (uniqueVertices.count(vertex) == 0)
+			{
+				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+				vertices.push_back(vertex);
+			}
+
+			indices.push_back(uniqueVertices[vertex]);
+		}
+
+		if (++shapeCount >= shapes.size())	// last shape.
+		{
+			modls.push_back(make_new<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
+			// no need to manually clear the containers.
+		}
+		else if (materialId != shapes[shapeCount].mesh.material_ids[0])	// the next shape has different texture.
+		{
+			modls.push_back(make_new<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
+			vertices.clear();	// clear.
+			indices.clear();
+			uniqueVertices.clear();
+			materialId = shapes[shapeCount].mesh.material_ids[0];	// set material for the next shape.
+		}
+	}
+	LOG_SUCCESS();
+
+	LOG_INFO("Vulkan", std::format("Loaded {} textures and {} models", texs.size(), modls.size()), 0);
+	for (auto& texture : texs)
+	{
+		addTexture(texture);
+	}
+	for (auto& model : modls)
+	{
+		addModel(model);
+	}
+
+	GameObject obj = make_new<GameObject>();
+	obj->models = modls;
+	return obj;
 }
 
 xr::GraphicsBindingVulkanKHR Noxg::VulkanInstance::getGraphicsBinding()

@@ -9,8 +9,8 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd C:/Lashes_baseColor.jpeg
-map_Bump -bm 1.000000 C:/Lashes_normal.png
+map_Kd Lashes_baseColor.jpeg
+map_Bump -bm 1.000000 Lashes_normal.png
 
 newmtl Shadow
 Ns 0.000000
@@ -20,7 +20,7 @@ Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 illum 2
-map_d C:/Shadow_baseColor.png
+map_Kd Shadow_baseColor.png
 
 newmtl Steed
 Ns 250.000000
@@ -30,5 +30,5 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd C:/Steed_baseColor.jpeg
-map_Bump -bm 1.000000 C:/Steed_normal.png
+map_Kd Steed_baseColor.jpeg
+map_Bump -bm 1.000000 Steed_normal.png
