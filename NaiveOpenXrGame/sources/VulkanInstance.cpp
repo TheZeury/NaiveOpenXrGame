@@ -355,18 +355,18 @@ void Noxg::VulkanInstance::InitializeSession()
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	AllocateCommandBuffers();
-	/*LOG_STEP("Vulkan", "Loading textures");
-	auto texture = make_new<Texture>("textures/Steed_baseColor.jpeg");
-	addTexture(texture);
-	LOG_SUCCESS();
-	LOG_STEP("Vulkan", "Loading Models");
-	auto model = make_new<MeshModel>("models/steed.obj", texture);
-	addModel(model);
-	LOG_SUCCESS();*/
-	GameObject obj = loadGameObjectFromFile("models/steed.obj");
-	obj->transform->setPosition({ -1.f, 0.f, -.5f });
-	obj->transform->setScale({ .01f, .01f, .01f });
-	gameObjects.push_back(obj);
+	GameObject steed = loadGameObjectFromFiles("steed");
+	steed->transform->setPosition({ -1.f, 0.f, -.5f });
+	steed->transform->setScale({ .01f, .01f, .01f });	// cm to m
+	gameObjects.push_back(steed);
+	GameObject revolver = loadGameObjectFromFiles("revolver");
+	revolver->transform = std::make_shared<XrSpaceTransform>(Utils::handLocations[1]);
+	glm::quat rotaA = { 0.7071068f, 0.f, -0.7071068f, 0.f };
+	glm::quat rotaB = { 0.7071068f , -0.7071068f, 0.f, 0.f };
+	revolver->transform->setRotation(rotaB * rotaA);
+	revolver->transform->setPosition({ 0.f, -0.18f, 0.03f });
+	revolver->transform->setScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
+	gameObjects.push_back(revolver);
 }
 
 void Noxg::VulkanInstance::CreateRenderPass()
@@ -634,15 +634,19 @@ void Noxg::VulkanInstance::addModel(MeshModel model)
 	models.push_back(model);
 }
 
-Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFile(std::string path)
+Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string name)
 {
+	std::string modelDirectory = "models/" + name;
+	std::string textureDirectory = modelDirectory + "/textures";
+	std::string modelPath = modelDirectory + '/' + name + ".obj";
+
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 
 	LOG_STEP("Vulkan", "Loading Model File");
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), "models"))
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str(), modelDirectory.c_str()))
 	{
 		throw std::runtime_error(warn + err);
 	}
@@ -654,7 +658,7 @@ Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFile(std::string path)
 	LOG_STEP("Vurkan", "Creating Textures");
 	for (auto& material : materials)
 	{
-		texs.push_back(make_new<Texture>("textures/" + material.diffuse_texname));
+		texs.push_back(make_new<Texture>(textureDirectory + '/' + material.diffuse_texname));
 	}
 	LOG_SUCCESS();
 

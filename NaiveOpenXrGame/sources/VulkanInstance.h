@@ -35,13 +35,13 @@ namespace Noxg
 		void CreateGraphicsPipeline();
 		void CreateFrameBuffers();
 		void CreateCommandPool();
-		void CreateDepthResources();	
+		void CreateDepthResources();
 		void AllocateCommandBuffers();
 		void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format);
 
 		void addTexture(Texture texture);
 		void addModel(MeshModel model);
-		GameObject loadGameObjectFromFile(std::string path);	// May creates multiple textures and models, but only a single gameObject.
+		GameObject loadGameObjectFromFiles(std::string name);	// May creates multiple textures and models, but only a single gameObject.
 		xr::GraphicsBindingVulkanKHR getGraphicsBinding();
 	private: // help functions.
 		std::vector<uint32_t> readFile(const std::string& filepath);

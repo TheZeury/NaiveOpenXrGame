@@ -21,6 +21,7 @@ void Noxg::NaiveGame::run()
 	{
 		if(openXrInstance.running())
 		{
+			openXrInstance.PoolActions();
 			openXrInstance.Update();
 		}
 	}

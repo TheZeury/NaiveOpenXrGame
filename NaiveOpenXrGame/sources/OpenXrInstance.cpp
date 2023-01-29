@@ -130,6 +130,7 @@ void Noxg::OpenXrInstance::InitializeSession()
 	CreateSession(graphics.getGraphicsBinding());
 	CreateSpace();
 	CreateSwapChains();
+	CreateActions();
 }
 
 void Noxg::OpenXrInstance::CreateSession(xr::GraphicsBindingVulkanKHR graphicsBinding)
@@ -205,6 +206,41 @@ void Noxg::OpenXrInstance::CreateSwapChains()
 		LOG_INFO("OpenXR", std::format("SwapChainImageExtent = ({}, {}, {})", view.recommendedSwapchainSampleCount, view.recommendedImageRectWidth, view.recommendedImageRectHeight), 0);
 	}
 	graphics.CreateSwapChainImageViews(swapChainImages, swapChainFormat, swapChainRects);
+}
+
+void Noxg::OpenXrInstance::CreateActions()
+{
+	xr::ActionSetCreateInfo setInfo("gameplay", "Gameplay", 0);
+	inputState.actionSet = instance.createActionSet(setInfo);
+
+	inputState.handSubactionPath[0] = instance.stringToPath("/user/hand/left");
+	inputState.handSubactionPath[1] = instance.stringToPath("/user/hand/right");
+
+	xr::ActionCreateInfo actionInfo("hand_pose", xr::ActionType::PoseInput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Hand Pose");
+	inputState.poseAction = inputState.actionSet.createAction(actionInfo);
+
+	std::array<xr::Path, 2> posePath = {
+		instance.stringToPath("/user/hand/left/input/grip/pose"),
+		instance.stringToPath("/user/hand/right/input/grip/pose"),
+	};
+
+	xr::Path oculusTouchInteractionProfilePath = instance.stringToPath("/interaction_profiles/oculus/touch_controller");
+
+	std::vector<xr::ActionSuggestedBinding> binding = { 
+		xr::ActionSuggestedBinding{ inputState.poseAction, posePath[0] },
+		xr::ActionSuggestedBinding{ inputState.poseAction, posePath[1] },
+	};
+	xr::InteractionProfileSuggestedBinding suggestedBinding(oculusTouchInteractionProfilePath, static_cast<uint32_t>(binding.size()), binding.data());
+	instance.suggestInteractionProfileBindings(suggestedBinding);
+
+	xr::ActionSpaceCreateInfo actionSpaceInfo(inputState.poseAction, { }, { });
+	actionSpaceInfo.subactionPath = inputState.handSubactionPath[0];
+	inputState.handSpace[0] = session.createActionSpace(actionSpaceInfo);
+	actionSpaceInfo.subactionPath = inputState.handSubactionPath[1];
+	inputState.handSpace[1] = session.createActionSpace(actionSpaceInfo);
+
+	xr::SessionActionSetsAttachInfo attachInfo(1, &inputState.actionSet);
+	session.attachSessionActionSets(attachInfo);
 }
 
 bool Noxg::OpenXrInstance::PollEvents()
@@ -286,6 +322,23 @@ bool Noxg::OpenXrInstance::HandleSessionStateChangedEvent(xr::EventDataSessionSt
 	return true;
 }
 
+void Noxg::OpenXrInstance::PoolActions()
+{
+	inputState.handActive = { XR_FALSE, XR_FALSE };
+
+	xr::ActiveActionSet activeActionSet(inputState.actionSet, { });
+	xr::ActionsSyncInfo syncInfo(1, &activeActionSet);
+	session.syncActions(syncInfo);
+
+	for (int hand : { 0, 1 })
+	{
+		xr::ActionStateGetInfo getInfo(inputState.poseAction, inputState.handSubactionPath[hand]);
+
+		xr::ActionStatePose poseState = session.getActionStatePose(getInfo);
+		inputState.handActive[hand] = poseState.isActive;
+	}
+}
+
 void Noxg::OpenXrInstance::Update()
 {
 	auto frameState = session.waitFrame({ });
@@ -297,6 +350,11 @@ void Noxg::OpenXrInstance::Update()
 
 	if (frameState.shouldRender == XR_TRUE)
 	{
+		for (int hand : { 0, 1 })
+		{
+			Utils::handLocations[hand] = inputState.handSpace[hand].locateSpace(appSpace, frameState.predictedDisplayTime);
+		}
+		
 		xr::ViewState viewState{ };
 		xr::ViewLocateInfo locateInfo(xr::ViewConfigurationType::PrimaryStereo, frameState.predictedDisplayTime, appSpace);
 		auto views = session.locateViewsToVector(locateInfo, reinterpret_cast<XrViewState*>(&viewState));

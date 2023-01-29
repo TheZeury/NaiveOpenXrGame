@@ -53,3 +53,30 @@ void Noxg::Transform::setMatrix(const glm::mat4& mat)
     XrMatrix4x4f_GetScale((XrVector3f*)&scale, (XrMatrix4x4f*)&mat);
     changed = false;
 }
+
+glm::vec3 Noxg::XrSpaceTransform::getPosition()
+{
+    if (spaceLocation.locationFlags & xr::SpaceLocationFlagBits::PositionValid)
+    {
+        return *((glm::vec3*)(&(spaceLocation.pose.position))) + attach.getRotation() * attach.getPosition();
+    }
+    return attach.getPosition();
+}
+
+glm::quat Noxg::XrSpaceTransform::getRotation()
+{
+    if (spaceLocation.locationFlags & xr::SpaceLocationFlagBits::OrientationValid)
+    {
+        return *((glm::quat*)(&(spaceLocation.pose.orientation))) * attach.getRotation();
+    }
+    return attach.getRotation();
+}
+
+glm::mat4 Noxg::XrSpaceTransform::getMatrix()
+{
+    auto translate = *((glm::vec3*)(&(spaceLocation.pose.position)));
+    auto rotation = *((glm::quat*)(&(spaceLocation.pose.orientation)));
+    auto matTranslate = glm::translate(glm::mat4{ 1.f }, translate);
+    auto matRotate = glm::mat4_cast(rotation);
+    return matTranslate * matRotate * attach.getMatrix();
+}

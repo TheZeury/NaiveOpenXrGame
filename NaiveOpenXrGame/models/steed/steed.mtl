@@ -1,0 +1,34 @@
+# Blender 3.3.1 MTL File: 'None'
+# www.blender.org
+
+newmtl Lashes
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd Lashes_baseColor.jpeg
+map_Bump -bm 1.000000 Lashes_normal.png
+
+newmtl Shadow
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 2
+map_Kd Shadow_baseColor.png
+
+newmtl Steed
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd Steed_baseColor.jpeg
+map_Bump -bm 1.000000 Steed_normal.png

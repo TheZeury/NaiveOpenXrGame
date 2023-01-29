@@ -34,5 +34,7 @@ namespace Noxg
 		inline static vk::Device vkDevice;
 		inline static vk::CommandPool vkCommandPool;
 		inline static vk::Queue vkQueue;
+
+		inline static std::array<xr::SpaceLocation, 2> handLocations;
 	};
 }

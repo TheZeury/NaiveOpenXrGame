@@ -2,9 +2,19 @@
 
 #include "mainCommon.h"
 #include "VulkanInstance.h"
+#include "Utils.h"
 
 namespace Noxg
 {
+	struct InputState
+	{
+		xr::ActionSet actionSet;
+		xr::Action poseAction;
+		std::array<xr::Path, 2> handSubactionPath;
+		std::array<xr::Space, 2> handSpace;
+		std::array<xr::Bool32, 2> handActive;
+	};
+
 	class OpenXrInstance
 	{
 	public:
@@ -20,9 +30,11 @@ namespace Noxg
 		void CreateSession(xr::GraphicsBindingVulkanKHR graphicsBinding);
 		void CreateSpace();
 		void CreateSwapChains();
+		void CreateActions();
 		bool PollEvents();
 		bool HandleSessionStateChangedEvent(xr::EventDataSessionStateChanged eventDataSessionStateChanged);
 		bool running() { return sessionRunning; }
+		void PoolActions();
 		void Update();
 		const xr::Instance& getInstance() const;
 		const xr::SystemId& getSystemId() const;
@@ -39,6 +51,8 @@ namespace Noxg
 		xr::EventDataBuffer eventDataBuffer;
 		xr::SessionState sessionState;
 		bool sessionRunning;
+
+		InputState inputState;
 	private:
 		VulkanInstance& graphics;
 	};
