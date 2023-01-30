@@ -2,9 +2,15 @@
 
 My first [OpenXR](https://github.com/KhronosGroup/OpenXR-SDK/) application.
 
-Render is implemented with Vulkan.
+Renderer is implemented with Vulkan.
 
 To be precise, the API I'm using is [OpenXR-Hpp](https://github.com/KhronosGroup/OpenXR-Hpp) and [Vulkan-Hpp](https://github.com/KhronosGroup/Vulkan-Hpp) which has already been part of the LunarG Vulkan SDK.
+
+OpenXR version : 1.0.26
+
+Vulkan version : 1.3.236.0
+
+**Both OpenXR SDK (including openxr_loader) and Vulkan SDK are not uploaded with this repo.** To properly build this repo, one should download them separately from official sites and do the *including* and *linking* works.
 
 ## Free libraries (other than OpenXR SDK and Vulkan SDK):
 
