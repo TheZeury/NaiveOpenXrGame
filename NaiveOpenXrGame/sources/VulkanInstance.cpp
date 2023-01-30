@@ -362,7 +362,7 @@ void Noxg::VulkanInstance::InitializeSession()
 	GameObject revolver = loadGameObjectFromFiles("revolver");
 	revolver->transform = std::make_shared<XrSpaceTransform>(Utils::handLocations[1]);
 	glm::quat rotaA = { 0.7071068f, 0.f, -0.7071068f, 0.f };
-	glm::quat rotaB = { 0.7071068f , -0.7071068f, 0.f, 0.f };
+	glm::quat rotaB = { 0.7071068f, -0.7071068f, 0.f, 0.f };
 	revolver->transform->setRotation(rotaB * rotaA);
 	revolver->transform->setPosition({ 0.f, -0.18f, 0.03f });
 	revolver->transform->setScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
