@@ -3,6 +3,7 @@
 #include "mainCommon.h"
 #include "VulkanInstance.h"
 #include "OpenXrInstance.h"
+#include "Physics/PhysXInstance.h"
 
 namespace Noxg
 {
@@ -15,6 +16,7 @@ namespace Noxg
 	private:
 		VulkanInstance vulkanInstance;
 		OpenXrInstance openXrInstance;
+		PhysXInstance physXInstance;
 	};
 }
 

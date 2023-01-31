@@ -27,6 +27,9 @@
     <ClInclude Include="sources\MeshModel.h" />
     <ClInclude Include="sources\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame.h" />
+    <ClInclude Include="sources\physics\PhysicsTransform.h" />
+    <ClInclude Include="sources\Physics\PhysXInstance.h" />
+    <ClInclude Include="sources\Physics\RigidDynamic.h" />
     <ClInclude Include="sources\Texture.h" />
     <ClInclude Include="sources\Transform.h" />
     <ClInclude Include="sources\Utils.h" />
@@ -40,6 +43,9 @@
     <ClCompile Include="sources\MeshModel.cpp" />
     <ClCompile Include="sources\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame.cpp" />
+    <ClCompile Include="sources\physics\PhysicsTransform.cpp" />
+    <ClCompile Include="sources\Physics\PhysXInstance.cpp" />
+    <ClCompile Include="sources\Physics\RigidDynamic.cpp" />
     <ClCompile Include="sources\Texture.cpp" />
     <ClCompile Include="sources\Transform.cpp" />
     <ClCompile Include="sources\Utils.cpp" />
@@ -48,6 +54,33 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">
       <Project>{f284cff0-ad5a-30b4-b78a-83ce9a8125d5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\FastXml.vcxproj">
+      <Project>{fa3ee492-3fda-3152-a465-4fa9e8bec56f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysX.vcxproj">
+      <Project>{249b9ce1-f2b9-3ef2-8747-80de5a2e58d0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXCharacterKinematic.vcxproj">
+      <Project>{e45ec887-8677-330f-82ce-dc07dcea4bdd}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXCommon.vcxproj">
+      <Project>{eaec76ab-e6b6-3149-9ab9-e9c780eaf3b5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXCooking.vcxproj">
+      <Project>{064f6fad-e54a-3ce3-aac5-4be93f517912}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXFoundation.vcxproj">
+      <Project>{b603f618-9ac5-3631-b0df-ab61eb775923}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXVehicle.vcxproj">
+      <Project>{56506ba1-7118-3890-8e17-07de67cddbe5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXVehicle2.vcxproj">
+      <Project>{ea2a6333-74fa-3bd9-bb73-d73266e098d2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\SceneQuery.vcxproj">
+      <Project>{1d969c44-4c78-3576-8bb0-ae3f7c8cc633}</Project>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -157,10 +190,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\source\foundation\include;C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalModuleDependencies>$(VCToolsInstallDir)\modules\;%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
       <EnableModules>true</EnableModules>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -13,6 +13,9 @@
 #include "..\external\xr_linear.h"
 #include <openxr/openxr_platform.h>
 #include <openxr/openxr.hpp>
+#define _SILENCE_CXX20_CISO646_REMOVED_WARNING
+#include <PxPhysicsAPI.h>
+using namespace physx;
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 

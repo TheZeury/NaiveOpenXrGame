@@ -51,6 +51,15 @@
     <ClInclude Include="sources\Transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sources\Physics\PhysXInstance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\physics\PhysicsTransform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Physics\RigidDynamic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\NaiveGame.cpp">
@@ -84,6 +93,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Transform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Physics\PhysXInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\physics\PhysicsTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Physics\RigidDynamic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

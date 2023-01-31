@@ -2,9 +2,13 @@
 #include "VulkanInstance.h"
 #include "MeshModel.h"
 #include "Utils.h"
+#include "Physics/RigidDynamic.h"
 
 Noxg::VulkanInstance::VulkanInstance()
 {
+	window = nullptr;
+	queueFamilyIndex = 0;
+	swapChainFormat = vk::Format::eUndefined;
 }
 
 Noxg::VulkanInstance::~VulkanInstance()
@@ -358,6 +362,7 @@ void Noxg::VulkanInstance::InitializeSession()
 	GameObject steed = loadGameObjectFromFiles("steed");
 	steed->transform->setPosition({ -1.f, 0.f, -.5f });
 	steed->transform->setScale({ .01f, .01f, .01f });	// cm to m
+	RigidDynamic_T rigid{ steed };
 	gameObjects.push_back(steed);
 	GameObject revolver = loadGameObjectFromFiles("revolver");
 	revolver->transform = std::make_shared<XrSpaceTransform>(Utils::handLocations[1]);
