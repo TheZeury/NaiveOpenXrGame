@@ -22,34 +22,34 @@
     <ClInclude Include="external\stb_image.h" />
     <ClInclude Include="external\tiny_obj_loader.h" />
     <ClInclude Include="external\xr_linear.h" />
-    <ClInclude Include="sources\GameObject.h" />
+    <ClInclude Include="sources\Bricks\GameObject.h" />
     <ClInclude Include="sources\mainCommon.h" />
-    <ClInclude Include="sources\MeshModel.h" />
-    <ClInclude Include="sources\OpenXrInstance.h" />
+    <ClInclude Include="sources\Renderer\MeshModel.h" />
+    <ClInclude Include="sources\XR\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame.h" />
     <ClInclude Include="sources\physics\PhysicsTransform.h" />
     <ClInclude Include="sources\Physics\PhysXInstance.h" />
     <ClInclude Include="sources\Physics\RigidDynamic.h" />
-    <ClInclude Include="sources\Texture.h" />
-    <ClInclude Include="sources\Transform.h" />
+    <ClInclude Include="sources\Renderer\Texture.h" />
+    <ClInclude Include="sources\Bricks\Transform.h" />
     <ClInclude Include="sources\Utils.h" />
-    <ClInclude Include="sources\VulkanInstance.h" />
+    <ClInclude Include="sources\Renderer\VulkanInstance.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="external\tiny_obj_loader.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="sources\GameObject.cpp" />
-    <ClCompile Include="sources\MeshModel.cpp" />
-    <ClCompile Include="sources\OpenXrInstance.cpp" />
+    <ClCompile Include="sources\Bricks\GameObject.cpp" />
+    <ClCompile Include="sources\Renderer\MeshModel.cpp" />
+    <ClCompile Include="sources\XR\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame.cpp" />
     <ClCompile Include="sources\physics\PhysicsTransform.cpp" />
     <ClCompile Include="sources\Physics\PhysXInstance.cpp" />
     <ClCompile Include="sources\Physics\RigidDynamic.cpp" />
-    <ClCompile Include="sources\Texture.cpp" />
-    <ClCompile Include="sources\Transform.cpp" />
+    <ClCompile Include="sources\Renderer\Texture.cpp" />
+    <ClCompile Include="sources\Bricks\Transform.cpp" />
     <ClCompile Include="sources\Utils.cpp" />
-    <ClCompile Include="sources\VulkanInstance.cpp" />
+    <ClCompile Include="sources\Renderer\VulkanInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">
@@ -191,7 +191,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\source\foundation\include;C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\sources;C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalModuleDependencies>$(VCToolsInstallDir)\modules\;%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
       <EnableModules>true</EnableModules>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>

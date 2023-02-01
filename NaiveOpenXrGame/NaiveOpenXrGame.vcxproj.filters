@@ -18,10 +18,10 @@
     <ClInclude Include="sources\NaiveGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\VulkanInstance.h">
+    <ClInclude Include="sources\Renderer\VulkanInstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\OpenXrInstance.h">
+    <ClInclude Include="sources\XR\OpenXrInstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\mainCommon.h">
@@ -30,7 +30,7 @@
     <ClInclude Include="external\xr_linear.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\MeshModel.h">
+    <ClInclude Include="sources\Renderer\MeshModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\Utils.h">
@@ -39,16 +39,16 @@
     <ClInclude Include="external\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\Texture.h">
+    <ClInclude Include="sources\Renderer\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="external\tiny_obj_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\GameObject.h">
+    <ClInclude Include="sources\Bricks\GameObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\Transform.h">
+    <ClInclude Include="sources\Bricks\Transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\Physics\PhysXInstance.h">
@@ -65,22 +65,22 @@
     <ClCompile Include="sources\NaiveGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\VulkanInstance.cpp">
+    <ClCompile Include="sources\Renderer\VulkanInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\OpenXrInstance.cpp">
+    <ClCompile Include="sources\XR\OpenXrInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\MeshModel.cpp">
+    <ClCompile Include="sources\Renderer\MeshModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\Texture.cpp">
+    <ClCompile Include="sources\Renderer\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="external\stb_image.cpp">
@@ -89,10 +89,10 @@
     <ClCompile Include="external\tiny_obj_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\GameObject.cpp">
+    <ClCompile Include="sources\Bricks\GameObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\Transform.cpp">
+    <ClCompile Include="sources\Bricks\Transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Physics\PhysXInstance.cpp">

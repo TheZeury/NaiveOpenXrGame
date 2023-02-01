@@ -2,7 +2,7 @@
 
 #include "mainCommon.h"
 #include "Transform.h"
-#include "MeshModel.h"
+#include "Renderer/MeshModel.h"
 
 namespace Noxg
 {

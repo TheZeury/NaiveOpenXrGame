@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../mainCommon.h"
+#include "mainCommon.h"
 #include "PhysXInstance.h"
 #include "PhysicsTransform.h"
-#include "../GameObject.h"
+#include "Bricks/GameObject.h"
 
 namespace Noxg
 {

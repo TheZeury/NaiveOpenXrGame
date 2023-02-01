@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Transform.h"
+#include "Bricks/Transform.h"
 
 namespace Noxg
 {

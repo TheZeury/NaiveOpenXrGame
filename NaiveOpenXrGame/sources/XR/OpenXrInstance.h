@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mainCommon.h"
-#include "VulkanInstance.h"
+#include "Renderer/VulkanInstance.h"
 #include "Utils.h"
 
 namespace Noxg

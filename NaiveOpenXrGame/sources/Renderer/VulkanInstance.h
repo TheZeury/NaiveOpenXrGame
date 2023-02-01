@@ -3,7 +3,7 @@
 #include "mainCommon.h"
 #include "MeshModel.h"
 #include "Texture.h"
-#include "GameObject.h"
+#include "Bricks/GameObject.h"
 
 namespace Noxg
 {

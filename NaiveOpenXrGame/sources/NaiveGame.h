@@ -1,8 +1,8 @@
 #pragma once
 
 #include "mainCommon.h"
-#include "VulkanInstance.h"
-#include "OpenXrInstance.h"
+#include "Renderer/VulkanInstance.h"
+#include "XR/OpenXrInstance.h"
 #include "Physics/PhysXInstance.h"
 
 namespace Noxg
