@@ -588,7 +588,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
 	std::vector<PushConstantData> data(1);
 
-	for(std::list<rf::Scene>::iterator it = scenes.begin(); it != scenes.end(); )
+	for(auto it = scenes.begin(); it != scenes.end(); )
 	{
 		auto scene = it->lock();
 		if (scene == nullptr)

@@ -24,9 +24,9 @@ void Noxg::NaiveGame::Run()
 	xrInstance->InitializeSession();
 	graphicsInstance->InitializeSession();
 
-	unsigned char pixel[4] = { 255, 255, 255, 255 };
-	auto pureWhite = std::make_shared<Texture>(pixel, 1, 1, 4);
-	graphicsInstance->addTexture(pureWhite);
+	unsigned char pixel[4] = { 0, 0, 0, 255 };
+	auto pureBlack = std::make_shared<Texture>(pixel, 1, 1, 4);
+	graphicsInstance->addTexture(pureBlack);
 	std::vector<Vertex> vertices = {
 		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { } },
 		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { } },
@@ -51,7 +51,7 @@ void Noxg::NaiveGame::Run()
 		1, 3, 7,	// right
 		1, 7, 5,
 	};
-	auto cube = std::make_shared<MeshModel>(vertices, indices, pureWhite);
+	auto cube = std::make_shared<MeshModel>(vertices, indices, pureBlack);
 	graphicsInstance->addModel(cube);
 
 	BuildScene();
@@ -81,9 +81,15 @@ void Noxg::NaiveGame::Run()
 					xr::HapticVibration vibration(xr::Duration::minHaptic(), XR_FREQUENCY_UNSPECIFIED, 1.f);
 					xrInstance->vibrate(vibration, 1);
 					hd::GameObject bullet = std::make_shared<GameObject>();
-					bullet->transform->setPosition({ 0.f, 1.f, 0.f });
+					auto pos = *((glm::vec3*)(&(Utils::handLocations[1].pose.position)));
+					auto orient = *((glm::quat*)(&(Utils::handLocations[1].pose.orientation)));
+					pos = orient * glm::vec3(0.01f, -0.145f, -0.117f) + pos;
+					bullet->transform->setPosition(pos);
+					bullet->transform->setRotation(orient);
+					bullet->transform->setScale({ 0.01f, 0.01f, 0.01f });
 					bullet->models.push_back(cube);
-					hd::RigidDynamic rigid = std::make_shared<RigidDynamic>(bullet, physicsEngineInstance, scene->physicsScene, glm::vec3{ 0.f, 1.f, -1.f });
+					auto direction = orient * glm::vec3{ 0.0f, -20.f, 0.0f };
+					hd::RigidDynamic rigid = std::make_shared<RigidDynamic>(bullet, physicsEngineInstance, scene->physicsScene, direction);
 					scene->addGameObject(bullet);
 				}
 				else if (value < 0.2f && !Utils::released[1])
@@ -97,7 +103,7 @@ void Noxg::NaiveGame::Run()
 	LOG_INFO("GAME", "Exited from Game Loop.", 0);
 
 	cube = nullptr;
-	pureWhite = nullptr;
+	pureBlack = nullptr;
 	scene = nullptr;
 
 	graphicsInstance->CleanUpSession();
