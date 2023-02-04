@@ -4,9 +4,9 @@ My first [OpenXR](https://github.com/KhronosGroup/OpenXR-SDK/) application.
 
 Renderer implemented with Vulkan.
 
-Physics Engine implemented over NVIDIA PhysX.
+Physics Engine implemented upon NVIDIA PhysX.
 
-To be precise, the API I'm using is [OpenXR-Hpp](https://github.com/KhronosGroup/OpenXR-Hpp) and [Vulkan-Hpp](https://github.com/KhronosGroup/Vulkan-Hpp) which has already been part of the LunarG Vulkan SDK.
+To be precise, the APIs I'm using are [OpenXR-Hpp](https://github.com/KhronosGroup/OpenXR-Hpp) and [Vulkan-Hpp](https://github.com/KhronosGroup/Vulkan-Hpp) which has already been part of the LunarG Vulkan SDK.
 
 OpenXR version : 1.0.26
 
