@@ -5,7 +5,9 @@
 
 namespace Noxg
 {
-	class MeshModel_T
+	MAKE_HANDLE(MeshModel);
+
+	class MeshModel
 	{
 	public:
 		struct Vertex
@@ -36,19 +38,19 @@ namespace Noxg
 			}
 		};
 	public:
-		MeshModel_T(const MeshModel_T&) = delete;
-		MeshModel_T& operator=(const MeshModel_T&) = delete;
+		MeshModel(const MeshModel&) = delete;
+		MeshModel& operator=(const MeshModel&) = delete;
 
-		MeshModel_T(std::string path, Texture tex);
-		MeshModel_T(std::vector<Vertex> vertices, std::vector<uint32_t> indices, Texture tex);
-		~MeshModel_T();
+		MeshModel(std::string path, hd::Texture tex);
+		MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices, hd::Texture tex);
+		~MeshModel();
 
 		void createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 
 		void bind(vk::CommandBuffer& commandBuffer);
 		void draw(vk::CommandBuffer& commandBuffer);
 	public:
-		Texture texture;
+		hd::Texture texture;
 
 	private:
 		uint32_t vertexCount;
@@ -59,17 +61,16 @@ namespace Noxg
 		vk::DeviceMemory indexBufferMemory;
 	};
 
-	using MeshModel = std::shared_ptr<MeshModel_T>;
-	using Vertex = MeshModel_T::Vertex;
+	using Vertex = MeshModel::Vertex;
 }
 
 
 namespace std
 {
 	template<>
-	struct hash<Noxg::MeshModel_T::Vertex>
+	struct hash<Noxg::MeshModel::Vertex>
 	{
-		size_t operator()(Noxg::MeshModel_T::Vertex const& vertex) const
+		size_t operator()(Noxg::MeshModel::Vertex const& vertex) const
 		{
 			return ((hash<glm::vec3>()(vertex.position) ^
 				(hash<glm::vec4>()(vertex.color) << 1)) >> 1) ^

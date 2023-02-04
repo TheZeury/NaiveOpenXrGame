@@ -30,7 +30,15 @@ namespace stb
 #include "..\external\stb_image.h"
 }
 #include "..\external\tiny_obj_loader.h"
+
+#define LOGMESSAGE
+#if !defined(LOGMESSAGE)
 #if !defined(NDEBUG)
+#define LOGMESSAGE
+#endif
+#endif
+
+#if defined(LOGMESSAGE)
 #define LOG_STEP(INSTANCE, STEP) LogStep(INSTANCE, STEP)
 #define LOG_SUCCESS() LogSuccess()
 #define LOG_FAILURE() LogFailure()
@@ -43,6 +51,17 @@ namespace stb
 #define LOG_INFO(INSTANCE, INFO, TAB)
 #define LOG_ERRO(ERR)
 #endif
+
+#define MAKE_HANDLE(CLASS_NAME) \
+class CLASS_NAME; \
+namespace hd \
+{ \
+	using CLASS_NAME = std::shared_ptr<CLASS_NAME>; \
+} \
+namespace rf \
+{ \
+	using CLASS_NAME = std::weak_ptr<CLASS_NAME>; \
+}
 
 //#define MIRROR_WINDOW
 //#define MIDDLE_EYE_MIRRORING

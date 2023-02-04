@@ -5,9 +5,9 @@ int main()
 {
 	try
 	{
-		Noxg::NaiveGame game{ };
-		game.init();
-		game.run();
+		Noxg::hd::GameInstance game = std::make_shared<Noxg::NaiveGame>();
+		game->Initialize();
+		game->Run();
 	}
 	catch (const std::exception& e)
 	{

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "mainCommon.h"
-#include "Renderer/VulkanInstance.h"
+#include "XrInstance.h"
+#include "Renderer/GraphicsInstance.h"
 #include "Utils.h"
 
 namespace Noxg
@@ -10,34 +11,40 @@ namespace Noxg
 	{
 		xr::ActionSet actionSet;
 		xr::Action poseAction;
+		xr::Action triggerAction;
+		xr::Action vibrateAction;
 		std::array<xr::Path, 2> handSubactionPath;
 		std::array<xr::Space, 2> handSpace;
 		std::array<xr::Bool32, 2> handActive;
 	};
 
-	class OpenXrInstance
+	MAKE_HANDLE(OpenXrInstance);
+
+	class OpenXrInstance : public XrInstance
 	{
 	public:
-		OpenXrInstance(VulkanInstance& vulkan);
+		OpenXrInstance(rf::GraphicsInstance vulkan);
 		~OpenXrInstance();
 
-		void Initialize();
-		void CleanUpInstance();
-		void CleanUpSession();
+		virtual void Initialize() override;
+		virtual void CleanUpInstance() override;
+		virtual void CleanUpSession() override;
 		void CreateInstance();
 		void InitializeSystem();
-		void InitializeSession();
+		virtual void InitializeSession() override;
 		void CreateSession(xr::GraphicsBindingVulkanKHR graphicsBinding);
 		void CreateSpace();
 		void CreateSwapChains();
 		void CreateActions();
-		bool PollEvents();
+		virtual bool PollEvents() override;
 		bool HandleSessionStateChangedEvent(xr::EventDataSessionStateChanged eventDataSessionStateChanged);
-		bool running() { return sessionRunning; }
-		void PoolActions();
-		void Update();
+		virtual bool running() override { return sessionRunning; }
+		virtual void PollActions() override;
+		virtual void Update() override;
 		const xr::Instance& getInstance() const;
 		const xr::SystemId& getSystemId() const;
+	public:
+		virtual void vibrate(const xr::HapticVibration& virbation, int hand) override;
 	private:
 		xr::Instance instance;
 		xr::Session session;
@@ -54,7 +61,7 @@ namespace Noxg
 
 		InputState inputState;
 	private:
-		VulkanInstance& graphics;
+		rf::GraphicsInstance graphics;
 	};
 }
 

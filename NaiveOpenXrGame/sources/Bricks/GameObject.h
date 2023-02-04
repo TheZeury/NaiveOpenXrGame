@@ -6,19 +6,17 @@
 
 namespace Noxg
 {
-	class GameObject_T
+	MAKE_HANDLE(GameObject);
+
+	class GameObject
 	{
 	public:
-		GameObject_T();
+		GameObject();
 
-		std::shared_ptr<ITransform> getTransform();
+		hd::ITransform transform;
 
-		std::shared_ptr<ITransform> transform;
-
-		std::vector<MeshModel> models;
+		std::vector<hd::MeshModel> models;
 	private:
 	};
-
-	using GameObject = std::shared_ptr<GameObject_T>;
 }
 

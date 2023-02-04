@@ -1,22 +1,22 @@
 #include "RigidDynamic.h"
 
-Noxg::RigidDynamic_T::RigidDynamic_T(GameObject obj) : gameObject{ obj }
+Noxg::RigidDynamic::RigidDynamic(rf::GameObject obj, rf::PhysicsEngineInstance physicsInstance, PxScene* physicsScene, glm::vec3 vec, PxForceMode::Enum forceMode) : gameObject{ obj }, physicsEngineInstance{ physicsInstance } , force{ vec }, mode{ forceMode }
 {
-	glm::mat4 mat = obj->transform->getMatrix();
+	auto _obj = obj.lock();
+	glm::mat4 mat = _obj->transform->getMatrix();
 	PxTransform pxTransform{ *((PxMat44*)(&mat)) };
-	pxRaw = PhysXInstance::globalInstance->createRigidDynamic(pxTransform);
-	glm::vec3 scale = obj->transform->getScale();
-	obj->transform = std::make_shared<PhysicsTransform>(pxRaw);
-	obj->transform->setScale(scale);
-	PhysXInstance::globalInstance->addActor(*pxRaw);
+	pxRaw = physicsInstance.lock()->createRigidDynamic(pxTransform);
+	glm::vec3 scale = _obj->transform->getScale();
+	_obj->transform = std::make_shared<PhysicsTransform>(pxRaw);
+	_obj->transform->setScale(scale);
+	physicsScene->addActor(*pxRaw);
+	if (vec != glm::vec3{ })
+	{
+		pxRaw->addForce(*((PxVec3*)(&vec)), forceMode);
+	}
 }
 
-Noxg::RigidDynamic_T::RigidDynamic_T(GameObject obj, glm::vec3 pos, glm::quat rotate) : gameObject{ obj }
+Noxg::RigidDynamic::~RigidDynamic()
 {
-	PxTransform pxTransform{ *((PxVec3*)(&pos)), *((PxQuat*)(&rotate)) };
-	pxRaw = PhysXInstance::globalInstance->createRigidDynamic(pxTransform);
-	glm::vec3 scale = obj->transform->getScale();
-	obj->transform = std::make_shared<PhysicsTransform>(pxRaw);
-	obj->transform->setScale(scale);
-	PhysXInstance::globalInstance->addActor(*pxRaw);
+//	PhysXInstance::globalInstance->removeActor(pxRaw);
 }

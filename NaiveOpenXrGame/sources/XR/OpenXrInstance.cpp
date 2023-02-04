@@ -1,6 +1,7 @@
 #include "OpenXrInstance.h"
+#include "Renderer/GraphicsInstance.h"
 
-Noxg::OpenXrInstance::OpenXrInstance(VulkanInstance& vulkan) : graphics(vulkan)
+Noxg::OpenXrInstance::OpenXrInstance(rf::GraphicsInstance vulkan) : graphics(vulkan)
 {
 }
 
@@ -24,7 +25,7 @@ void Noxg::OpenXrInstance::CleanUpSession()
 {
 	for (auto& swapchain : swapChains)
 	{
-		swapchain.destroy();
+//		swapchain.destroy();
 	}
 
 	if (appSpace != nullptr) appSpace.destroy();
@@ -127,7 +128,7 @@ void Noxg::OpenXrInstance::InitializeSystem()
 
 void Noxg::OpenXrInstance::InitializeSession()
 {
-	CreateSession(graphics.getGraphicsBinding());
+	CreateSession(graphics.lock()->getGraphicsBinding());
 	CreateSpace();
 	CreateSwapChains();
 	CreateActions();
@@ -205,7 +206,7 @@ void Noxg::OpenXrInstance::CreateSwapChains()
 		LOG_INFO("OpenXR", std::format("SwapChainImageType = {}", xr::to_string(swapChainImages[0][0].type)), 0);
 		LOG_INFO("OpenXR", std::format("SwapChainImageExtent = ({}, {}, {})", view.recommendedSwapchainSampleCount, view.recommendedImageRectWidth, view.recommendedImageRectHeight), 0);
 	}
-	graphics.CreateSwapChainImageViews(swapChainImages, swapChainFormat, swapChainRects);
+	graphics.lock()->CreateSwapChainImageViews(swapChainImages, swapChainFormat, swapChainRects);
 }
 
 void Noxg::OpenXrInstance::CreateActions()
@@ -216,12 +217,28 @@ void Noxg::OpenXrInstance::CreateActions()
 	inputState.handSubactionPath[0] = instance.stringToPath("/user/hand/left");
 	inputState.handSubactionPath[1] = instance.stringToPath("/user/hand/right");
 
-	xr::ActionCreateInfo actionInfo("hand_pose", xr::ActionType::PoseInput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Hand Pose");
-	inputState.poseAction = inputState.actionSet.createAction(actionInfo);
+	xr::ActionCreateInfo poseActionInfo("hand_pose", xr::ActionType::PoseInput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Hand Pose");
+	inputState.poseAction = inputState.actionSet.createAction(poseActionInfo);
 
 	std::array<xr::Path, 2> posePath = {
 		instance.stringToPath("/user/hand/left/input/grip/pose"),
 		instance.stringToPath("/user/hand/right/input/grip/pose"),
+	};
+
+	xr::ActionCreateInfo triggerActionInfo("trigger", xr::ActionType::FloatInput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Trigger");
+	inputState.triggerAction = inputState.actionSet.createAction(triggerActionInfo);
+
+	std::array<xr::Path, 2> triggerPath = {
+		instance.stringToPath("/user/hand/left/input/trigger/value"),
+		instance.stringToPath("/user/hand/right/input/trigger/value"),
+	};
+
+	xr::ActionCreateInfo vibrateActionInfo("vibrate", xr::ActionType::VibrationOutput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Virbate");
+	inputState.vibrateAction = inputState.actionSet.createAction(vibrateActionInfo);
+
+	std::array<xr::Path, 2> vibratePath = {
+		instance.stringToPath("/user/hand/left/output/haptic"),
+		instance.stringToPath("/user/hand/right/output/haptic"),
 	};
 
 	xr::Path oculusTouchInteractionProfilePath = instance.stringToPath("/interaction_profiles/oculus/touch_controller");
@@ -229,6 +246,10 @@ void Noxg::OpenXrInstance::CreateActions()
 	std::vector<xr::ActionSuggestedBinding> binding = { 
 		xr::ActionSuggestedBinding{ inputState.poseAction, posePath[0] },
 		xr::ActionSuggestedBinding{ inputState.poseAction, posePath[1] },
+		xr::ActionSuggestedBinding{ inputState.triggerAction, triggerPath[0] },
+		xr::ActionSuggestedBinding{ inputState.triggerAction, triggerPath[1] },
+		xr::ActionSuggestedBinding{ inputState.vibrateAction, vibratePath[0] },
+		xr::ActionSuggestedBinding{ inputState.vibrateAction, vibratePath[1] },
 	};
 	xr::InteractionProfileSuggestedBinding suggestedBinding(oculusTouchInteractionProfilePath, static_cast<uint32_t>(binding.size()), binding.data());
 	instance.suggestInteractionProfileBindings(suggestedBinding);
@@ -322,7 +343,7 @@ bool Noxg::OpenXrInstance::HandleSessionStateChangedEvent(xr::EventDataSessionSt
 	return true;
 }
 
-void Noxg::OpenXrInstance::PoolActions()
+void Noxg::OpenXrInstance::PollActions()
 {
 	inputState.handActive = { XR_FALSE, XR_FALSE };
 
@@ -336,6 +357,10 @@ void Noxg::OpenXrInstance::PoolActions()
 
 		xr::ActionStatePose poseState = session.getActionStatePose(getInfo);
 		inputState.handActive[hand] = poseState.isActive;
+
+		getInfo.action = inputState.triggerAction;
+		xr::ActionStateFloat triggerState = session.getActionStateFloat(getInfo);
+		Utils::triggerStates[hand] = triggerState;
 	}
 }
 
@@ -365,11 +390,11 @@ void Noxg::OpenXrInstance::Update()
 			{
 				auto swapChain = swapChains[i];
 				auto imageIndex = swapChain.acquireSwapchainImage({ });
-				swapChain.waitSwapchainImage({ xr::Duration::infinite });
+				swapChain.waitSwapchainImage({ xr::Duration::infinite() });
 
 				projectionLayerViews[i] = xr::CompositionLayerProjectionView{ views[i].pose, views[i].fov, { swapChain, swapChainRects[i], 0 } };
 
-				graphics.RenderView(projectionLayerViews[i], i, imageIndex, swapChainFormat); // Renderer.
+				graphics.lock()->RenderView(projectionLayerViews[i], i, imageIndex, swapChainFormat); // Renderer.
 
 				swapChain.releaseSwapchainImage({ });
 			}
@@ -394,4 +419,13 @@ const xr::Instance& Noxg::OpenXrInstance::getInstance() const
 const xr::SystemId& Noxg::OpenXrInstance::getSystemId() const
 {
 	return systemId;
+}
+
+void Noxg::OpenXrInstance::vibrate(const xr::HapticVibration& virbation, int hand)
+{
+	xr::HapticActionInfo hapticInfo(inputState.vibrateAction, inputState.handSubactionPath[hand]);
+	if (session.applyHapticFeedback(hapticInfo, virbation.get_base()) != xr::Result::Success)
+	{
+		throw std::runtime_error("failed to vibrate.");
+	}
 }

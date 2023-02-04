@@ -4,6 +4,8 @@
 
 namespace Noxg
 {
+	MAKE_HANDLE(ITransform);
+
 	class ITransform
 	{
 	public:
@@ -19,6 +21,8 @@ namespace Noxg
 		virtual glm::mat4 getMatrix() = 0;
 		virtual void setMatrix(const glm::mat4& mat) = 0;
 	};
+
+	MAKE_HANDLE(Transform);
 
 	class Transform : public ITransform
 	{
@@ -42,6 +46,8 @@ namespace Noxg
 		glm::mat4 matrix{ 1.f };
 		bool changed = true;
 	};
+
+	MAKE_HANDLE(XrSpaceTransform);
 
 	class XrSpaceTransform : public ITransform
 	{

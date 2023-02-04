@@ -1,7 +1,7 @@
 #include "MeshModel.h"
 #include "Utils.h"
 
-Noxg::MeshModel_T::MeshModel_T(std::string path, Texture tex)
+Noxg::MeshModel::MeshModel(std::string path, hd::Texture tex)
 {
 	texture = tex;
 	tinyobj::attrib_t attrib;
@@ -52,19 +52,19 @@ Noxg::MeshModel_T::MeshModel_T(std::string path, Texture tex)
 	createMeshModel(vertices, indices);
 }
 
-Noxg::MeshModel_T::MeshModel_T(std::vector<Vertex> vertices, std::vector<uint32_t> indices, Texture tex)
+Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices, hd::Texture tex)
 {
 	texture = tex;
 	createMeshModel(vertices, indices);
 }
 
-Noxg::MeshModel_T::~MeshModel_T()
+Noxg::MeshModel::~MeshModel()
 {
 	Utils::destroyBuffer(vertexBuffer, vertexBufferMemory);
 	Utils::destroyBuffer(indexBuffer, indexBufferMemory);
 }
 
-void Noxg::MeshModel_T::createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+void Noxg::MeshModel::createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
 	// VertexBuffer
 	vertexCount = static_cast<uint32_t>(vertices.size());
@@ -101,7 +101,7 @@ void Noxg::MeshModel_T::createMeshModel(std::vector<Vertex>& vertices, std::vect
 	Utils::destroyBuffer(stagingBuffer, stagingBufferMemory);
 }
 
-void Noxg::MeshModel_T::bind(vk::CommandBuffer& commandBuffer)
+void Noxg::MeshModel::bind(vk::CommandBuffer& commandBuffer)
 {
 	std::array<vk::Buffer, 1> vertexBuffers = { vertexBuffer };
 	std::array<vk::DeviceSize, 1> offsets = { 0 };
@@ -110,7 +110,7 @@ void Noxg::MeshModel_T::bind(vk::CommandBuffer& commandBuffer)
 	commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
 }
 
-void Noxg::MeshModel_T::draw(vk::CommandBuffer& commandBuffer)
+void Noxg::MeshModel::draw(vk::CommandBuffer& commandBuffer)
 {
 	commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
 }

@@ -1,7 +1,7 @@
 #include "Texture.h"
 #include "Utils.h"
 
-Noxg::Texture_T::Texture_T(std::string path)
+Noxg::Texture::Texture(std::string path)
 {
 	int width, height, channels;
 	stb::stbi_uc* pixels = stb::stbi_load(path.c_str(), &width, &height, &channels, stb::STBI_rgb_alpha);
@@ -10,19 +10,19 @@ Noxg::Texture_T::Texture_T(std::string path)
 	stb::stbi_image_free(pixels);
 }
 
-Noxg::Texture_T::Texture_T(stb::stbi_uc* pixels, int width, int height, int channels)
+Noxg::Texture::Texture(stb::stbi_uc* pixels, int width, int height, int channels)
 {
 	createTexture(pixels, width, height, channels);
 }
 
-Noxg::Texture_T::~Texture_T()
+Noxg::Texture::~Texture()
 {
 	Utils::vkDevice.destroySampler(textureSampler);
 	Utils::vkDevice.destroyImageView(textureImageView);
 	Utils::destroyImage(textureImage, textureImageMemory);
 }
 
-void Noxg::Texture_T::createTexture(stb::stbi_uc* pixels, int width, int height, int channels)
+void Noxg::Texture::createTexture(stb::stbi_uc* pixels, int width, int height, int channels)
 {
 	vk::DeviceSize imageSize = sizeof(stb::stbi_uc) * width * height * 4;
 	auto [stagingBuffer, stagingBufferMemory] = 

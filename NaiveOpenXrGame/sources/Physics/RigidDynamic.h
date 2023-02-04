@@ -1,22 +1,27 @@
 #pragma once
 
 #include "mainCommon.h"
-#include "PhysXInstance.h"
+#include "Physics/PhysicsEngineInstance.h"
 #include "PhysicsTransform.h"
 #include "Bricks/GameObject.h"
 
 namespace Noxg
 {
-	class RigidDynamic_T
+	MAKE_HANDLE(RigidDynamic);
+
+	class RigidDynamic
 	{
 	public:
-		RigidDynamic_T(GameObject obj);
-		RigidDynamic_T(GameObject obj, glm::vec3 pos, glm::quat rotate);
-		std::weak_ptr<GameObject_T> gameObject;
+		RigidDynamic(rf::GameObject obj, rf::PhysicsEngineInstance physicsInstance, PxScene* physicsScene, glm::vec3 vec = { }, PxForceMode::Enum forceMode = PxForceMode::eVELOCITY_CHANGE);
+		~RigidDynamic();
+		
+	public:
+		rf::PhysicsEngineInstance physicsEngineInstance;
+		rf::GameObject gameObject;
+		glm::vec3 force;
+		PxForceMode::Enum mode;
 	private:
 		PxRigidDynamic* pxRaw = nullptr;
 	};
-
-	using RigidDynamic = std::shared_ptr<RigidDynamic_T>;
 }
 

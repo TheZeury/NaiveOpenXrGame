@@ -4,6 +4,8 @@
 
 namespace Noxg
 {
+	MAKE_HANDLE(PhysicsTransform);
+
 	class PhysicsTransform : public ITransform
 	{
 	public:

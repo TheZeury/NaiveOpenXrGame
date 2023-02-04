@@ -1,22 +1,25 @@
 #pragma once
 
 #include "mainCommon.h"
+#include "Bricks/GameInstance.h"
 #include "Renderer/VulkanInstance.h"
 #include "XR/OpenXrInstance.h"
 #include "Physics/PhysXInstance.h"
+#include "Physics/RigidDynamic.h"
 
 namespace Noxg
 {
-	class NaiveGame
+	MAKE_HANDLE(NaiveGame);
+
+	class NaiveGame : public GameInstance
 	{
 	public:
 		NaiveGame();
-		void init();
-		void run();
+		virtual void Initialize() override;
+		virtual void Run() override;
+		void BuildScene();
 	private:
-		VulkanInstance vulkanInstance;
-		OpenXrInstance openXrInstance;
-		PhysXInstance physXInstance;
+		hd::Scene scene;
 	};
 }
 

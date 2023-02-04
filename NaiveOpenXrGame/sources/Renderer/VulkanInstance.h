@@ -1,13 +1,17 @@
 #pragma once
 
 #include "mainCommon.h"
-#include "MeshModel.h"
-#include "Texture.h"
+#include "GraphicsInstance.h"
 #include "Bricks/GameObject.h"
+#include "Bricks/Scene.h"
+
+#include <list>
 
 namespace Noxg
 {
-	class VulkanInstance
+	MAKE_HANDLE(VulkanInstance);
+
+	class VulkanInstance : public GraphicsInstance
 	{
 	public:
 		struct PushConstantData
@@ -21,15 +25,15 @@ namespace Noxg
 		VulkanInstance();
 		~VulkanInstance();
 
-		void Initialize(const xr::Instance& xrInstance, const xr::SystemId& xrSystemId);
-		void CleanUpInstance();
-		void CleanUpSession();
+		virtual void Initialize(rf::XrInstance xrInstance) override;
+		virtual void CleanUpInstance() override;
+		virtual void CleanUpSession() override;
 		void CreateWindow();
 		void CreateInstance();
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
-		void CreateSwapChainImageViews(std::vector<std::vector<xr::SwapchainImageVulkanKHR>>& swapChainImages, vk::Format format, std::vector<xr::Rect2Di> rects);
-		void InitializeSession();
+		virtual void CreateSwapChainImageViews(std::vector<std::vector<xr::SwapchainImageVulkanKHR>>& swapChainImages, vk::Format format, std::vector<xr::Rect2Di> rects) override;
+		virtual void InitializeSession() override;
 		void CreateRenderPass();
 		void CreateDescriptors();
 		void CreateGraphicsPipeline();
@@ -37,12 +41,13 @@ namespace Noxg
 		void CreateCommandPool();
 		void CreateDepthResources();
 		void AllocateCommandBuffers();
-		void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format);
+		virtual void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format) override;
 
-		void addTexture(Texture texture);
-		void addModel(MeshModel model);
-		GameObject loadGameObjectFromFiles(std::string name);	// May creates multiple textures and models, but only a single gameObject.
-		xr::GraphicsBindingVulkanKHR getGraphicsBinding();
+		virtual void addTexture(hd::Texture texture) override;
+		virtual void addModel(hd::MeshModel model) override;
+		virtual void addScene(rf::Scene scene) override;
+		virtual hd::GameObject loadGameObjectFromFiles(std::string name) override;	// May creates multiple textures and models, but only a single gameObject.
+		virtual xr::GraphicsBindingVulkanKHR getGraphicsBinding() override;
 	private: // help functions.
 		std::vector<uint32_t> readFile(const std::string& filepath);
 
@@ -70,18 +75,18 @@ namespace Noxg
 		vk::Format swapChainFormat;
 		std::vector<xr::Rect2Di> swapChainRects;
 		xr::DispatchLoaderDynamic dispather;
-		std::vector<MeshModel> models;
-		std::vector<Texture> textures;
 
-		std::vector<GameObject> gameObjects;
+		std::vector<hd::MeshModel> models;
+		std::vector<hd::Texture> textures;
 
 #ifdef MIRROR_WINDOW
 		vk::SurfaceKHR mirrorSurface;
 #endif
 	
 	private: // Not Owning. Don't try to destroy them. (But it's ok to destruct since they are handle classes instead of pointers.)
-		xr::Instance xrInstance;
-		xr::SystemId xrSystemId;
+		xr::Instance openXrInstance;
+		xr::SystemId openXrSystemId;
+		std::list<rf::Scene> scenes;
 	};
 }
 

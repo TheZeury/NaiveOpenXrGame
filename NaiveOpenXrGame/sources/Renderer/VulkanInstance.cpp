@@ -2,6 +2,7 @@
 #include "VulkanInstance.h"
 #include "MeshModel.h"
 #include "Utils.h"
+#include "XR/OpenXrInstance.h"
 #include "Physics/RigidDynamic.h"
 
 Noxg::VulkanInstance::VulkanInstance()
@@ -16,11 +17,13 @@ Noxg::VulkanInstance::~VulkanInstance()
 	
 }
 
-void Noxg::VulkanInstance::Initialize(const xr::Instance& xrInst, const xr::SystemId& xrSysId)
+void Noxg::VulkanInstance::Initialize(rf::XrInstance xrInstance)
 {
-	xrInstance = xrInst;
-	xrSystemId = xrSysId;
-	dispather = xr::DispatchLoaderDynamic{ xrInstance };
+	auto xrInst = std::static_pointer_cast<OpenXrInstance>(xrInstance.lock());
+	openXrInstance = xrInst->getInstance();
+	openXrSystemId = xrInst->getSystemId();
+	xrInst = nullptr;
+	dispather = xr::DispatchLoaderDynamic{ openXrInstance };
 #ifdef MIRROR_WINDOW
 	CreateWindow();
 #endif
@@ -55,16 +58,12 @@ void Noxg::VulkanInstance::CleanUpSession()
 	instance.destroySurfaceKHR(mirrorSurface);
 #endif
 
-	LOG_STEP("Vulkan", "Destroying Textures");
-	textures.clear();
-	LOG_SUCCESS();
-
-	LOG_STEP("Vulkan", "Destroying Game Objects");
-	gameObjects.clear();
-	LOG_SUCCESS();
-
 	LOG_STEP("Vulkan", "Destroying Models");
 	models.clear();
+	LOG_SUCCESS();
+
+	LOG_STEP("Vulkan", "Destroying Textures");
+	textures.clear();
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Descriptor Pool");
@@ -117,6 +116,13 @@ void Noxg::VulkanInstance::CleanUpSession()
 	device.destroyRenderPass(renderPass);
 	LOG_SUCCESS();
 
+	LOG_STEP("Vulkan", "Destroying Depth Resources");
+	for (int i = 0; i < depthImages.size(); ++i)
+	{
+		Utils::destroyImage(depthImages[i], depthImageMemories[i]);
+		device.destroyImageView(depthImageViews[i]);
+	}
+	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Swap Chain Image Views");
 	for (auto& views : swapChainImageViews)
@@ -164,7 +170,7 @@ void Noxg::VulkanInstance::CreateInstance()
 	}
 
 	// Get VulkanGraphicsRequirements.
-	xr::GraphicsRequirementsVulkanKHR requirement = xrInstance.getVulkanGraphicsRequirements2KHR(xrSystemId, dispather);
+	xr::GraphicsRequirementsVulkanKHR requirement = openXrInstance.getVulkanGraphicsRequirements2KHR(openXrSystemId, dispather);
 	LOG_INFO("Vulkan", "Vulkan API Version Information: ", 0);
 	LOG_INFO("Vulkan", 
 		std::format("Lowest supported API version = {}.{}.{} ", 
@@ -185,10 +191,11 @@ void Noxg::VulkanInstance::CreateInstance()
 	"VK_LAYER_KHRONOS_validation"
 	};
 
-#ifdef NDEBUG
-	const bool enableValidationLayers = false;
-#else
-	const bool enableValidationLayers = true;
+#define ENABLE_VALIDATION_LAYERS
+#if !defined(ENABLE_VALIDATION_LAYERS)
+#if !defined(NDEBUG)
+#define ENABLE_VALIDATION_LAYERS
+#endif
 #endif
 
 	LOG_STEP("Vulkan", "Creating Vulkan Instance");
@@ -196,7 +203,7 @@ void Noxg::VulkanInstance::CreateInstance()
 	vk::ApplicationInfo appInfo("Naive OpenXR Game", 1, "No Engine", 1, VK_API_VERSION_1_3);
 
 	// Instance Info.
-#ifdef NDEBUG
+#if !defined(ENABLE_VALIDATION_LAYERS)
 	vk::InstanceCreateInfo instanceInfo({}, &appInfo, nullptr, extensions);
 #else
 	vk::InstanceCreateInfo instanceInfo({}, &appInfo, validationLayers, extensions);
@@ -204,12 +211,12 @@ void Noxg::VulkanInstance::CreateInstance()
 	VkInstanceCreateInfo instInfo = instanceInfo;
 
 	// Xr Vulkan Instance Create Info.
-	xr::VulkanInstanceCreateInfoKHR createInfo(xrSystemId, {}, &vkGetInstanceProcAddr, &instInfo, nullptr);
+	xr::VulkanInstanceCreateInfoKHR createInfo(openXrSystemId, {}, &vkGetInstanceProcAddr, &instInfo, nullptr);
 
 	// Xr Create Vulkan Instance.
 	VkInstance vkInstance;
 	VkResult vkResult;
-	xrInstance.createVulkanInstanceKHR(createInfo, &vkInstance, &vkResult, dispather);
+	openXrInstance.createVulkanInstanceKHR(createInfo, &vkInstance, &vkResult, dispather);
 	if (vkResult != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan instance.");
 	}
@@ -221,8 +228,8 @@ void Noxg::VulkanInstance::CreateInstance()
 void Noxg::VulkanInstance::PickPhysicalDevice()
 {
 	LOG_STEP("Vulkan", "Picking Physical Device");
-	xr::VulkanGraphicsDeviceGetInfoKHR getInfo(xrSystemId, instance);
-	physicalDevice = xrInstance.getVulkanGraphicsDevice2KHR(getInfo, dispather);
+	xr::VulkanGraphicsDeviceGetInfoKHR getInfo(openXrSystemId, instance);
+	physicalDevice = openXrInstance.getVulkanGraphicsDevice2KHR(getInfo, dispather);
 	LOG_SUCCESS();
 	auto properties = physicalDevice.getProperties();
 	LOG_INFO("Vulkan", ("Physical Device Name : " + static_cast<std::string>(properties.deviceName.data())), 0);
@@ -285,7 +292,7 @@ void Noxg::VulkanInstance::CreateLogicalDevice()
 	VkDeviceCreateInfo deviInfo = deviceInfo;
 
 	xr::VulkanDeviceCreateInfoKHR createInfo(
-		xrSystemId,
+		openXrSystemId,
 		{},
 		&vkGetInstanceProcAddr,
 		physicalDevice,
@@ -296,7 +303,7 @@ void Noxg::VulkanInstance::CreateLogicalDevice()
 	LOG_STEP("Vulkan", "Creating Vulkan Logical Device");
 	VkDevice vkDevice;
 	VkResult vkResult;
-	xrInstance.createVulkanDeviceKHR(createInfo, &vkDevice, &vkResult, dispather);
+	openXrInstance.createVulkanDeviceKHR(createInfo, &vkDevice, &vkResult, dispather);
 	if (vkResult != VK_SUCCESS)
 	{
 		throw std::runtime_error("Can't create logical device.");
@@ -327,6 +334,7 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 		swapChainImageViews.push_back(imageViews);
 	}
 	LOG_SUCCESS();
+	LOG_INFO("Vulkan", std::format("Swapchain length : {}", swapChainImages[0].size()), 0);
 
 #ifdef MIRROR_WINDOW
 	LOG_STEP("Vulkan", "Creating Mirror Window Swap Chain");
@@ -359,19 +367,6 @@ void Noxg::VulkanInstance::InitializeSession()
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	AllocateCommandBuffers();
-	GameObject steed = loadGameObjectFromFiles("steed");
-	steed->transform->setPosition({ -1.f, 0.f, -.5f });
-	steed->transform->setScale({ .01f, .01f, .01f });	// cm to m
-	RigidDynamic_T rigid{ steed };
-	gameObjects.push_back(steed);
-	GameObject revolver = loadGameObjectFromFiles("revolver");
-	revolver->transform = std::make_shared<XrSpaceTransform>(Utils::handLocations[1]);
-	glm::quat rotaA = { 0.7071068f, 0.f, -0.7071068f, 0.f };
-	glm::quat rotaB = { 0.7071068f, -0.7071068f, 0.f, 0.f };
-	revolver->transform->setRotation(rotaB * rotaA);
-	revolver->transform->setPosition({ 0.f, -0.18f, 0.03f });
-	revolver->transform->setScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
-	gameObjects.push_back(revolver);
 }
 
 void Noxg::VulkanInstance::CreateRenderPass()
@@ -437,8 +432,8 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo({ }, dynamicStates);
 
-	auto vertexBindingDescriptions = MeshModel_T::Vertex::getBindingDescriptions();
-	auto vertexAttributeDescriptions = MeshModel_T::Vertex::getAttributeDescriptions();
+	auto vertexBindingDescriptions = MeshModel::Vertex::getBindingDescriptions();
+	auto vertexAttributeDescriptions = MeshModel::Vertex::getAttributeDescriptions();
 
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ { }, vertexBindingDescriptions, vertexAttributeDescriptions };
 
@@ -592,16 +587,29 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	XrMatrix4x4f matProjectionView;	// PV
 	XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
 	std::vector<PushConstantData> data(1);
-	for (auto& obj : gameObjects)
+
+	for(std::list<rf::Scene>::iterator it = scenes.begin(); it != scenes.end(); )
 	{
-		auto matTransform = obj->transform->getMatrix();	// M
-		XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
-		commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
-		for(auto& model : obj->models)
+		auto scene = it->lock();
+		if (scene == nullptr)
 		{
-			commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->texture->descriptorSet[view] }, { });
-			model->bind(commandBuffers[view]);
-			model->draw(commandBuffers[view]);
+			it = scenes.erase(it);
+			continue;
+		}
+		++it;
+
+		auto& gameObjects = scene->gameObjects;
+		for (auto& obj : gameObjects)
+		{
+			auto matTransform = obj->transform->getMatrix();	// M
+			XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+			commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+			for (auto& model : obj->models)
+			{
+				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->texture->descriptorSet[view] }, { });
+				model->bind(commandBuffers[view]);
+				model->draw(commandBuffers[view]);
+			}
 		}
 	}
 	// End Draw.
@@ -614,7 +622,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	queue.submit(submitInfo, inFlights[view]);
 }
 
-void Noxg::VulkanInstance::addTexture(Texture texture)
+void Noxg::VulkanInstance::addTexture(hd::Texture texture)
 {
 	textures.push_back(texture);
 
@@ -634,12 +642,17 @@ void Noxg::VulkanInstance::addTexture(Texture texture)
 	}
 }
 
-void Noxg::VulkanInstance::addModel(MeshModel model)
+void Noxg::VulkanInstance::addModel(hd::MeshModel model)
 {
 	models.push_back(model);
 }
 
-Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string name)
+void Noxg::VulkanInstance::addScene(rf::Scene scene)
+{
+	scenes.push_back(scene);
+}
+
+Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string name)
 {
 	std::string modelDirectory = "models/" + name;
 	std::string textureDirectory = modelDirectory + "/textures";
@@ -657,13 +670,13 @@ Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string name)
 	}
 	LOG_SUCCESS();
 
-	std::vector<Texture> texs;
-	std::vector<MeshModel> modls;
+	std::vector<hd::Texture> texs;
+	std::vector<hd::MeshModel> modls;
 
 	LOG_STEP("Vurkan", "Creating Textures");
 	for (auto& material : materials)
 	{
-		texs.push_back(make_new<Texture>(textureDirectory + '/' + material.diffuse_texname));
+		texs.push_back(std::make_shared<Texture>(textureDirectory + '/' + material.diffuse_texname));
 	}
 	LOG_SUCCESS();
 
@@ -707,12 +720,12 @@ Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string name)
 
 		if (++shapeCount >= shapes.size())	// last shape.
 		{
-			modls.push_back(make_new<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
+			modls.push_back(std::make_shared<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
 			// no need to manually clear the containers.
 		}
 		else if (materialId != shapes[shapeCount].mesh.material_ids[0])	// the next shape has different texture.
 		{
-			modls.push_back(make_new<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
+			modls.push_back(std::make_shared<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
 			vertices.clear();	// clear.
 			indices.clear();
 			uniqueVertices.clear();
@@ -731,7 +744,7 @@ Noxg::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string name)
 		addModel(model);
 	}
 
-	GameObject obj = make_new<GameObject>();
+	hd::GameObject obj = std::make_shared<GameObject>();
 	obj->models = modls;
 	return obj;
 }

@@ -22,8 +22,13 @@
     <ClInclude Include="external\stb_image.h" />
     <ClInclude Include="external\tiny_obj_loader.h" />
     <ClInclude Include="external\xr_linear.h" />
+    <ClInclude Include="sources\Bricks\GameInstance.h" />
     <ClInclude Include="sources\Bricks\GameObject.h" />
+    <ClInclude Include="sources\Bricks\Scene.h" />
+    <ClInclude Include="sources\Bricks\SceneManager.h" />
     <ClInclude Include="sources\mainCommon.h" />
+    <ClInclude Include="sources\Physics\PhysicsEngineInstance.h" />
+    <ClInclude Include="sources\Renderer\GraphicsInstance.h" />
     <ClInclude Include="sources\Renderer\MeshModel.h" />
     <ClInclude Include="sources\XR\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame.h" />
@@ -34,12 +39,18 @@
     <ClInclude Include="sources\Bricks\Transform.h" />
     <ClInclude Include="sources\Utils.h" />
     <ClInclude Include="sources\Renderer\VulkanInstance.h" />
+    <ClInclude Include="sources\XR\XrInstance.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="external\tiny_obj_loader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sources\Bricks\GameInstance.cpp" />
     <ClCompile Include="sources\Bricks\GameObject.cpp" />
+    <ClCompile Include="sources\Bricks\Scene.cpp" />
+    <ClCompile Include="sources\Bricks\SceneManager.cpp" />
+    <ClCompile Include="sources\Physics\PhysicsEngineInstance.cpp" />
+    <ClCompile Include="sources\Renderer\GraphicsInstance.cpp" />
     <ClCompile Include="sources\Renderer\MeshModel.cpp" />
     <ClCompile Include="sources\XR\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame.cpp" />
@@ -50,6 +61,7 @@
     <ClCompile Include="sources\Bricks\Transform.cpp" />
     <ClCompile Include="sources\Utils.cpp" />
     <ClCompile Include="sources\Renderer\VulkanInstance.cpp" />
+    <ClCompile Include="sources\XR\XrInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">
@@ -174,8 +186,9 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\sources;C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableModules>true</EnableModules>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
