@@ -8,7 +8,7 @@ namespace Noxg
 {
 	MAKE_HANDLE(SceneManager);
 
-	class SceneManager
+	class SceneManager : public std::enable_shared_from_this<SceneManager>
 	{
 	public:
 		void Initialize(rf::Scene scene);

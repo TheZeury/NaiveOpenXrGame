@@ -6,11 +6,15 @@
 
 namespace Noxg
 {
+	class SceneManager;
+
 	MAKE_HANDLE(Scene);
 
-	class Scene
+	class Scene : public std::enable_shared_from_this<Scene>
 	{
 	public:
+		void CalculateFrame();
+
 		/// <summary>
 		/// Add a new gameObject into this scene.
 		/// </summary>
@@ -27,7 +31,7 @@ namespace Noxg
 		std::unordered_set<hd::GameObject> gameObjects;
 
 	public:
-		std::weak_ptr<Scene> self;
+		std::weak_ptr<SceneManager> manager;
 
 	public:
 		PxScene* physicsScene = nullptr;

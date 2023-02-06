@@ -3,6 +3,7 @@
 void Noxg::SceneManager::Initialize(rf::Scene scene)
 {
 	scene.lock()->physicsScene = defaultPhysicsEngineInstance.lock()->createScene();
+	scene.lock()->manager = shared_from_this();
 }
 
 void Noxg::SceneManager::Destroy(rf::Scene scene)

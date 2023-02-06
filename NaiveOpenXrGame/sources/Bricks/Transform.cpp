@@ -1,82 +1,127 @@
 #include "Transform.h"
 
-glm::vec3 Noxg::Transform::getPosition()
+std::tuple<bool, glm::mat4*> Noxg::Transform::updateMatrix()
 {
-    return position;
-}
+    auto pa = parent.lock();
+    bool updated;
 
-void Noxg::Transform::setPosition(glm::vec3 pos)
-{
-    position = pos;
-    changed = true;
-}
-
-glm::quat Noxg::Transform::getRotation()
-{
-    return rotation;
-}
-
-void Noxg::Transform::setRotation(glm::quat rotat)
-{
-    rotation = rotat;
-    changed = true;
-}
-
-glm::vec3 Noxg::Transform::getScale()
-{
-    return scale;
-}
-
-void Noxg::Transform::setScale(glm::vec3 scal)
-{
-    scale = scal;
-    changed = true;
-}
-
-glm::mat4 Noxg::Transform::getMatrix()
-{
-    if (changed)
+    if (pa == nullptr)
     {
-        auto matTranslate = glm::translate(glm::mat4{ 1.f }, position);
-        auto matScale = glm::scale(glm::mat4{ 1.f }, scale);
-        auto matRotate = glm::mat4_cast(rotation);
-        matrix = matTranslate * matScale * matRotate;
-        changed = false;
+        updated = globalChanged;
+        if(updated)
+        {
+            globalMatrix = getLocalMatrix();
+        }
     }
-    return matrix;
-}
-
-void Noxg::Transform::setMatrix(const glm::mat4& mat)
-{
-    XrMatrix4x4f_GetTranslation((XrVector3f*)&position, (XrMatrix4x4f*)&mat);
-    XrMatrix4x4f_GetRotation((XrQuaternionf*)&rotation, (XrMatrix4x4f*)&mat);
-    XrMatrix4x4f_GetScale((XrVector3f*)&scale, (XrMatrix4x4f*)&mat);
-    changed = false;
-}
-
-glm::vec3 Noxg::XrSpaceTransform::getPosition()
-{
-    if (spaceLocation.locationFlags & xr::SpaceLocationFlagBits::PositionValid)
+    else
     {
-        return *((glm::vec3*)(&(spaceLocation.pose.position))) + attach.getRotation() * attach.getPosition();
+        auto [parentUpdated, parentTransform] = pa->updateMatrix();
+        updated = parentUpdated || globalChanged;
+        if (updated)
+        {
+            globalMatrix = *parentTransform * getLocalMatrix();
+        }
     }
-    return attach.getPosition();
-}
 
-glm::quat Noxg::XrSpaceTransform::getRotation()
-{
-    if (spaceLocation.locationFlags & xr::SpaceLocationFlagBits::OrientationValid)
+    if (updated)
     {
-        return *((glm::quat*)(&(spaceLocation.pose.orientation))) * attach.getRotation();
+        for (auto& _child : children)
+        {
+            auto child = _child.lock();
+            if (child != nullptr)
+            {
+                child->globalChanged = true;
+            }
+        }
     }
-    return attach.getRotation();
+    globalChanged = false;
+    return std::make_tuple(updated, &globalMatrix);
 }
 
-glm::mat4 Noxg::XrSpaceTransform::getMatrix()
+glm::mat4 Noxg::Transform::getGlobalMatrix()
 {
-    auto translate = *((glm::vec3*)(&(spaceLocation.pose.position)));
-    auto rotation = *((glm::quat*)(&(spaceLocation.pose.orientation)));
-    auto matTranslate = glm::translate(glm::mat4{ 1.f }, translate);
-    auto matRotate = glm::mat4_cast(rotation);
-    return matTranslate * matRotate * attach.getMatrix();
+    updateMatrix();
+    return globalMatrix;
+}
+
+void Noxg::Transform::setGlobalMatrix(const glm::mat4& mat)
+{
+    auto pa = parent.lock();
+    globalMatrix = mat;
+    if (pa == nullptr)
+    {
+        setLocalMatrix(mat);
+    }
+    else
+    {
+        auto [parentUpdated, parentMatrix] = pa->updateMatrix();
+        setLocalMatrix(glm::inverse(*parentMatrix) * mat);
+    }
+    for (auto& _child : children)
+    {
+        auto child = _child.lock();
+        if (child != nullptr)
+        {
+            child->globalChanged = true;
+        }
+    }
+    globalChanged = false;
+}
+
+glm::vec3 Noxg::Transform::getLocalPosition()
+{
+    return localPosition;
+}
+
+void Noxg::Transform::setLocalPosition(glm::vec3 pos)
+{
+    localPosition = pos;
+    localChanged = true;
+    globalChanged = true;
+}
+
+glm::quat Noxg::Transform::getLocalRotation()
+{
+    return localRotation;
+}
+
+void Noxg::Transform::setLocalRotation(glm::quat rotat)
+{
+    localRotation = rotat;
+    localChanged = true;
+    globalChanged = true;
+}
+
+glm::vec3 Noxg::Transform::getLocalScale()
+{
+    return localScale;
+}
+
+void Noxg::Transform::setLocalScale(glm::vec3 scal)
+{
+    localScale = scal;
+    localChanged = true;
+    globalChanged = true;
+}
+
+glm::mat4 Noxg::Transform::getLocalMatrix()
+{
+    if (localChanged)
+    {
+        auto matTranslate = glm::translate(glm::mat4{ 1.f }, localPosition);
+        auto matScale = glm::scale(glm::mat4{ 1.f }, localScale);
+        auto matRotate = glm::mat4_cast(localRotation);
+        localMatrix = matTranslate * matScale * matRotate;
+        localChanged = false;
+    }
+    return localMatrix;
+}
+
+void Noxg::Transform::setLocalMatrix(const glm::mat4& mat)
+{
+    XrMatrix4x4f_GetTranslation((XrVector3f*)&localPosition, (XrMatrix4x4f*)&mat);
+    XrMatrix4x4f_GetRotation((XrQuaternionf*)&localRotation, (XrMatrix4x4f*)&mat);
+    XrMatrix4x4f_GetScale((XrVector3f*)&localScale, (XrMatrix4x4f*)&mat);
+    localChanged = false;
+    globalChanged = true;
 }

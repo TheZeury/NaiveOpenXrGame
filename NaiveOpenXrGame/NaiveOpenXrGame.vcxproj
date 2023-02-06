@@ -22,6 +22,7 @@
     <ClInclude Include="external\stb_image.h" />
     <ClInclude Include="external\tiny_obj_loader.h" />
     <ClInclude Include="external\xr_linear.h" />
+    <ClInclude Include="sources\Bricks\GameComponent.h" />
     <ClInclude Include="sources\Bricks\GameInstance.h" />
     <ClInclude Include="sources\Bricks\GameObject.h" />
     <ClInclude Include="sources\Bricks\Scene.h" />
@@ -40,11 +41,13 @@
     <ClInclude Include="sources\Utils.h" />
     <ClInclude Include="sources\Renderer\VulkanInstance.h" />
     <ClInclude Include="sources\XR\XrInstance.h" />
+    <ClInclude Include="sources\XR\XrSpaceTransform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="external\tiny_obj_loader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sources\Bricks\GameComponent.cpp" />
     <ClCompile Include="sources\Bricks\GameInstance.cpp" />
     <ClCompile Include="sources\Bricks\GameObject.cpp" />
     <ClCompile Include="sources\Bricks\Scene.cpp" />
@@ -62,6 +65,7 @@
     <ClCompile Include="sources\Utils.cpp" />
     <ClCompile Include="sources\Renderer\VulkanInstance.cpp" />
     <ClCompile Include="sources\XR\XrInstance.cpp" />
+    <ClCompile Include="sources\XR\XrSpaceTransform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">
@@ -203,7 +207,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)\sources;C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalModuleDependencies>$(VCToolsInstallDir)\modules\;%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
       <EnableModules>true</EnableModules>

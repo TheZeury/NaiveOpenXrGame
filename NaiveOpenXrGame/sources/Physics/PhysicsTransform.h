@@ -6,25 +6,23 @@ namespace Noxg
 {
 	MAKE_HANDLE(PhysicsTransform);
 
-	class PhysicsTransform : public ITransform
+	class PhysicsTransform : public Transform, public IHaveFrameCalculation
 	{
 	public:
-		virtual glm::vec3 getPosition() override;
-		virtual void setPosition(glm::vec3 pos) override;
+		virtual std::tuple<bool, glm::mat4*> updateMatrix() override;
 
-		virtual glm::quat getRotation() override;
-		virtual void setRotation(glm::quat rotat) override;
-
-		virtual glm::vec3 getScale() override;
-		virtual void setScale(glm::vec3 scal) override;
-
-		virtual glm::mat4 getMatrix() override;
-		virtual void setMatrix(const glm::mat4& mat) override;
+		virtual void setGlobalMatrix(const glm::mat4& mat) override;
 
 		PhysicsTransform(PxRigidActor* actor) : pxActor{ actor } { }
 
+	public:
+		virtual void CalculateFrame() override;
+
 	private:
-		glm::vec3 scale = { 1.f, 1.f, 1.f };
+		void informChangesToActor();
+
+	private:
 		PxRigidActor* pxActor = nullptr;
+		friend class RigidDynamic;
 	};
 }

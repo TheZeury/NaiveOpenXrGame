@@ -9,15 +9,17 @@ namespace Noxg
 {
 	MAKE_HANDLE(RigidDynamic);
 
-	class RigidDynamic
+	class RigidDynamic : public GameComponent
 	{
 	public:
-		RigidDynamic(rf::GameObject obj, rf::PhysicsEngineInstance physicsInstance, PxScene* physicsScene, glm::vec3 vec = { }, PxForceMode::Enum forceMode = PxForceMode::eVELOCITY_CHANGE);
+		RigidDynamic(glm::vec3 vec = { }, PxForceMode::Enum forceMode = PxForceMode::eVELOCITY_CHANGE);
 		~RigidDynamic();
+
+	public:
+		virtual void Enable() override;
 		
 	public:
 		rf::PhysicsEngineInstance physicsEngineInstance;
-		rf::GameObject gameObject;
 		glm::vec3 force;
 		PxForceMode::Enum mode;
 	private:

@@ -1,48 +1,30 @@
 #include "PhysicsTransform.h"
 
-glm::vec3 Noxg::PhysicsTransform::getPosition()
+std::tuple<bool, glm::mat4*> Noxg::PhysicsTransform::updateMatrix()
 {
-    if (pxActor == nullptr) return { 0.f, 0.f, 0.f };
-    PxVec3 pxPos = pxActor->getGlobalPose().p;
-    return *((glm::vec3*)(&pxPos));
+    auto [updated, newGlobalMatrix] = Transform::updateMatrix();
+    if (updated)    // No too much difference with Transform::updateMatrix but need to update the pxActor if needed.
+    {
+        informChangesToActor();
+    }
+    return std::make_tuple(updated, newGlobalMatrix);
 }
 
-void Noxg::PhysicsTransform::setPosition(glm::vec3 pos)
+void Noxg::PhysicsTransform::setGlobalMatrix(const glm::mat4& mat)
 {
-    
+    Transform::setGlobalMatrix(mat);
+    informChangesToActor(); // No too much difference with Transform::setGlobalMatrix but need to update the pxActor after that.
 }
 
-glm::quat Noxg::PhysicsTransform::getRotation()
+void Noxg::PhysicsTransform::CalculateFrame()
 {
-    if (pxActor == nullptr) return { 1.f, 0.f, 0.f, 0.f };
-    PxQuat pxQuat = pxActor->getGlobalPose().q;
-    return *((glm::quat*)(&pxQuat));
-}
-
-void Noxg::PhysicsTransform::setRotation(glm::quat rotat)
-{
-}
-
-glm::vec3 Noxg::PhysicsTransform::getScale()
-{
-    return scale;
-}
-
-void Noxg::PhysicsTransform::setScale(glm::vec3 scal)
-{
-    scale = scal;
-}
-
-glm::mat4 Noxg::PhysicsTransform::getMatrix()
-{
-    if (pxActor == nullptr) return glm::mat4{ 1.f };
     PxMat44 pxMat{ pxActor->getGlobalPose() };
-    glm::mat4 scal = glm::scale(glm::mat4{ 1.f }, scale);
-    return (*((glm::mat4*)(&pxMat))) * scal;
+    glm::mat4 physicsTrans = (pxActor == nullptr) ? glm::mat4{ 1.f } : (*((glm::mat4*)(&pxMat)));
+    Transform::setGlobalMatrix(physicsTrans);   // Since we don't want to update the pxActor, use Transform::setGlobalMatrix instead.
 }
 
-void Noxg::PhysicsTransform::setMatrix(const glm::mat4& mat)
+void Noxg::PhysicsTransform::informChangesToActor()
 {
     if (pxActor == nullptr) return;
-    pxActor->setGlobalPose(PxTransform(*((PxMat44*)(&mat))));
+    pxActor->setGlobalPose(PxTransform(*((PxMat44*)(&globalMatrix))));
 }

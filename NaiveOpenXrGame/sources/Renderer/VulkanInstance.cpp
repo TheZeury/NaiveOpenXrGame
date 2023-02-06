@@ -601,7 +601,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		auto& gameObjects = scene->gameObjects;
 		for (auto& obj : gameObjects)
 		{
-			auto matTransform = obj->transform->getMatrix();	// M
+			auto matTransform = obj->transform->getGlobalMatrix();	// M
 			XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
 			commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
 			for (auto& model : obj->models)
