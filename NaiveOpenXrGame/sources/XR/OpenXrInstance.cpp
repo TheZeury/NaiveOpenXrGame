@@ -145,7 +145,7 @@ void Noxg::OpenXrInstance::CreateSession(xr::GraphicsBindingVulkanKHR graphicsBi
 void Noxg::OpenXrInstance::CreateSpace()
 {
 	LOG_STEP("OpenXR", "Creating Reference Space");
-	xr::ReferenceSpaceCreateInfo refSpaceCreateInfo(xr::ReferenceSpaceType::Local, { });
+	xr::ReferenceSpaceCreateInfo refSpaceCreateInfo(xr::ReferenceSpaceType::Stage, { });
 	appSpace = session.createReferenceSpace(refSpaceCreateInfo);
 	LOG_SUCCESS();
 }

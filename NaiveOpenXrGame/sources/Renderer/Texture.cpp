@@ -42,6 +42,6 @@ void Noxg::Texture::createTexture(stb::stbi_uc* pixels, int width, int height, i
 
 	textureImageView = Utils::createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
 
-	vk::SamplerCreateInfo samplerInfo({ }, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, VK_TRUE, 1.0f, VK_FALSE, vk::CompareOp::eAlways, 0.f, 0.f, vk::BorderColor::eIntOpaqueBlack, VK_FALSE);
+	vk::SamplerCreateInfo samplerInfo({ }, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, VK_TRUE, Utils::maxAnisotrophy, VK_FALSE, vk::CompareOp::eAlways, 0.f, 0.f, vk::BorderColor::eIntOpaqueBlack, VK_FALSE);
 	textureSampler = Utils::vkDevice.createSampler(samplerInfo);
 }

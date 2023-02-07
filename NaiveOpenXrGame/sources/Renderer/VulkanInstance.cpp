@@ -234,6 +234,8 @@ void Noxg::VulkanInstance::PickPhysicalDevice()
 	auto properties = physicalDevice.getProperties();
 	LOG_INFO("Vulkan", ("Physical Device Name : " + static_cast<std::string>(properties.deviceName.data())), 0);
 	LOG_INFO("Vulkan", std::format("Push Constant Limit : {}", properties.limits.maxPushConstantsSize), 0);
+	LOG_INFO("Vulkan", std::format("Max Anisotropy : {}", properties.limits.maxSamplerAnisotropy), 0);
+	Utils::maxAnisotrophy = properties.limits.maxSamplerAnisotropy;
 	auto features = physicalDevice.getFeatures();
 }
 

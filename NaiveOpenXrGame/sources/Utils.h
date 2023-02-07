@@ -38,5 +38,7 @@ namespace Noxg
 		inline static std::array<xr::SpaceLocation, 2> handLocations;
 		inline static std::array<xr::ActionStateFloat, 2> triggerStates;
 		inline static std::array<bool, 2> released = { true, true };
+
+		inline static float maxAnisotrophy;
 	};
 }

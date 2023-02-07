@@ -20,6 +20,10 @@ namespace Noxg
 		void BuildScene();
 	private:
 		hd::Scene scene;
+		hd::Texture pureBlack;
+		hd::Texture pureWhite;
+		hd::MeshModel blackCube;
+		hd::MeshModel whiteCube;
 	};
 }
 

@@ -14,6 +14,7 @@ namespace Noxg
 	public:
 		RigidDynamic(glm::vec3 vec = { }, PxForceMode::Enum forceMode = PxForceMode::eVELOCITY_CHANGE);
 		~RigidDynamic();
+		void addShape(PxShape* shape);
 
 	public:
 		virtual void Enable() override;
@@ -23,6 +24,7 @@ namespace Noxg
 		glm::vec3 force;
 		PxForceMode::Enum mode;
 	private:
+		std::vector<PxShape*> pending;
 		PxRigidDynamic* pxRaw = nullptr;
 	};
 }

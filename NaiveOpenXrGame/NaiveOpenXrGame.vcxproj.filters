@@ -84,6 +84,9 @@
     <ClInclude Include="sources\XR\XrSpaceTransform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sources\Physics\PhysicsShape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\NaiveGame.cpp">
@@ -150,6 +153,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\XR\XrSpaceTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Physics\PhysicsShape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

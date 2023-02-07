@@ -29,6 +29,7 @@
     <ClInclude Include="sources\Bricks\SceneManager.h" />
     <ClInclude Include="sources\mainCommon.h" />
     <ClInclude Include="sources\Physics\PhysicsEngineInstance.h" />
+    <ClInclude Include="sources\Physics\PhysicsShape.h" />
     <ClInclude Include="sources\Renderer\GraphicsInstance.h" />
     <ClInclude Include="sources\Renderer\MeshModel.h" />
     <ClInclude Include="sources\XR\OpenXrInstance.h" />
@@ -53,6 +54,7 @@
     <ClCompile Include="sources\Bricks\Scene.cpp" />
     <ClCompile Include="sources\Bricks\SceneManager.cpp" />
     <ClCompile Include="sources\Physics\PhysicsEngineInstance.cpp" />
+    <ClCompile Include="sources\Physics\PhysicsShape.cpp" />
     <ClCompile Include="sources\Renderer\GraphicsInstance.cpp" />
     <ClCompile Include="sources\Renderer\MeshModel.cpp" />
     <ClCompile Include="sources\XR\OpenXrInstance.cpp" />

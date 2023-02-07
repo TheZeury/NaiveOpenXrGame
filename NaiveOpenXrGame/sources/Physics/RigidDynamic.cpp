@@ -11,6 +11,18 @@ Noxg::RigidDynamic::~RigidDynamic()
 //	PhysXInstance::globalInstance->removeActor(pxRaw);
 }
 
+void Noxg::RigidDynamic::addShape(PxShape* shape)
+{
+	if(pxRaw == nullptr)
+	{
+		pending.push_back(shape);
+	}
+	else
+	{
+		pxRaw->attachShape(*shape);
+	}
+}
+
 void Noxg::RigidDynamic::Enable()
 {
 	auto obj = gameObject.lock();
@@ -20,6 +32,10 @@ void Noxg::RigidDynamic::Enable()
 	PxTransform pxTransform{ *((PxMat44*)(&mat)) };
 	pxRaw = physicsEngineInstance.lock()->createRigidDynamic(pxTransform);
 	std::dynamic_pointer_cast<PhysicsTransform>(obj->transform)->pxActor = pxRaw;
+	for (auto& shape : pending)
+	{
+		pxRaw->attachShape(*shape);
+	}
 	obj->scene.lock()->physicsScene->addActor(*pxRaw);
 	if (force != glm::vec3{ })
 	{
