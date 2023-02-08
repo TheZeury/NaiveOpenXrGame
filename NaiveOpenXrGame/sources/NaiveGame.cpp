@@ -1,5 +1,6 @@
 #include "NaiveGame.h"
 #include "XR/XrSpaceTransform.h"
+#include "Physics/RigidStatic.h"
 #include <chrono>
 
 Noxg::NaiveGame::NaiveGame()
@@ -190,7 +191,17 @@ void Noxg::NaiveGame::BuildScene()
 		auto groundModel = std::make_shared<MeshModel>(vertices, indices, tiles);
 		auto ground = std::make_shared<GameObject>();
 		ground->models.push_back(groundModel);
+
+		auto collider = std::make_shared<GameObject>();
+		collider->transform = std::make_shared<PhysicsTransform>(nullptr);
+		collider->transform->setLocalRotation(glm::rotate(glm::quat{ 1.f, 0.f, 0.f, 0.f }, glm::pi<float>() / 2.f, { 0.f, 0.f, 1.f }));
+		auto rigid = std::make_shared<RigidStatic>();
+		auto shape = physicsEngineInstance->createShape(PxPlaneGeometry());
+		rigid->addShape(shape);
+		collider->addComponent(rigid);
+
 		scene->addGameObject(ground);
+		scene->addGameObject(collider);
 	}
 
 	{	// Right hand.

@@ -4,17 +4,18 @@
 #include "Physics/PhysicsEngineInstance.h"
 #include "PhysicsTransform.h"
 #include "Bricks/GameObject.h"
+#include "RigidActor.h"
 
 namespace Noxg
 {
 	MAKE_HANDLE(RigidDynamic);
 
-	class RigidDynamic : public GameComponent
+	class RigidDynamic : public RigidActor
 	{
 	public:
 		RigidDynamic(glm::vec3 vec = { }, PxForceMode::Enum forceMode = PxForceMode::eVELOCITY_CHANGE);
 		~RigidDynamic();
-		void addShape(PxShape* shape);
+		virtual void addShape(PxShape* shape) override;
 
 	public:
 		virtual void Enable() override;

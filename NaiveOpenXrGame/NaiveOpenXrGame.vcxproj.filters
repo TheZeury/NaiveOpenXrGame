@@ -87,6 +87,12 @@
     <ClInclude Include="sources\Physics\PhysicsShape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sources\Physics\RigidStatic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Physics\RigidActor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\NaiveGame.cpp">
@@ -156,6 +162,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Physics\PhysicsShape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Physics\RigidStatic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Physics\RigidActor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

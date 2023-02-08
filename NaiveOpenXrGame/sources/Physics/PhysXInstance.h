@@ -15,6 +15,7 @@ namespace Noxg
 		virtual void addScene(rf::Scene scene) override;
 		virtual PxScene* createScene() const override;
 		virtual PxRigidDynamic* createRigidDynamic(const PxTransform& pose) const override;
+		virtual PxRigidStatic* createRigidStatic(const PxTransform& pose) const override;
 		virtual PxShape* createShape(const PxGeometry& geometry) const override;
 	private:
 		PxDefaultAllocator allocator;

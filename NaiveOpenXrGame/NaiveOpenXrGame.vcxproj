@@ -30,6 +30,8 @@
     <ClInclude Include="sources\mainCommon.h" />
     <ClInclude Include="sources\Physics\PhysicsEngineInstance.h" />
     <ClInclude Include="sources\Physics\PhysicsShape.h" />
+    <ClInclude Include="sources\Physics\RigidActor.h" />
+    <ClInclude Include="sources\Physics\RigidStatic.h" />
     <ClInclude Include="sources\Renderer\GraphicsInstance.h" />
     <ClInclude Include="sources\Renderer\MeshModel.h" />
     <ClInclude Include="sources\XR\OpenXrInstance.h" />
@@ -55,6 +57,8 @@
     <ClCompile Include="sources\Bricks\SceneManager.cpp" />
     <ClCompile Include="sources\Physics\PhysicsEngineInstance.cpp" />
     <ClCompile Include="sources\Physics\PhysicsShape.cpp" />
+    <ClCompile Include="sources\Physics\RigidActor.cpp" />
+    <ClCompile Include="sources\Physics\RigidStatic.cpp" />
     <ClCompile Include="sources\Renderer\GraphicsInstance.cpp" />
     <ClCompile Include="sources\Renderer\MeshModel.cpp" />
     <ClCompile Include="sources\XR\OpenXrInstance.cpp" />

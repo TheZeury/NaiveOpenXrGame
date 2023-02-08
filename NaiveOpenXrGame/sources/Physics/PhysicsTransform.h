@@ -24,5 +24,6 @@ namespace Noxg
 	private:
 		PxRigidActor* pxActor = nullptr;
 		friend class RigidDynamic;
+		friend class RigidStatic;
 	};
 }

@@ -56,6 +56,11 @@ PxRigidDynamic* Noxg::PhysXInstance::createRigidDynamic(const PxTransform& pose)
 	return physics->createRigidDynamic(pose);
 }
 
+PxRigidStatic* Noxg::PhysXInstance::createRigidStatic(const PxTransform& pose) const
+{
+	return physics->createRigidStatic(pose);
+}
+
 PxShape* Noxg::PhysXInstance::createShape(const PxGeometry& geometry) const
 {
 	return physics->createShape(geometry, *material);

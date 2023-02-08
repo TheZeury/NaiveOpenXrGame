@@ -16,6 +16,7 @@ namespace Noxg
 		virtual void addScene(rf::Scene scene) = 0;
 		virtual PxScene* createScene() const = 0;
 		virtual PxRigidDynamic* createRigidDynamic(const PxTransform& pose) const = 0;
+		virtual PxRigidStatic* createRigidStatic(const PxTransform& pose) const = 0;
 		virtual PxShape* createShape(const PxGeometry& geometry) const = 0;
 	protected:
 		std::list<rf::Scene> scenes;
