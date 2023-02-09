@@ -14,6 +14,7 @@ namespace Noxg
 		{
 			glm::vec3 position;
 			glm::vec4 color;
+			glm::vec3 normal;
 			glm::vec2 uv;
 
 			static std::array<vk::VertexInputBindingDescription, 1> getBindingDescriptions()
@@ -23,12 +24,13 @@ namespace Noxg
 				};
 			}
 
-			static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDescriptions()
+			static std::array<vk::VertexInputAttributeDescription, 4> getAttributeDescriptions()
 			{
 				return {
 					vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, position) },
 					vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32A32Sfloat, offsetof(Vertex, color) },
-					vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) },
+					vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal) },
+					vk::VertexInputAttributeDescription{ 3, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) },
 				};
 			}
 

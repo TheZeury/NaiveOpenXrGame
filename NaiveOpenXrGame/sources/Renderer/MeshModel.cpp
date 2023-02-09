@@ -30,6 +30,12 @@ Noxg::MeshModel::MeshModel(std::string path, hd::Texture tex)
 				attrib.vertices[3 * index.vertex_index + 2],
 			};
 
+			vertex.normal = {
+				attrib.normals[3 * index.vertex_index + 0],
+				attrib.normals[3 * index.vertex_index + 1],
+				attrib.normals[3 * index.vertex_index + 2],
+			};
+
 			vertex.uv = {
 				attrib.texcoords[2 * index.texcoord_index + 0],
 				1.f - attrib.texcoords[2 * index.texcoord_index + 1],

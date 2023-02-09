@@ -17,6 +17,7 @@ namespace Noxg
 		struct PushConstantData
 		{
 			XrMatrix4x4f projectionView;
+			glm::mat4 modelMatrix;
 		};
 
 	public: // public functions.

@@ -35,28 +35,50 @@ void Noxg::NaiveGame::Run()
 	graphicsInstance->addTexture(pureWhite);
 	
 	std::vector<Vertex> vertices = {
-		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { } },
-		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { } },
-		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { } },
-		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { } },
-		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { } },
-		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { } },
-		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { } },
-		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { } },
+		// down
+		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
+		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
+		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
+		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
+		// up
+		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
+		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
+		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
+		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
+		// front
+		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
+		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
+		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
+		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
+		// back
+		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
+		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
+		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
+		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
+		// left
+		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
+		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
+		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
+		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
+		// right
+		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
+		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
+		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
+		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
 	};
 	std::vector<uint32_t> indices = {
-		0, 2, 1,	// down
-		1, 2, 3,
-		4, 5, 6,	// up
-		5, 7, 6,
-		0, 1, 4,	// front
-		1, 5, 4,
-		2, 6, 3,	// back
-		3, 6, 7,
-		0, 4, 6,	// left
-		2, 0, 6,
-		1, 3, 7,	// right
-		1, 7, 5,
+		0 + 0,  1 + 0,  2 + 0,	// down
+		2 + 0,  3 + 0,  0 + 0,
+		0 + 4,  1 + 4,  2 + 4,	// up
+		2 + 4,  3 + 4,  0 + 4,
+		0 + 8,  1 + 8,  2 + 8,	// front
+		2 + 8,  3 + 8,  0 + 8,
+		0 + 12, 1 + 12, 2 + 12,	// back
+		2 + 12, 3 + 12, 0 + 12,
+		0 + 16, 1 + 16, 2 + 16,	// left
+		2 + 16, 3 + 16, 0 + 16,
+		0 + 20, 1 + 20, 2 + 20,	// right
+		2 + 20, 3 + 20, 0 + 20,
 	};
 	blackCube = std::make_shared<MeshModel>(vertices, indices, pureBlack);
 	whiteCube = std::make_shared<MeshModel>(vertices, indices, pureWhite);
@@ -179,14 +201,14 @@ void Noxg::NaiveGame::BuildScene()
 		auto tiles = std::make_shared<Texture>("textures/GroundTile.jpg");
 		graphicsInstance->addTexture(tiles);
 		std::vector<Vertex> vertices = {
-			{ { -100.f, 0.f, 100.f }, { }, { 100.f, 0.f } },
-			{ { 100.f, 0.f, 100.f }, { }, { 0.f, 0.f } },
-			{ { -100.f, 0.f, -100.f }, { }, { 100.f, 100.f } },
-			{ { 100.f, 0.f, -100.f }, { }, { 0.f, 100.f } },
+			{ { -100.f, 0.f, 100.f }, { }, { 0.f, 1.f, 0.f }, { 100.f, 0.f } },
+			{ { 100.f, 0.f, 100.f }, { }, { 0.f, 1.f, 0.f }, { 0.f, 0.f } },
+			{ { 100.f, 0.f, -100.f }, { }, { 0.f, 1.f, 0.f }, { 0.f, 100.f } },
+			{ { -100.f, 0.f, -100.f }, { }, { 0.f, 1.f, 0.f }, { 100.f, 100.f } },
 		};
 		std::vector<uint32_t> indices = {
 			0, 1, 2,
-			2, 1, 3,
+			2, 3, 0,
 		};
 		auto groundModel = std::make_shared<MeshModel>(vertices, indices, tiles);
 		auto ground = std::make_shared<GameObject>();
