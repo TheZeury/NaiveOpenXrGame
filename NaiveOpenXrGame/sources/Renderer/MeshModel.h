@@ -36,7 +36,7 @@ namespace Noxg
 
 			bool operator==(const Vertex& other) const
 			{
-				return position == other.position && color == other.color && uv == other.uv;
+				return position == other.position && normal == other.normal && uv == other.uv;
 			}
 		};
 	public:
@@ -75,7 +75,7 @@ namespace std
 		size_t operator()(Noxg::MeshModel::Vertex const& vertex) const
 		{
 			return ((hash<glm::vec3>()(vertex.position) ^
-				(hash<glm::vec4>()(vertex.color) << 1)) >> 1) ^
+				(hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
 				(hash<glm::vec2>()(vertex.uv) << 1);
 		}
 	};

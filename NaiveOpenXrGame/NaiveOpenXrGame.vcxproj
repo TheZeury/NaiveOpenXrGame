@@ -43,6 +43,7 @@
     <ClInclude Include="sources\Bricks\Transform.h" />
     <ClInclude Include="sources\Utils.h" />
     <ClInclude Include="sources\Renderer\VulkanInstance.h" />
+    <ClInclude Include="sources\XR\XrControllerActions.h" />
     <ClInclude Include="sources\XR\XrInstance.h" />
     <ClInclude Include="sources\XR\XrSpaceTransform.h" />
   </ItemGroup>
@@ -70,6 +71,7 @@
     <ClCompile Include="sources\Bricks\Transform.cpp" />
     <ClCompile Include="sources\Utils.cpp" />
     <ClCompile Include="sources\Renderer\VulkanInstance.cpp" />
+    <ClCompile Include="sources\XR\XrControllerActions.cpp" />
     <ClCompile Include="sources\XR\XrInstance.cpp" />
     <ClCompile Include="sources\XR\XrSpaceTransform.cpp" />
   </ItemGroup>

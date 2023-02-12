@@ -7,15 +7,27 @@
 
 namespace Noxg
 {
-	struct InputState
+	struct InputAction
 	{
 		xr::ActionSet actionSet;
 		xr::Action poseAction;
 		xr::Action triggerAction;
+		xr::Action gripAction;
+		xr::Action thumbstickXAction;
+		xr::Action thumbstickYAction;
 		xr::Action vibrateAction;
 		std::array<xr::Path, 2> handSubactionPath;
 		std::array<xr::Space, 2> handSpace;
+	};
+
+	struct InputState
+	{
 		std::array<xr::Bool32, 2> handActive;
+		std::array<xr::SpaceLocation, 2> handLocations;
+		std::array<xr::ActionStateFloat, 2> triggerStates;
+		std::array<xr::ActionStateFloat, 2> gripStates;
+		std::array<xr::ActionStateFloat, 2> thumbstickXStates;
+		std::array<xr::ActionStateFloat, 2> thumbstickYStates;
 	};
 
 	MAKE_HANDLE(OpenXrInstance);
@@ -45,6 +57,7 @@ namespace Noxg
 		const xr::SystemId& getSystemId() const;
 	public:
 		virtual void vibrate(const xr::HapticVibration& virbation, int hand) override;
+		InputState inputState;
 	private:
 		xr::Instance instance;
 		xr::Session session;
@@ -59,7 +72,7 @@ namespace Noxg
 		xr::SessionState sessionState;
 		bool sessionRunning;
 
-		InputState inputState;
+		InputAction inputAction;
 	private:
 		rf::GraphicsInstance graphics;
 	};

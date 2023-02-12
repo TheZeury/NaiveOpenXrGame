@@ -212,29 +212,53 @@ void Noxg::OpenXrInstance::CreateSwapChains()
 void Noxg::OpenXrInstance::CreateActions()
 {
 	xr::ActionSetCreateInfo setInfo("gameplay", "Gameplay", 0);
-	inputState.actionSet = instance.createActionSet(setInfo);
+	inputAction.actionSet = instance.createActionSet(setInfo);
 
-	inputState.handSubactionPath[0] = instance.stringToPath("/user/hand/left");
-	inputState.handSubactionPath[1] = instance.stringToPath("/user/hand/right");
+	inputAction.handSubactionPath[0] = instance.stringToPath("/user/hand/left");
+	inputAction.handSubactionPath[1] = instance.stringToPath("/user/hand/right");
 
-	xr::ActionCreateInfo poseActionInfo("hand_pose", xr::ActionType::PoseInput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Hand Pose");
-	inputState.poseAction = inputState.actionSet.createAction(poseActionInfo);
+	xr::ActionCreateInfo poseActionInfo("hand_pose", xr::ActionType::PoseInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "Hand Pose");
+	inputAction.poseAction = inputAction.actionSet.createAction(poseActionInfo);
 
 	std::array<xr::Path, 2> posePath = {
 		instance.stringToPath("/user/hand/left/input/grip/pose"),
 		instance.stringToPath("/user/hand/right/input/grip/pose"),
 	};
 
-	xr::ActionCreateInfo triggerActionInfo("trigger", xr::ActionType::FloatInput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Trigger");
-	inputState.triggerAction = inputState.actionSet.createAction(triggerActionInfo);
+	xr::ActionCreateInfo triggerActionInfo("trigger", xr::ActionType::FloatInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "Trigger");
+	inputAction.triggerAction = inputAction.actionSet.createAction(triggerActionInfo);
 
 	std::array<xr::Path, 2> triggerPath = {
 		instance.stringToPath("/user/hand/left/input/trigger/value"),
 		instance.stringToPath("/user/hand/right/input/trigger/value"),
 	};
 
-	xr::ActionCreateInfo vibrateActionInfo("vibrate", xr::ActionType::VibrationOutput, static_cast<uint32_t>(inputState.handSubactionPath.size()), inputState.handSubactionPath.data(), "Virbate");
-	inputState.vibrateAction = inputState.actionSet.createAction(vibrateActionInfo);
+	xr::ActionCreateInfo gripActionInfo("grip", xr::ActionType::FloatInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "Grip");
+	inputAction.gripAction = inputAction.actionSet.createAction(gripActionInfo);
+
+	std::array<xr::Path, 2> gripPath = {
+		instance.stringToPath("/user/hand/left/input/squeeze/value"),
+		instance.stringToPath("/user/hand/right/input/squeeze/value"),
+	};
+
+	xr::ActionCreateInfo thumbstickXActionInfo("thumbstick_x", xr::ActionType::FloatInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "ThumbStick X");
+	inputAction.thumbstickXAction = inputAction.actionSet.createAction(thumbstickXActionInfo);
+
+	std::array<xr::Path, 2> thumbstickXPath = {
+		instance.stringToPath("/user/hand/left/input/thumbstick/x"),
+		instance.stringToPath("/user/hand/right/input/thumbstick/x"),
+	};
+
+	xr::ActionCreateInfo thumbstickYActionInfo("thumbstick_y", xr::ActionType::FloatInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "ThumbStick Y");
+	inputAction.thumbstickYAction = inputAction.actionSet.createAction(thumbstickYActionInfo);
+
+	std::array<xr::Path, 2> thumbstickYPath = {
+		instance.stringToPath("/user/hand/left/input/thumbstick/y"),
+		instance.stringToPath("/user/hand/right/input/thumbstick/y"),
+	};
+
+	xr::ActionCreateInfo vibrateActionInfo("vibrate", xr::ActionType::VibrationOutput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "Virbate");
+	inputAction.vibrateAction = inputAction.actionSet.createAction(vibrateActionInfo);
 
 	std::array<xr::Path, 2> vibratePath = {
 		instance.stringToPath("/user/hand/left/output/haptic"),
@@ -244,23 +268,29 @@ void Noxg::OpenXrInstance::CreateActions()
 	xr::Path oculusTouchInteractionProfilePath = instance.stringToPath("/interaction_profiles/oculus/touch_controller");
 
 	std::vector<xr::ActionSuggestedBinding> binding = { 
-		xr::ActionSuggestedBinding{ inputState.poseAction, posePath[0] },
-		xr::ActionSuggestedBinding{ inputState.poseAction, posePath[1] },
-		xr::ActionSuggestedBinding{ inputState.triggerAction, triggerPath[0] },
-		xr::ActionSuggestedBinding{ inputState.triggerAction, triggerPath[1] },
-		xr::ActionSuggestedBinding{ inputState.vibrateAction, vibratePath[0] },
-		xr::ActionSuggestedBinding{ inputState.vibrateAction, vibratePath[1] },
+		xr::ActionSuggestedBinding{ inputAction.poseAction, posePath[0] },
+		xr::ActionSuggestedBinding{ inputAction.poseAction, posePath[1] },
+		xr::ActionSuggestedBinding{ inputAction.triggerAction, triggerPath[0] },
+		xr::ActionSuggestedBinding{ inputAction.triggerAction, triggerPath[1] },
+		xr::ActionSuggestedBinding{ inputAction.gripAction, gripPath[0] },
+		xr::ActionSuggestedBinding{ inputAction.gripAction, gripPath[1] },
+		xr::ActionSuggestedBinding{ inputAction.thumbstickXAction, thumbstickXPath[0] },
+		xr::ActionSuggestedBinding{ inputAction.thumbstickXAction, thumbstickXPath[1] },
+		xr::ActionSuggestedBinding{ inputAction.thumbstickYAction, thumbstickYPath[0] },
+		xr::ActionSuggestedBinding{ inputAction.thumbstickYAction, thumbstickYPath[1] },
+		xr::ActionSuggestedBinding{ inputAction.vibrateAction, vibratePath[0] },
+		xr::ActionSuggestedBinding{ inputAction.vibrateAction, vibratePath[1] },
 	};
 	xr::InteractionProfileSuggestedBinding suggestedBinding(oculusTouchInteractionProfilePath, static_cast<uint32_t>(binding.size()), binding.data());
 	instance.suggestInteractionProfileBindings(suggestedBinding);
 
-	xr::ActionSpaceCreateInfo actionSpaceInfo(inputState.poseAction, { }, { });
-	actionSpaceInfo.subactionPath = inputState.handSubactionPath[0];
-	inputState.handSpace[0] = session.createActionSpace(actionSpaceInfo);
-	actionSpaceInfo.subactionPath = inputState.handSubactionPath[1];
-	inputState.handSpace[1] = session.createActionSpace(actionSpaceInfo);
+	xr::ActionSpaceCreateInfo actionSpaceInfo(inputAction.poseAction, { }, { });
+	actionSpaceInfo.subactionPath = inputAction.handSubactionPath[0];
+	inputAction.handSpace[0] = session.createActionSpace(actionSpaceInfo);
+	actionSpaceInfo.subactionPath = inputAction.handSubactionPath[1];
+	inputAction.handSpace[1] = session.createActionSpace(actionSpaceInfo);
 
-	xr::SessionActionSetsAttachInfo attachInfo(1, &inputState.actionSet);
+	xr::SessionActionSetsAttachInfo attachInfo(1, &inputAction.actionSet);
 	session.attachSessionActionSets(attachInfo);
 }
 
@@ -347,20 +377,32 @@ void Noxg::OpenXrInstance::PollActions()
 {
 	inputState.handActive = { XR_FALSE, XR_FALSE };
 
-	xr::ActiveActionSet activeActionSet(inputState.actionSet, { });
+	xr::ActiveActionSet activeActionSet(inputAction.actionSet, { });
 	xr::ActionsSyncInfo syncInfo(1, &activeActionSet);
 	session.syncActions(syncInfo);
 
 	for (int hand : { 0, 1 })
 	{
-		xr::ActionStateGetInfo getInfo(inputState.poseAction, inputState.handSubactionPath[hand]);
+		xr::ActionStateGetInfo getInfo(inputAction.poseAction, inputAction.handSubactionPath[hand]);
 
 		xr::ActionStatePose poseState = session.getActionStatePose(getInfo);
 		inputState.handActive[hand] = poseState.isActive;
 
-		getInfo.action = inputState.triggerAction;
+		getInfo.action = inputAction.triggerAction;
 		xr::ActionStateFloat triggerState = session.getActionStateFloat(getInfo);
-		Utils::triggerStates[hand] = triggerState;
+		inputState.triggerStates[hand] = triggerState;
+
+		getInfo.action = inputAction.gripAction;
+		xr::ActionStateFloat gripState = session.getActionStateFloat(getInfo);
+		inputState.gripStates[hand] = gripState;
+
+		getInfo.action = inputAction.thumbstickXAction;
+		xr::ActionStateFloat thumbstickXState = session.getActionStateFloat(getInfo);
+		inputState.thumbstickXStates[hand] = thumbstickXState;
+
+		getInfo.action = inputAction.thumbstickYAction;
+		xr::ActionStateFloat thumbstickYState = session.getActionStateFloat(getInfo);
+		inputState.thumbstickYStates[hand] = thumbstickYState;
 	}
 }
 
@@ -377,7 +419,7 @@ void Noxg::OpenXrInstance::Update()
 	{
 		for (int hand : { 0, 1 })
 		{
-			Utils::handLocations[hand] = inputState.handSpace[hand].locateSpace(appSpace, frameState.predictedDisplayTime);
+			inputState.handLocations[hand] = inputAction.handSpace[hand].locateSpace(appSpace, frameState.predictedDisplayTime);
 		}
 		
 		xr::ViewState viewState{ };
@@ -423,7 +465,7 @@ const xr::SystemId& Noxg::OpenXrInstance::getSystemId() const
 
 void Noxg::OpenXrInstance::vibrate(const xr::HapticVibration& virbation, int hand)
 {
-	xr::HapticActionInfo hapticInfo(inputState.vibrateAction, inputState.handSubactionPath[hand]);
+	xr::HapticActionInfo hapticInfo(inputAction.vibrateAction, inputAction.handSubactionPath[hand]);
 	if (session.applyHapticFeedback(hapticInfo, virbation.get_base()) != xr::Result::Success)
 	{
 		throw std::runtime_error("failed to vibrate.");

@@ -44,7 +44,7 @@ PxScene* Noxg::PhysXInstance::createScene() const
 {
 	PxSceneDesc sceneDesc(physics->getTolerancesScale());
 	{
-		sceneDesc.gravity = PxVec3(0.0f, 0.00f, 0.0f);
+		sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 		sceneDesc.cpuDispatcher = dispatcher;
 		sceneDesc.filterShader = PxDefaultSimulationFilterShader;
 	}

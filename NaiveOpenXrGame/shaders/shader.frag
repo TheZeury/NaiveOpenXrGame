@@ -11,8 +11,8 @@ layout(location = 0) out vec4 outColor;
 
 vec3 lightDirection = { 1.0, 1.0, -0.4 };
 
-vec4 lightColor = { 1.0, 1.0, 1.0, 1.0 };
-float ambient = 0.4;
+vec4 lightColor = { 0.5, 0.5, 0.5, 1.0 };
+float ambient = 0.5;
 float diffuse;
 
 void main() {
@@ -20,5 +20,9 @@ void main() {
     diffuse = max(dot(lightDirection, normalize(fragNormal)), 0.0);
     vec4 diffuseLight = lightColor * diffuse;
     outColor = texture(textureSampler, FragUv) * (ambientLight + diffuseLight);
+    if(outColor.w < 0.3)
+    {
+        discard;
+    }
     //outColor = vec4(FragUv, 0.0, 1.0);
 }

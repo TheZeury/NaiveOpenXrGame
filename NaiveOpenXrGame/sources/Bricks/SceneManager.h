@@ -2,6 +2,7 @@
 
 #include "Renderer/GraphicsInstance.h"
 #include "Physics/PhysicsEngineInstance.h"
+#include "XR/XrInstance.h"
 #include "Scene.h"
 
 namespace Noxg
@@ -20,5 +21,6 @@ namespace Noxg
 
 		rf::GraphicsInstance defaultGraphicsInstance;
 		rf::PhysicsEngineInstance defaultPhysicsEngineInstance;
+		rf::XrInstance defaultXrInstance;
 	};
 }
