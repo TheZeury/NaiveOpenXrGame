@@ -31,11 +31,13 @@ namespace Noxg
 		bool gripReleased();
 		float gripValue();
 
-		/*bool primaryButtonClicked();
+		bool primaryButtonClicked();
 		bool primaryButtonReleased();
+		bool primaryButtonValue();
 
 		bool secondaryButtonClicked();
-		bool secondaryButtonReleased();*/
+		bool secondaryButtonReleased();
+		bool secondaryButtonValue();
 
 		glm::vec2 primaryAxisValue();
 	private:
@@ -46,6 +48,12 @@ namespace Noxg
 		bool m_gripClicked = false;
 		bool m_gripReleased = false;
 		bool gripReleasing = true;
+		bool m_primaryButtonClicked = false;
+		bool m_primaryButtonReleased = false;
+		bool primaryButtonReleasing = true;
+		bool m_secondaryButtonClicked = false;
+		bool m_secondaryButtonReleased = false;
+		bool secondaryButtonReleasing = true;
 
 		rf::OpenXrInstance xrInstance;
 	};

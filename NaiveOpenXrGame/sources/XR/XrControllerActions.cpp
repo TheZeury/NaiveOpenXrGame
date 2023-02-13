@@ -60,21 +60,54 @@ void Noxg::XrControllerActions::CalculateFrame()
 		}
 	}
 
+	{	// Primary button state.
+		m_primaryButtonClicked = false;
+		m_primaryButtonReleased = false;
+		bool value = primaryButtonValue();
+		if (primaryButtonReleasing)
+		{
+			if (value)
+			{
+				m_primaryButtonClicked = true;
+				primaryButtonReleasing = false;
+			}
+		}
+		else
+		{
+			if (!value)
+			{
+				m_primaryButtonReleased = true;
+				primaryButtonReleasing = true;
+			}
+		}
+	}
+
+	{	// Secondary button state.
+		m_secondaryButtonClicked = false;
+		m_secondaryButtonReleased = false;
+		bool value = secondaryButtonValue();
+		if (secondaryButtonReleasing)
+		{
+			if (value)
+			{
+				m_secondaryButtonClicked = true;
+				secondaryButtonReleasing = false;
+			}
+		}
+		else
+		{
+			if (!value)
+			{
+				m_secondaryButtonReleased = true;
+				secondaryButtonReleasing = true;
+			}
+		}
+	}
+
 	{	// Controller pose.
 		gameObject.lock()->transform->setLocalPosition(position());
 		gameObject.lock()->transform->setLocalRotation(rotation());
 	}
-
-	//{	// Temp.
-	//	auto xr = xrInstance.lock();
-	//	static glm::vec2 lastValue[2] = {};
-	//	glm::vec2 axisValue{ xr->inputState.thumbstickXStates[hand].currentState, xr->inputState.thumbstickYStates[hand].currentState };
-	//	if (axisValue != lastValue[hand])
-	//	{
-	//		std::cout << "hand " << hand << ": " << std::format("({}, {})", axisValue.x, axisValue.y) << std::endl;
-	//		lastValue[hand] = axisValue;
-	//	}
-	//}
 }
 
 bool Noxg::XrControllerActions::isActive()
@@ -130,6 +163,40 @@ float Noxg::XrControllerActions::gripValue()
 	auto xr = xrInstance.lock();
 	if (xr == nullptr) return 0.0f;
 	return xr->inputState.gripStates[hand].currentState;
+}
+
+bool Noxg::XrControllerActions::primaryButtonClicked()
+{
+	return m_primaryButtonClicked;
+}
+
+bool Noxg::XrControllerActions::primaryButtonReleased()
+{
+	return m_primaryButtonReleased;
+}
+
+bool Noxg::XrControllerActions::primaryButtonValue()
+{
+	auto xr = xrInstance.lock();
+	if (xr == nullptr) return false;
+	return static_cast<bool>(xr->inputState.primaryButtonStates[hand].currentState);
+}
+
+bool Noxg::XrControllerActions::secondaryButtonClicked()
+{
+	return m_secondaryButtonClicked;
+}
+
+bool Noxg::XrControllerActions::secondaryButtonReleased()
+{
+	return m_secondaryButtonReleased;
+}
+
+bool Noxg::XrControllerActions::secondaryButtonValue()
+{
+	auto xr = xrInstance.lock();
+	if (xr == nullptr) return false;
+	return static_cast<bool>(xr->inputState.secondaryButtonStates[hand].currentState);
 }
 
 glm::vec2 Noxg::XrControllerActions::primaryAxisValue()

@@ -28,6 +28,7 @@
     <ClInclude Include="sources\Bricks\Scene.h" />
     <ClInclude Include="sources\Bricks\SceneManager.h" />
     <ClInclude Include="sources\mainCommon.h" />
+    <ClInclude Include="sources\NaiveGame\MachineGear.h" />
     <ClInclude Include="sources\Physics\PhysicsEngineInstance.h" />
     <ClInclude Include="sources\Physics\PhysicsShape.h" />
     <ClInclude Include="sources\Physics\RigidActor.h" />
@@ -56,6 +57,7 @@
     <ClCompile Include="sources\Bricks\GameObject.cpp" />
     <ClCompile Include="sources\Bricks\Scene.cpp" />
     <ClCompile Include="sources\Bricks\SceneManager.cpp" />
+    <ClCompile Include="sources\NaiveGame\MachineGear.cpp" />
     <ClCompile Include="sources\Physics\PhysicsEngineInstance.cpp" />
     <ClCompile Include="sources\Physics\PhysicsShape.cpp" />
     <ClCompile Include="sources\Physics\RigidActor.cpp" />

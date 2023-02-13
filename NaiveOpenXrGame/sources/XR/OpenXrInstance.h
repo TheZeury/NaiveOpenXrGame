@@ -13,6 +13,8 @@ namespace Noxg
 		xr::Action poseAction;
 		xr::Action triggerAction;
 		xr::Action gripAction;
+		xr::Action primaryButtonAction;
+		xr::Action secondaryButtonAction;
 		xr::Action thumbstickXAction;
 		xr::Action thumbstickYAction;
 		xr::Action vibrateAction;
@@ -26,6 +28,8 @@ namespace Noxg
 		std::array<xr::SpaceLocation, 2> handLocations;
 		std::array<xr::ActionStateFloat, 2> triggerStates;
 		std::array<xr::ActionStateFloat, 2> gripStates;
+		std::array<xr::ActionStateBoolean, 2> primaryButtonStates;
+		std::array<xr::ActionStateBoolean, 2> secondaryButtonStates;
 		std::array<xr::ActionStateFloat, 2> thumbstickXStates;
 		std::array<xr::ActionStateFloat, 2> thumbstickYStates;
 	};

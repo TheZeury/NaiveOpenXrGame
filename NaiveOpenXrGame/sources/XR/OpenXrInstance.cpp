@@ -241,6 +241,22 @@ void Noxg::OpenXrInstance::CreateActions()
 		instance.stringToPath("/user/hand/right/input/squeeze/value"),
 	};
 
+	xr::ActionCreateInfo primaryButtonActionInfo("primary_button", xr::ActionType::BooleanInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "Primary Button");
+	inputAction.primaryButtonAction = inputAction.actionSet.createAction(primaryButtonActionInfo);
+
+	std::array<xr::Path, 2> primaryButtonPath = {
+		instance.stringToPath("/user/hand/left/input/x/click"),
+		instance.stringToPath("/user/hand/right/input/a/click"),
+	};
+
+	xr::ActionCreateInfo secondaryButtonActionInfo("secondary_button", xr::ActionType::BooleanInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "Secondary Button");
+	inputAction.secondaryButtonAction = inputAction.actionSet.createAction(secondaryButtonActionInfo);
+
+	std::array<xr::Path, 2> secondaryButtonPath = {
+		instance.stringToPath("/user/hand/left/input/y/click"),
+		instance.stringToPath("/user/hand/right/input/b/click"),
+	};
+
 	xr::ActionCreateInfo thumbstickXActionInfo("thumbstick_x", xr::ActionType::FloatInput, static_cast<uint32_t>(inputAction.handSubactionPath.size()), inputAction.handSubactionPath.data(), "ThumbStick X");
 	inputAction.thumbstickXAction = inputAction.actionSet.createAction(thumbstickXActionInfo);
 
@@ -274,6 +290,10 @@ void Noxg::OpenXrInstance::CreateActions()
 		xr::ActionSuggestedBinding{ inputAction.triggerAction, triggerPath[1] },
 		xr::ActionSuggestedBinding{ inputAction.gripAction, gripPath[0] },
 		xr::ActionSuggestedBinding{ inputAction.gripAction, gripPath[1] },
+		xr::ActionSuggestedBinding{ inputAction.primaryButtonAction, primaryButtonPath[0] },
+		xr::ActionSuggestedBinding{ inputAction.primaryButtonAction, primaryButtonPath[1] },
+		xr::ActionSuggestedBinding{ inputAction.secondaryButtonAction, secondaryButtonPath[0] },
+		xr::ActionSuggestedBinding{ inputAction.secondaryButtonAction, secondaryButtonPath[1] },
 		xr::ActionSuggestedBinding{ inputAction.thumbstickXAction, thumbstickXPath[0] },
 		xr::ActionSuggestedBinding{ inputAction.thumbstickXAction, thumbstickXPath[1] },
 		xr::ActionSuggestedBinding{ inputAction.thumbstickYAction, thumbstickYPath[0] },
@@ -395,6 +415,14 @@ void Noxg::OpenXrInstance::PollActions()
 		getInfo.action = inputAction.gripAction;
 		xr::ActionStateFloat gripState = session.getActionStateFloat(getInfo);
 		inputState.gripStates[hand] = gripState;
+
+		getInfo.action = inputAction.primaryButtonAction;
+		xr::ActionStateBoolean primaryButtonState = session.getActionStateBoolean(getInfo);
+		inputState.primaryButtonStates[hand] = primaryButtonState;
+
+		getInfo.action = inputAction.secondaryButtonAction;
+		xr::ActionStateBoolean secondaryButtonState = session.getActionStateBoolean(getInfo);
+		inputState.secondaryButtonStates[hand] = secondaryButtonState;
 
 		getInfo.action = inputAction.thumbstickXAction;
 		xr::ActionStateFloat thumbstickXState = session.getActionStateFloat(getInfo);
