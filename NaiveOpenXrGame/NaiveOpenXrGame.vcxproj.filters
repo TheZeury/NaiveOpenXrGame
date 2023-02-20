@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\NaiveGame.h">
+    <ClInclude Include="sources\NaiveGame\NaiveGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\Renderer\VulkanInstance.h">
@@ -99,9 +99,12 @@
     <ClInclude Include="sources\NaiveGame\MachineGear.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sources\Physics\ITriggerCallback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\NaiveGame.cpp">
+    <ClCompile Include="sources\NaiveGame\NaiveGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Renderer\VulkanInstance.cpp">
@@ -180,6 +183,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\NaiveGame\MachineGear.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Physics\ITriggerCallback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

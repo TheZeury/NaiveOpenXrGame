@@ -1,6 +1,7 @@
 #include "NaiveGame.h"
 #include "XR/XrSpaceTransform.h"
 #include "Physics/RigidStatic.h"
+#include "Physics/ITriggerCallback.h"
 #include "XR/XrControllerActions.h"
 #include "NaiveGame/MachineGear.h"
 #include <chrono>
@@ -116,8 +117,6 @@ void Noxg::NaiveGame::Run()
 			scene->CalculateFrame();
 
 			{
-				/*glm::vec3 scale = glm::vec3{ .9f, .9f, .9f } * (leftHandAction->gripValue()) + glm::vec3(.1f, .1f, .1f);
-				leftHandBox->transform->setLocalScale(scale);*/
 				leftHandBox->transform->setLocalPosition({ 0.f, -5.f * (leftHandAction->gripValue()), 0.f });
 
 				glm::vec2 angularVelocity = leftHandAction->primaryAxisValue();
@@ -173,8 +172,6 @@ void Noxg::NaiveGame::Run()
 				box->transform->setLocalMatrix(leftHandBox->transform->getGlobalMatrix());
 				box->transform->setLocalScale({ 1.f, 1.f, 1.f });
 				hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
-				/*glm::vec3 boxScale = leftHandBox->transform->getLocalScale() * 0.5f;
-				auto targetShape = physicsEngineInstance->createShape(PxBoxGeometry(*((PxVec3*)(&boxScale))));*/
 				auto shapes = leftHandGear->getRecommendedColliders();
 				for(auto& shape : shapes)
 				{
@@ -236,7 +233,6 @@ void Noxg::NaiveGame::BuildScene()
 
 		auto collider = std::make_shared<GameObject>();
 		collider->transform = std::make_shared<PhysicsTransform>(nullptr);
-		//collider->transform->setLocalRotation(glm::rotate(glm::quat{ 1.f, 0.f, 0.f, 0.f }, glm::pi<float>() / 2.f, { 0.f, 0.f, 1.f }));
 		auto rigid = std::make_shared<RigidStatic>();
 		auto shape = physicsEngineInstance->createShape(PxPlaneGeometry());
 		shape->setLocalPose(PxTransform(PxShortestRotation({ 1.f, 0.f, 0.f }, { 0.f, 1.f, 0.f })));
@@ -249,7 +245,6 @@ void Noxg::NaiveGame::BuildScene()
 
 	{	// Right hand.
 		hd::GameObject rightHand = std::make_shared<GameObject>();
-		//rightHand->transform = std::make_shared<XrSpaceTransform>(Utils::handLocations[1]);
 		rightHandAction = std::make_shared<XrControllerActions>(1);
 		rightHand->addComponent(rightHandAction);
 
@@ -271,14 +266,29 @@ void Noxg::NaiveGame::BuildScene()
 		leftHandAction = std::make_shared<XrControllerActions>(0);
 		leftHand->addComponent(leftHandAction);
 
+		hd::GameObject triggerObject = std::make_shared<GameObject>();
+		triggerObject->transform = std::make_shared<PhysicsTransform>(nullptr);
+		hd::RigidStatic rigid = std::make_shared<RigidStatic>();
+		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.1f));
+		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+		class TempTriggerCallback: public ITriggerCallback
+		{
+			virtual void OnEnter(const PxTriggerPair& pair) override { LOG_INFO("PhysX", "Trigger Entered.", 0); };
+			virtual void OnExit(const PxTriggerPair& pair) override { LOG_INFO("PhysX", "Trigger Exited.", 0); };
+		};
+		shape->userData = static_cast<ITriggerCallback*>(new TempTriggerCallback());
+		rigid->addShape(shape);
+		triggerObject->addComponent(rigid);
+		leftHand->transform->addChild(triggerObject->transform);
+
 		leftHandBox = std::make_shared<GameObject>();
-		/*leftHandBox->models.push_back(whiteCube);
-		leftHandBox->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });*/
 		leftHandGear = std::make_shared<MachineGear>(pureWhite);
 		leftHandBox->addComponent(leftHandGear);
-		leftHand->transform->addChild(leftHandBox->transform);
+		triggerObject->transform->addChild(leftHandBox->transform);
 
 		scene->addGameObject(leftHand);
+		scene->addGameObject(triggerObject);
 		scene->addGameObject(leftHandBox);
 	}
 

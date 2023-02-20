@@ -29,6 +29,7 @@
     <ClInclude Include="sources\Bricks\SceneManager.h" />
     <ClInclude Include="sources\mainCommon.h" />
     <ClInclude Include="sources\NaiveGame\MachineGear.h" />
+    <ClInclude Include="sources\Physics\ITriggerCallback.h" />
     <ClInclude Include="sources\Physics\PhysicsEngineInstance.h" />
     <ClInclude Include="sources\Physics\PhysicsShape.h" />
     <ClInclude Include="sources\Physics\RigidActor.h" />
@@ -36,7 +37,7 @@
     <ClInclude Include="sources\Renderer\GraphicsInstance.h" />
     <ClInclude Include="sources\Renderer\MeshModel.h" />
     <ClInclude Include="sources\XR\OpenXrInstance.h" />
-    <ClInclude Include="sources\NaiveGame.h" />
+    <ClInclude Include="sources\NaiveGame\NaiveGame.h" />
     <ClInclude Include="sources\physics\PhysicsTransform.h" />
     <ClInclude Include="sources\Physics\PhysXInstance.h" />
     <ClInclude Include="sources\Physics\RigidDynamic.h" />
@@ -58,6 +59,7 @@
     <ClCompile Include="sources\Bricks\Scene.cpp" />
     <ClCompile Include="sources\Bricks\SceneManager.cpp" />
     <ClCompile Include="sources\NaiveGame\MachineGear.cpp" />
+    <ClCompile Include="sources\Physics\ITriggerCallback.cpp" />
     <ClCompile Include="sources\Physics\PhysicsEngineInstance.cpp" />
     <ClCompile Include="sources\Physics\PhysicsShape.cpp" />
     <ClCompile Include="sources\Physics\RigidActor.cpp" />
@@ -65,7 +67,7 @@
     <ClCompile Include="sources\Renderer\GraphicsInstance.cpp" />
     <ClCompile Include="sources\Renderer\MeshModel.cpp" />
     <ClCompile Include="sources\XR\OpenXrInstance.cpp" />
-    <ClCompile Include="sources\NaiveGame.cpp" />
+    <ClCompile Include="sources\NaiveGame\NaiveGame.cpp" />
     <ClCompile Include="sources\physics\PhysicsTransform.cpp" />
     <ClCompile Include="sources\Physics\PhysXInstance.cpp" />
     <ClCompile Include="sources\Physics\RigidDynamic.cpp" />

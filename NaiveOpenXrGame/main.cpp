@@ -1,5 +1,5 @@
 #include "sources/mainCommon.h"
-#include "sources/NaiveGame.h"
+#include "sources/NaiveGame/NaiveGame.h"
 
 int main()
 {

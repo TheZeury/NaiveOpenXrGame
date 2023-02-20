@@ -1,11 +1,44 @@
 #include "PhysXInstance.h"
+#include "ITriggerCallback.h"
+
+class EventCallback : public PxSimulationEventCallback
+{
+	virtual void onConstraintBreak(PxConstraintInfo* constraints, PxU32 count) { }
+	virtual void onWake(PxActor** actors, PxU32 count) { }
+	virtual void onSleep(PxActor** actors, PxU32 count) { }
+	virtual void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs) { }
+	virtual void onTrigger(PxTriggerPair* pairs, PxU32 count)
+	{
+		for (size_t i = 0; i < count; ++i)
+		{
+			const auto& pair = pairs[i];
+			if (pair.triggerShape->userData != nullptr)
+			{
+				Noxg::ITriggerCallback* triggerCallback = reinterpret_cast<Noxg::ITriggerCallback*>(pair.triggerShape->userData);
+				if (pair.status & PxPairFlag::eNOTIFY_TOUCH_FOUND)
+				{
+					triggerCallback->OnEnter(pair);
+				}
+				else if (pair.status & PxPairFlag::eNOTIFY_TOUCH_LOST)
+				{
+					triggerCallback->OnExit(pair);
+				}
+				else
+				{
+					LOG_INFO("PhysX", "Undefined.", 0);
+				}
+			}
+		}
+	}
+	virtual void onAdvance(const PxRigidBody* const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) { }
+};
 
 void Noxg::PhysXInstance::Initialize()
 {
 	LOG_STEP("PhysX", "Initializing PhysX");
 	foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator, errorCallback);
 	physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, PxTolerancesScale(), true);
-	dispatcher = PxDefaultCpuDispatcherCreate(2);
+	dispatcher = PxDefaultCpuDispatcherCreate(PxThread::getNbPhysicalCores());
 
 	material = physics->createMaterial(0.5f, 0.5f, 0.6f);
 
@@ -46,6 +79,7 @@ PxScene* Noxg::PhysXInstance::createScene() const
 	{
 		sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 		sceneDesc.cpuDispatcher = dispatcher;
+		sceneDesc.simulationEventCallback = new EventCallback();
 		sceneDesc.filterShader = PxDefaultSimulationFilterShader;
 	}
 	return physics->createScene(sceneDesc);

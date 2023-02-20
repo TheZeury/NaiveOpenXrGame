@@ -11,8 +11,8 @@ layout(location = 0) out vec4 outColor;
 
 vec3 lightDirection = { 1.0, 1.0, -0.4 };
 
-vec4 lightColor = { 0.5, 0.5, 0.5, 1.0 };
-float ambient = 0.5;
+vec4 lightColor = { 1.0, 1.0, 1.0, 1.0 };
+float ambient = 0.4;
 float diffuse;
 
 void main() {

@@ -18,6 +18,7 @@ void Noxg::PhysicsTransform::setGlobalMatrix(const glm::mat4& mat)
 
 void Noxg::PhysicsTransform::CalculateFrame()
 {
+    updateMatrix(); // Because of the lazy-update strategy, some changes may still have not been updated to this transform before we fetch the next pose from pxActor and would be discarded unexpectedly, so this line is necessary.
     PxMat44 pxMat{ pxActor->getGlobalPose() };
     glm::mat4 physicsTrans = (pxActor == nullptr) ? glm::mat4{ 1.f } : (*((glm::mat4*)(&pxMat)));
     Transform::setGlobalMatrix(physicsTrans);   // Since we don't want to update the pxActor, use Transform::setGlobalMatrix instead.
