@@ -14,7 +14,7 @@ Vulkan version : 1.3.236.0
 
 NVIDIA PhysX version : 5.1.2.32190885
 
-**Both OpenXR SDK (including openxr_loader) and Vulkan SDK are not uploaded with this repo.** To properly build this repo, one should download them separately from their official sites/repos and do the *including* and *linking* works.
+**OpenXR SDK (including openxr_loader), Vulkan SDK and PhysX SDK are not uploaded with this repo.** To properly build this repo, one should download them separately from their official sites/repos and do the *including* and *linking* works.
 
 ## Free libraries (other than OpenXR SDK and Vulkan SDK):
 
