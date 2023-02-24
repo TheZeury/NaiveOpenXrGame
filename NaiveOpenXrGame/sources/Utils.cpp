@@ -154,7 +154,7 @@ void Noxg::Utils::generateMipmaps(vk::Image image, int32_t texWidth, int32_t tex
 	barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
 	barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 	barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-	barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+	barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
 	commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, { }, { }, { }, { barrier });
 
