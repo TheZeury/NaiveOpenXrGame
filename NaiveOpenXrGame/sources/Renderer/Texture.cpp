@@ -24,6 +24,7 @@ Noxg::Texture::~Texture()
 
 void Noxg::Texture::createTexture(stb::stbi_uc* pixels, int width, int height, int channels)
 {
+	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
 	vk::DeviceSize imageSize = sizeof(stb::stbi_uc) * width * height * 4;
 	auto [stagingBuffer, stagingBufferMemory] = 
 		Utils::CreateBuffer(sizeof(stb::stbi_uc), width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
@@ -32,16 +33,17 @@ void Noxg::Texture::createTexture(stb::stbi_uc* pixels, int width, int height, i
 	Utils::unmapMemory(stagingBufferMemory);
 	
 	std::array<uint32_t, 1> queueFamilyIndices = { 0 };
-	vk::ImageCreateInfo imageInfo({ }, vk::ImageType::e2D, vk::Format::eR8G8B8A8Srgb, { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 }, 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::SharingMode::eExclusive, queueFamilyIndices, vk::ImageLayout::eUndefined);
+	vk::ImageCreateInfo imageInfo({ }, vk::ImageType::e2D, vk::Format::eR8G8B8A8Srgb, { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 }, mipLevels, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::SharingMode::eExclusive, queueFamilyIndices, vk::ImageLayout::eUndefined);
 	std::tie(textureImage, textureImageMemory) = Utils::CreateImage(imageInfo, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	Utils::transitionImageLayout(textureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+	Utils::transitionImageLayout(textureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, mipLevels);
 	Utils::copyBufferToImage(textureImage, stagingBuffer, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 	Utils::destroyBuffer(stagingBuffer, stagingBufferMemory);
-	Utils::transitionImageLayout(textureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+	//Utils::transitionImageLayout(textureImage, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+	Utils::generateMipmaps(textureImage, width, height, mipLevels);
 
-	textureImageView = Utils::createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
+	textureImageView = Utils::createImageView(textureImage, vk::Format::eR8G8B8A8Srgb, mipLevels);
 
-	vk::SamplerCreateInfo samplerInfo({ }, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, VK_TRUE, Utils::maxAnisotrophy, VK_FALSE, vk::CompareOp::eAlways, 0.f, 0.f, vk::BorderColor::eIntOpaqueBlack, VK_FALSE);
+	vk::SamplerCreateInfo samplerInfo({ }, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, VK_TRUE, Utils::maxAnisotrophy, VK_FALSE, vk::CompareOp::eAlways, 0.f, static_cast<float>(mipLevels), vk::BorderColor::eIntOpaqueBlack, VK_FALSE);
 	textureSampler = Utils::vkDevice.createSampler(samplerInfo);
 }

@@ -518,7 +518,7 @@ void Noxg::VulkanInstance::CreateDepthResources()
 		vk::ImageCreateInfo imageInfo({ }, vk::ImageType::e2D, depthFormat, { static_cast<uint32_t>(swapChainRects[i].extent.width), static_cast<uint32_t>(swapChainRects[i].extent.height), 1}, 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, queueFamilyIndices, vk::ImageLayout::eUndefined);
 
 		auto [depthImage, depthImageMemory] = Utils::CreateImage(imageInfo, vk::MemoryPropertyFlagBits::eDeviceLocal);
-		auto depthImageView = Utils::createImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
+		auto depthImageView = Utils::createImageView(depthImage, depthFormat,1, vk::ImageAspectFlagBits::eDepth);
 		depthImages.push_back(depthImage);
 		depthImageMemories.push_back(depthImageMemory);
 		depthImageViews.push_back(depthImageView);

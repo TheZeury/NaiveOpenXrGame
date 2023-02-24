@@ -22,6 +22,7 @@ namespace Noxg
 		std::vector<vk::DescriptorSet> descriptorSet;
 
 	public:
+		uint32_t mipLevels;
 		vk::ImageView textureImageView;
 		vk::Sampler textureSampler;
 		vk::Image textureImage;

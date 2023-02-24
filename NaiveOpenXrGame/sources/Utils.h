@@ -16,10 +16,11 @@ namespace Noxg
 		static void unmapMemory(vk::DeviceMemory memory);
 		static void copyBuffer(vk::Buffer& dstBuffer, vk::Buffer& srcBuffer, vk::DeviceSize size);
 		static void copyBufferToImage(vk::Image& dstImage, vk::Buffer& srcBuffer, uint32_t width, uint32_t height);
-		static void transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+		static void transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels = 1);
+		static void generateMipmaps(vk::Image image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 		static void destroyBuffer(vk::Buffer& buffer, vk::DeviceMemory& memory);
 		static void destroyImage(vk::Image& image, vk::DeviceMemory& memory);
-		static vk::ImageView createImageView(vk::Image& image, vk::Format format, vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
+		static vk::ImageView createImageView(vk::Image& image, vk::Format format, uint32_t mipLevels = 1, vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
 		static vk::CommandBuffer beginSingleTimeCommandBuffer();
 		static void endSingleTimeCommandBuffer(vk::CommandBuffer& commandBuffer);
 		static vk::Format findSupportedFormat(const std::vector<vk::Format> candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);

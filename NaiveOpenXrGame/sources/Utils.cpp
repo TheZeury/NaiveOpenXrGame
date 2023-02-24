@@ -78,11 +78,11 @@ void Noxg::Utils::copyBufferToImage(vk::Image& dstImage, vk::Buffer& srcBuffer, 
 	endSingleTimeCommandBuffer(commandBuffer);
 }
 
-void Noxg::Utils::transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+void Noxg::Utils::transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels)
 {
 	auto commandBuffer = beginSingleTimeCommandBuffer();
 
-	vk::ImageMemoryBarrier barrier({ }, { }, oldLayout, newLayout, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, image, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+	vk::ImageMemoryBarrier barrier({ }, { }, oldLayout, newLayout, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, image, { vk::ImageAspectFlagBits::eColor, 0, mipLevels, 0, 1 });
 	vk::PipelineStageFlags sourceStage, destinationStage;
 	if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
 	{
@@ -111,6 +111,56 @@ void Noxg::Utils::transitionImageLayout(vk::Image image, vk::Format format, vk::
 	endSingleTimeCommandBuffer(commandBuffer);
 }
 
+void Noxg::Utils::generateMipmaps(vk::Image image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
+{
+	auto commandBuffer = beginSingleTimeCommandBuffer();
+
+	vk::ImageMemoryBarrier barrier({ }, { }, { }, { }, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, image, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+
+	int32_t mipWidth = texWidth;
+	int32_t mipHeight = texHeight;
+
+	for (uint32_t i = 1; i < mipLevels; ++i)
+	{
+		barrier.subresourceRange.baseMipLevel = i - 1;
+		barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+		barrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+		barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+		barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+
+		commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, { }, { }, { }, { barrier });
+
+		vk::ImageBlit blit(
+			{ vk::ImageAspectFlagBits::eColor, i - 1, 0, 1 }, 
+			std::array<vk::Offset3D, 2>({ { 0, 0, 0 }, { mipWidth, mipHeight, 1 } }), 
+			{ vk::ImageAspectFlagBits::eColor, i, 0, 1 }, 
+			std::array<vk::Offset3D, 2>({ { 0, 0, 0 }, { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 } })
+		);
+
+		commandBuffer.blitImage(image, vk::ImageLayout::eTransferSrcOptimal, image, vk::ImageLayout::eTransferDstOptimal, { blit }, vk::Filter::eLinear);
+
+		barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+		barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+		barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+		commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, { }, { }, { }, { barrier });
+
+		if (mipWidth > 1) mipWidth /= 2;
+		if (mipHeight > 1) mipHeight /= 2;
+	}
+
+	barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+	barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+	barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+	barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+	barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+
+	commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, { }, { }, { }, { barrier });
+
+	endSingleTimeCommandBuffer(commandBuffer);
+}
+
 void Noxg::Utils::destroyBuffer(vk::Buffer& buffer, vk::DeviceMemory& memory)
 {
 	vkDevice.destroyBuffer(buffer);
@@ -123,9 +173,9 @@ void Noxg::Utils::destroyImage(vk::Image& image, vk::DeviceMemory& memory)
 	vkDevice.freeMemory(memory);
 }
 
-vk::ImageView Noxg::Utils::createImageView(vk::Image& image, vk::Format format, vk::ImageAspectFlags aspectFlags)
+vk::ImageView Noxg::Utils::createImageView(vk::Image& image, vk::Format format, uint32_t mipLevels, vk::ImageAspectFlags aspectFlags)
 {
-	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, { }, { aspectFlags, 0, 1, 0, 1 });
+	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, { }, { aspectFlags, 0, mipLevels, 0, 1 });
 	return vkDevice.createImageView(viewInfo);
 }
 
