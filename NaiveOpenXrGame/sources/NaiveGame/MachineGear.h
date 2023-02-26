@@ -2,7 +2,7 @@
 
 #include "mainCommon.h"
 #include "Bricks/GameComponent.h"
-#include "Renderer/Texture.h"
+#include "Renderer/Material.h"
 
 namespace Noxg
 {
@@ -11,7 +11,7 @@ namespace Noxg
 	class MachineGear : public GameComponent
 	{
 	public:
-		MachineGear(rf::Texture _texture, int _level = 1, float _baseSize = 0.1f, float _thickness = 0.1f);
+		MachineGear(rf::Material _texture, int _level = 1, float _baseSize = 0.1f, float _thickness = 0.1f);
 
 		virtual void Enable() override;
 		virtual void Redraw();
@@ -20,7 +20,7 @@ namespace Noxg
 		void setBaseSize(float newBaseSize);
 
 	public:
-		rf::Texture texture;
+		rf::Material texture;
 		int level = 1;
 		float baseSize = 0.1f;
 		float thickness = 0.1f;

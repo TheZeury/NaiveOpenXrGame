@@ -1,6 +1,7 @@
 #include "mainCommon.h"
 #include "VulkanInstance.h"
 #include "MeshModel.h"
+#include "Material.h"
 #include "Utils.h"
 #include "XR/OpenXrInstance.h"
 #include "Physics/RigidDynamic.h"
@@ -65,6 +66,8 @@ void Noxg::VulkanInstance::CleanUpSession()
 	LOG_STEP("Vulkan", "Destroying Textures");
 	textures.clear();
 	LOG_SUCCESS();
+
+	Texture::empty = nullptr;
 
 	LOG_STEP("Vulkan", "Destroying Descriptor Pool");
 	device.destroyDescriptorPool(descriptorPool);
@@ -366,6 +369,8 @@ void Noxg::VulkanInstance::InitializeSession()
 	CreateDepthResources();
 	CreateRenderPass();
 	CreateDescriptors();
+	unsigned char pixels[] = { 0, 0, 0, 0 };
+	Texture::empty = std::make_shared<Texture>(pixels, 1, 1, 4);
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	AllocateCommandBuffers();
@@ -395,18 +400,21 @@ void Noxg::VulkanInstance::CreateRenderPass()
 
 void Noxg::VulkanInstance::CreateDescriptors()
 {
-	vk::DescriptorSetLayoutBinding samplerLayoutBinding(0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, { });
+	/*vk::DescriptorSetLayoutBinding samplerLayoutBinding(0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, { });
 	
 	std::array<vk::DescriptorSetLayoutBinding, 1> bindings = { samplerLayoutBinding };
 	vk::DescriptorSetLayoutCreateInfo layoutInfo({ }, bindings);
-	textureSetLayout = device.createDescriptorSetLayout(layoutInfo);
+	textureSetLayout = device.createDescriptorSetLayout(layoutInfo);*/
+	Material::materialSetLayout = Material::getDescriptorSetLayout();
 
-	std::array<vk::DescriptorPoolSize, 1> poolSizes = {
-		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(swapChainImageViews.size() * 10) },
+	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
+		vk::DescriptorPoolSize{ vk::DescriptorType::eUniformBuffer, 10 },
+		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, 20 },
 	};
 
-	vk::DescriptorPoolCreateInfo poolInfo({ }, static_cast<uint32_t>(swapChainImageViews.size() * 10), poolSizes);
+	vk::DescriptorPoolCreateInfo poolInfo({ }, 10, poolSizes);
 	descriptorPool = device.createDescriptorPool(poolInfo);
+	Material::descriptorPool = descriptorPool;
 }
 
 void Noxg::VulkanInstance::CreateGraphicsPipeline()
@@ -443,7 +451,7 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineViewportStateCreateInfo viewportInfo({ }, 1, nullptr, 1, nullptr);
 
-	vk::PipelineRasterizationStateCreateInfo rasterizationInfo({ }, VK_FALSE, VK_FALSE, vk::PolygonMode::eFill, vk::CullModeFlagBits::eNone, vk::FrontFace::eCounterClockwise, VK_FALSE, { }, { }, { }, 1.f);
+	vk::PipelineRasterizationStateCreateInfo rasterizationInfo({ }, VK_FALSE, VK_FALSE, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise, VK_FALSE, { }, { }, { }, 1.f);
 
 	vk::PipelineMultisampleStateCreateInfo multisampleInfo{ };
 
@@ -454,7 +462,7 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 	vk::PipelineColorBlendStateCreateInfo colorBlendInfo{ }; colorBlendInfo.attachmentCount = 1; colorBlendInfo.pAttachments = &colorBlendAttachment;
 
 	std::array<vk::DescriptorSetLayout, 1> setLayouts = {
-		textureSetLayout
+		Material::materialSetLayout,
 	};
 
 	std::vector<vk::PushConstantRange> pushConstantRanges = {
@@ -609,7 +617,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 			commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
 			for (auto& model : obj->models)
 			{
-				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->texture->descriptorSet[view] }, { });
+				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
 				model->bind(commandBuffers[view]);
 				model->draw(commandBuffers[view]);
 			}
@@ -625,30 +633,30 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	queue.submit(submitInfo, inFlights[view]);
 }
 
-void Noxg::VulkanInstance::addTexture(hd::Texture texture)
-{
-	textures.push_back(texture);
-
-	std::vector<vk::DescriptorSetLayout> layouts(swapChainImageViews.size(), textureSetLayout);
-	vk::DescriptorSetAllocateInfo allocateInfo(descriptorPool, layouts);
-	texture->descriptorSet = device.allocateDescriptorSets(allocateInfo);
-
-	for (size_t i = 0; i < swapChainImageViews.size(); ++i)
-	{
-		std::array<vk::DescriptorImageInfo, 1> imageInfos = {
-			vk::DescriptorImageInfo(texture->textureSampler, texture->textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal)
-		};
-		std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
-			vk::WriteDescriptorSet(texture->descriptorSet[i], 0, 0, vk::DescriptorType::eCombinedImageSampler, imageInfos)
-		};
-		device.updateDescriptorSets(descriptorWrites, { });
-	}
-}
-
-void Noxg::VulkanInstance::addModel(hd::MeshModel model)
-{
-	models.push_back(model);
-}
+//void Noxg::VulkanInstance::addTexture(hd::Texture texture)
+//{
+//	textures.push_back(texture);
+//
+//	std::vector<vk::DescriptorSetLayout> layouts(swapChainImageViews.size(), textureSetLayout);
+//	vk::DescriptorSetAllocateInfo allocateInfo(descriptorPool, layouts);
+//	texture->descriptorSet = device.allocateDescriptorSets(allocateInfo);
+//
+//	for (size_t i = 0; i < swapChainImageViews.size(); ++i)
+//	{
+//		std::array<vk::DescriptorImageInfo, 1> imageInfos = {
+//			vk::DescriptorImageInfo(texture->textureSampler, texture->textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal)
+//		};
+//		std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
+//			vk::WriteDescriptorSet(texture->descriptorSet[i], 0, 0, vk::DescriptorType::eCombinedImageSampler, imageInfos)
+//		};
+//		device.updateDescriptorSets(descriptorWrites, { });
+//	}
+//}
+//
+//void Noxg::VulkanInstance::addModel(hd::MeshModel model)
+//{
+//	models.push_back(model);
+//}
 
 void Noxg::VulkanInstance::addScene(rf::Scene scene)
 {
@@ -673,13 +681,15 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 	}
 	LOG_SUCCESS();
 
-	std::vector<hd::Texture> texs;
+	std::vector<hd::Material> mates;
 	std::vector<hd::MeshModel> modls;
 
-	LOG_STEP("Vurkan", "Creating Textures");
+	LOG_STEP("Vulkan", "Creating Textures");
 	for (auto& material : materials)
 	{
-		texs.push_back(std::make_shared<Texture>(textureDirectory + '/' + material.diffuse_texname));
+		auto diffuseTex = material.diffuse_texname == "" ? nullptr : std::make_shared<Texture>(textureDirectory + '/' + material.diffuse_texname);
+		auto normalTex = material.bump_texname == "" ? nullptr : std::make_shared<Texture>(textureDirectory + '/' + material.bump_texname);
+		mates.push_back(std::make_shared<Material>(diffuseTex, normalTex));
 	}
 	LOG_SUCCESS();
 
@@ -704,9 +714,9 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 			};
 
 			vertex.normal = {
-				attrib.normals[3 * index.vertex_index + 0],
-				attrib.normals[3 * index.vertex_index + 1],
-				attrib.normals[3 * index.vertex_index + 2],
+				attrib.normals[3 * index.normal_index + 0],
+				attrib.normals[3 * index.normal_index + 1],
+				attrib.normals[3 * index.normal_index + 2],
 			};
 
 			vertex.uv = {
@@ -729,12 +739,12 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 
 		if (++shapeCount >= shapes.size())	// last shape.
 		{
-			modls.push_back(std::make_shared<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
+			modls.push_back(std::make_shared<MeshModel>(vertices, indices, mates[materialId]));	// make current model.
 			// no need to manually clear the containers.
 		}
 		else if (materialId != shapes[shapeCount].mesh.material_ids[0])	// the next shape has different texture.
 		{
-			modls.push_back(std::make_shared<MeshModel>(vertices, indices, texs[materialId]));	// make current model.
+			modls.push_back(std::make_shared<MeshModel>(vertices, indices, mates[materialId]));	// make current model.
 			vertices.clear();	// clear.
 			indices.clear();
 			uniqueVertices.clear();
@@ -743,15 +753,15 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 	}
 	LOG_SUCCESS();
 
-	LOG_INFO("Vulkan", std::format("Loaded {} textures and {} models", texs.size(), modls.size()), 0);
-	for (auto& texture : texs)
+	LOG_INFO("Vulkan", std::format("Loaded {} textures and {} models", mates.size(), modls.size()), 0);
+	/*for (auto& texture : texs)
 	{
 		addTexture(texture);
 	}
 	for (auto& model : modls)
 	{
 		addModel(model);
-	}
+	}*/
 
 	hd::GameObject obj = std::make_shared<GameObject>();
 	obj->models = modls;

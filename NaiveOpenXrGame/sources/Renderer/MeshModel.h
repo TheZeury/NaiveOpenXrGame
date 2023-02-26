@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mainCommon.h"
-#include "Texture.h"
+#include "Material.h"
 
 namespace Noxg
 {
@@ -14,8 +14,10 @@ namespace Noxg
 		{
 			glm::vec3 position;
 			glm::vec4 color;
-			glm::vec3 normal;
 			glm::vec2 uv;
+			glm::vec3 normal;
+			glm::vec3 tangent;
+			glm::vec3 bitangent;
 
 			static std::array<vk::VertexInputBindingDescription, 1> getBindingDescriptions()
 			{
@@ -24,35 +26,40 @@ namespace Noxg
 				};
 			}
 
-			static std::array<vk::VertexInputAttributeDescription, 4> getAttributeDescriptions()
+			static std::array<vk::VertexInputAttributeDescription, 6> getAttributeDescriptions()
 			{
 				return {
 					vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, position) },
 					vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32A32Sfloat, offsetof(Vertex, color) },
-					vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal) },
-					vk::VertexInputAttributeDescription{ 3, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) },
+					vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) },
+					vk::VertexInputAttributeDescription{ 3, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal) },
+					vk::VertexInputAttributeDescription{ 4, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, tangent) },
+					vk::VertexInputAttributeDescription{ 5, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, bitangent) },
 				};
 			}
 
 			bool operator==(const Vertex& other) const
 			{
-				return position == other.position && normal == other.normal && uv == other.uv;
+				return position == other.position && normal == other.normal && uv == other.uv;	
+				// There's no need to take tangent and bitangent into consideration since they are averaged through all vertices that have the same position, uv, and normal values;
 			}
 		};
 	public:
 		MeshModel(const MeshModel&) = delete;
 		MeshModel& operator=(const MeshModel&) = delete;
 
-		MeshModel(std::string path, hd::Texture tex);
-		MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices, hd::Texture tex);
+		MeshModel(std::string path, hd::Material tex);
+		MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices, hd::Material tex);
 		~MeshModel();
 
-		void createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+		void createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, bool calculateTBN = true);
 
 		void bind(vk::CommandBuffer& commandBuffer);
 		void draw(vk::CommandBuffer& commandBuffer);
+
+		static void calculateTangentBitangent(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	public:
-		hd::Texture texture;
+		hd::Material material;
 
 	private:
 		uint32_t vertexCount;

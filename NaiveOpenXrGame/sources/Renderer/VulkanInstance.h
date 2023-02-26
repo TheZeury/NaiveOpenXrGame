@@ -44,8 +44,8 @@ namespace Noxg
 		void AllocateCommandBuffers();
 		virtual void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format) override;
 
-		virtual void addTexture(hd::Texture texture) override;
-		virtual void addModel(hd::MeshModel model) override;
+		//virtual void addTexture(hd::Texture texture) override;
+		//virtual void addModel(hd::MeshModel model) override;
 		virtual void addScene(rf::Scene scene) override;
 		virtual hd::GameObject loadGameObjectFromFiles(std::string name) override;	// May creates multiple textures and models, but only a single gameObject.
 		virtual xr::GraphicsBindingVulkanKHR getGraphicsBinding() override;

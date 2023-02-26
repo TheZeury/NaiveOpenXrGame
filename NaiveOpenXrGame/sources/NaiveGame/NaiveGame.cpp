@@ -36,45 +36,47 @@ void Noxg::NaiveGame::Run()
 	xrInstance->InitializeSession();
 	graphicsInstance->InitializeSession();
 
-	unsigned char blackPixel[4] = { 0, 0, 0, 255 };
+	/*unsigned char blackPixel[4] = { 0, 0, 0, 255 };
 	pureBlack = std::make_shared<Texture>(blackPixel, 1, 1, 4);
 	unsigned char whitePixel[4] = { 255, 255, 255, 255 };
 	pureWhite = std::make_shared<Texture>(whitePixel, 1, 1, 4);
 
 	graphicsInstance->addTexture(pureBlack);
-	graphicsInstance->addTexture(pureWhite);
+	graphicsInstance->addTexture(pureWhite);*/
+	pureBlack = std::make_shared<Material>(glm::vec4{ 0.f, 0.f, 0.f, 1.f });
+	pureWhite = std::make_shared<Material>(glm::vec4{ 1.f, 1.f, 1.f, 1.f });
 	
 	std::vector<Vertex> vertices = {
 		// down
-		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
-		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
-		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
-		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { 0.f, -1.f, 0.f }, { } },
+		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
+		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
+		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
+		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
 		// up
-		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
-		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
-		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
-		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { 0.f, 1.f, 0.f }, { } },
+		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
+		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
+		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
+		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
 		// front
-		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
-		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
-		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
-		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { 0.f, 0.f, 1.f }, { } },
+		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { }, { }},
+		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { }, { }},
+		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { } , { }},
+		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { } , { }},
 		// back
-		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
-		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
-		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
-		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { 0.f, 0.f, -1.f }, { } },
+		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
+		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
+		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
+		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
 		// left
-		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
-		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
-		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
-		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { -1.f, 0.f, 0.f }, { } },
+		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
+		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
+		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
+		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
 		// right
-		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
-		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
-		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
-		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { 1.f, 0.f, 0.f }, { } },
+		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
+		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
+		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
+		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
 	};
 	std::vector<uint32_t> indices = {
 		0 + 0,  1 + 0,  2 + 0,	// down
@@ -92,7 +94,7 @@ void Noxg::NaiveGame::Run()
 	};
 	blackCube = std::make_shared<MeshModel>(vertices, indices, pureBlack);
 	whiteCube = std::make_shared<MeshModel>(vertices, indices, pureWhite);
-	graphicsInstance->addModel(blackCube);
+	/*graphicsInstance->addModel(blackCube);*/
 
 	auto bulletShape = physicsEngineInstance->createShape(PxBoxGeometry(0.05f, 0.05f, 0.05f));
 
@@ -215,13 +217,15 @@ void Noxg::NaiveGame::BuildScene()
 	sceneManager->Initialize(scene);
 
 	{	// Ground.
-		auto tiles = std::make_shared<Texture>("textures/GroundTile.jpg");
-		graphicsInstance->addTexture(tiles);
+		auto tiles_diffuse = std::make_shared<Texture>("textures/GroundTile_diffuse.jpg");
+		auto tiles_normal = std::make_shared<Texture>("textures/GroundTile_normal.jpg");
+		auto tiles = std::make_shared<Material>(tiles_diffuse, tiles_normal);
+		/*graphicsInstance->addTexture(tiles);*/
 		std::vector<Vertex> vertices = {
-			{ { -100.f, 0.f, 100.f }, { }, { 0.f, 1.f, 0.f }, { 100.f, 0.f } },
-			{ { 100.f, 0.f, 100.f }, { }, { 0.f, 1.f, 0.f }, { 0.f, 0.f } },
-			{ { 100.f, 0.f, -100.f }, { }, { 0.f, 1.f, 0.f }, { 0.f, 100.f } },
-			{ { -100.f, 0.f, -100.f }, { }, { 0.f, 1.f, 0.f }, { 100.f, 100.f } },
+			{ { -100.f, 0.f, 100.f }, { }, { 100.f, 0.f }, { 0.f, 1.f, 0.f }, { }, { } },
+			{ { 100.f, 0.f, 100.f }, { }, { 0.f, 0.f }, { 0.f, 1.f, 0.f }, { }, { } },
+			{ { 100.f, 0.f, -100.f },{ }, { 0.f, 100.f }, { 0.f, 1.f, 0.f }, { }, { } },
+			{ { -100.f, 0.f, -100.f }, { }, { 100.f, 100.f }, { 0.f, 1.f, 0.f }, { }, { } },
 		};
 		std::vector<uint32_t> indices = {
 			0, 1, 2,
@@ -294,10 +298,10 @@ void Noxg::NaiveGame::BuildScene()
 
 	{	// Steed.
 		hd::GameObject steed = std::make_shared<GameObject>();
-		steed->transform = std::make_shared<PhysicsTransform>(nullptr);
+		//steed->transform = std::make_shared<PhysicsTransform>(nullptr);
 		steed->transform->setLocalPosition({ -1.f, 0.f, -.5f });
-		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
-		steed->addComponent(rigid);
+		//hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
+		//steed->addComponent(rigid);
 
 		hd::GameObject steedModel = graphicsInstance->loadGameObjectFromFiles("steed");
 		steedModel->transform->setLocalScale({ .01f, 0.01f, 0.01f });	// cm to m

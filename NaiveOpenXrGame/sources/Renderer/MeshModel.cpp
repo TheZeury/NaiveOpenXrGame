@@ -1,9 +1,9 @@
 #include "MeshModel.h"
 #include "Utils.h"
 
-Noxg::MeshModel::MeshModel(std::string path, hd::Texture tex)
+Noxg::MeshModel::MeshModel(std::string path, hd::Material tex)
 {
-	texture = tex;
+	material = tex;
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
@@ -58,9 +58,9 @@ Noxg::MeshModel::MeshModel(std::string path, hd::Texture tex)
 	createMeshModel(vertices, indices);
 }
 
-Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices, hd::Texture tex)
+Noxg::MeshModel::MeshModel(std::vector<Vertex> vertices, std::vector<uint32_t> indices, hd::Material tex)
 {
-	texture = tex;
+	material = tex;
 	createMeshModel(vertices, indices);
 }
 
@@ -70,8 +70,12 @@ Noxg::MeshModel::~MeshModel()
 	Utils::destroyBuffer(indexBuffer, indexBufferMemory);
 }
 
-void Noxg::MeshModel::createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+void Noxg::MeshModel::createMeshModel(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, bool calculateTBN)
 {
+	if (calculateTBN)
+	{
+		calculateTangentBitangent(vertices, indices);
+	}
 	// VertexBuffer
 	vertexCount = static_cast<uint32_t>(vertices.size());
 	vk::DeviceSize bufferSize = sizeof(Vertex) * vertexCount;
@@ -119,4 +123,61 @@ void Noxg::MeshModel::bind(vk::CommandBuffer& commandBuffer)
 void Noxg::MeshModel::draw(vk::CommandBuffer& commandBuffer)
 {
 	commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
+}
+
+void Noxg::MeshModel::calculateTangentBitangent(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+{
+	if (indices.size() % 3 != 0)
+	{
+		throw std::runtime_error("Not a complete triangle mesh.");
+	}
+	std::vector<uint32_t> count(vertices.size(), 0);
+
+	for (size_t i = 0; i < indices.size(); i += 3)
+	{
+		uint32_t index0 = indices[i + 0];
+		uint32_t index1 = indices[i + 1];
+		uint32_t index2 = indices[i + 2];
+
+		++count[index0];
+		++count[index1];
+		++count[index2];
+
+		Vertex& v0 = vertices[index0];
+		Vertex& v1 = vertices[index1];
+		Vertex& v2 = vertices[index2];
+
+		glm::vec3& p0 = v0.position;
+		glm::vec3& p1 = v1.position;
+		glm::vec3& p2 = v2.position;
+
+		glm::vec2& u0 = v0.uv;
+		glm::vec2& u1 = v1.uv;
+		glm::vec2& u2 = v2.uv;
+
+		glm::vec3 deltaP1 = p1 - p0;
+		glm::vec3 deltaP2 = p2 - p0;
+
+		glm::vec2 deltaU1 = u1 - u0;
+		glm::vec2 deltaU2 = u2 - u0;
+
+		float r = 1.0f / (deltaU1.x * deltaU2.y - deltaU2.x * deltaU1.y);
+		glm::vec3 tangent = (deltaP1 * deltaU2.y - deltaP2 * deltaU1.y) * r;
+		glm::vec3 bitangent = (deltaP2 * deltaU1.x - deltaP1 * deltaU2.x) * r;
+
+		v0.tangent += tangent;
+		v0.bitangent += bitangent;
+
+		v1.tangent += tangent;
+		v1.bitangent += bitangent;
+
+		v2.tangent += tangent;
+		v2.bitangent += bitangent;
+	}
+
+	for (int i = 0; i < vertices.size(); ++i)
+	{
+		vertices[i].tangent /= count[i];
+		vertices[i].bitangent /= count[i];
+	}
 }

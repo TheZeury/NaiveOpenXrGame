@@ -19,7 +19,7 @@ namespace Noxg
 		void createTexture(stb::stbi_uc* pixels, int width, int height, int channels);
 
 	public:
-		std::vector<vk::DescriptorSet> descriptorSet;
+		inline static hd::Texture empty;
 
 	public:
 		uint32_t mipLevels;
