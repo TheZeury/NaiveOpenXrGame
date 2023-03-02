@@ -4,8 +4,6 @@
 #include "OpenXrInstance.h"
 #include "Bricks/GameComponent.h"
 
-#include <functional>
-
 namespace Noxg
 {
 	MAKE_HANDLE(XrControllerActions);

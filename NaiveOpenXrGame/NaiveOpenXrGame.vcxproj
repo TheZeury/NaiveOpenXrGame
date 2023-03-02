@@ -52,6 +52,8 @@
     <ClInclude Include="sources\XR\XrSpaceTransform.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\modules\std.compat.ixx" />
+    <ClCompile Include="..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\modules\std.ixx" />
     <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="external\tiny_obj_loader.cpp" />
     <ClCompile Include="main.cpp" />
@@ -229,6 +231,7 @@
       <EnableModules>true</EnableModules>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <CompileAs>CompileAsCppModule</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

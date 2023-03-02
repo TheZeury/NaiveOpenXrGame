@@ -4,7 +4,6 @@
 #include "Physics/ITriggerCallback.h"
 #include "XR/XrControllerActions.h"
 #include "NaiveGame/MachineGear.h"
-#include <chrono>
 
 Noxg::hd::XrControllerActions rightHandAction;
 Noxg::hd::XrControllerActions leftHandAction;

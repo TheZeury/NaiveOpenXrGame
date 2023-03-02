@@ -2,7 +2,6 @@
 
 #include "mainCommon.h"
 #include "GameObject.h"
-#include <unordered_set>
 
 namespace Noxg
 {

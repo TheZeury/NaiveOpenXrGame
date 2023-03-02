@@ -60,7 +60,7 @@ void Noxg::VulkanInstance::CleanUpSession()
 	instance.destroySurfaceKHR(mirrorSurface);
 #endif
 
-	preservedModels.clear();
+	//preservedModels.clear();
 
 	Texture::empty = nullptr;
 
@@ -464,8 +464,8 @@ void Noxg::VulkanInstance::AllocateCommandBuffers()
 	commandBuffers = device.allocateCommandBuffers(allocateInfo);
 	LOG_SUCCESS();
 
-	preservedModels.clear();
-	preservedModels.resize(swapChains.size());
+	//preservedModels.clear();
+	//preservedModels.resize(swapChains.size());
 
 	LOG_STEP("Vulkan", "Creating synchronizers");
 	vk::FenceCreateInfo fenceInfo(vk::FenceCreateFlagBits::eSignaled);
@@ -488,7 +488,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		throw std::runtime_error("Failed to reset Fences.");
 	}
 
-	preservedModels[view].clear();
+	//preservedModels[view].clear();
 
 	commandBuffers[view].reset();
 
@@ -538,7 +538,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
 				model->bind(commandBuffers[view]);
 				model->draw(commandBuffers[view]);
-				preservedModels[view].push_back(model);
+				//preservedModels[view].push_back(model);
 			}
 		}
 	}

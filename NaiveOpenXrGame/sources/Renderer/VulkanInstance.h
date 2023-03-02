@@ -6,8 +6,6 @@
 #include "Bricks/Scene.h"
 #include "SwapChain.h"
 
-#include <list>
-
 namespace Noxg
 {
 	MAKE_HANDLE(VulkanInstance);
@@ -63,7 +61,7 @@ namespace Noxg
 		vk::Pipeline pipeline;
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;
-		std::vector<std::vector<hd::MeshModel>> preservedModels;	// models are preserved by a commandBuffer when they are being drawn.
+		// std::vector<std::vector<hd::MeshModel>> preservedModels;	// models are preserved by a commandBuffer when they are being drawn.
 		vk::Semaphore drawDone;
 		std::vector<vk::Fence> inFlights;
 		std::vector<hd::SwapChain> swapChains;
