@@ -10,7 +10,6 @@ Noxg::VulkanInstance::VulkanInstance()
 {
 	window = nullptr;
 	queueFamilyIndex = 0;
-	swapChainFormat = vk::Format::eUndefined;
 }
 
 Noxg::VulkanInstance::~VulkanInstance()
@@ -31,6 +30,8 @@ void Noxg::VulkanInstance::Initialize(rf::XrInstance xrInstance)
 	CreateInstance();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
+	Utils::vkDevice = device;
+	Utils::vkPhysicalDevice = physicalDevice;
 }
 
 void Noxg::VulkanInstance::CleanUpInstance()
@@ -59,13 +60,7 @@ void Noxg::VulkanInstance::CleanUpSession()
 	instance.destroySurfaceKHR(mirrorSurface);
 #endif
 
-	LOG_STEP("Vulkan", "Destroying Models");
-	models.clear();
-	LOG_SUCCESS();
-
-	LOG_STEP("Vulkan", "Destroying Textures");
-	textures.clear();
-	LOG_SUCCESS();
+	preservedModels.clear();
 
 	Texture::empty = nullptr;
 
@@ -93,17 +88,9 @@ void Noxg::VulkanInstance::CleanUpSession()
 	device.destroyCommandPool(commandPool);
 	LOG_SUCCESS();
 
-
-	LOG_STEP("Vulkan", "Destroying Frame Buffers");
-	for (auto& framebuffers : frameBuffers)
-	{
-		for (auto& framebuffer : framebuffers)
-		{
-			device.destroyFramebuffer(framebuffer);
-		}
-	}
+	LOG_STEP("Vulkan", "Destroying Swap Chains");
+	swapChains.clear();
 	LOG_SUCCESS();
-
 
 	LOG_STEP("Vulkan", "Destroying Pipeline");
 	device.destroyPipeline(pipeline);
@@ -117,24 +104,6 @@ void Noxg::VulkanInstance::CleanUpSession()
 
 	LOG_STEP("Vulkan", "Destroying Render Pass");
 	device.destroyRenderPass(renderPass);
-	LOG_SUCCESS();
-
-	LOG_STEP("Vulkan", "Destroying Depth Resources");
-	for (int i = 0; i < depthImages.size(); ++i)
-	{
-		Utils::destroyImage(depthImages[i], depthImageMemories[i]);
-		device.destroyImageView(depthImageViews[i]);
-	}
-	LOG_SUCCESS();
-
-	LOG_STEP("Vulkan", "Destroying Swap Chain Image Views");
-	for (auto& views : swapChainImageViews)
-	{
-		for (auto& view : views)
-		{
-			device.destroyImageView(view);
-		}
-	}
 	LOG_SUCCESS();
 }
 
@@ -324,19 +293,19 @@ void Noxg::VulkanInstance::CreateLogicalDevice()
 
 void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr::SwapchainImageVulkanKHR>>& swapChainImages, vk::Format format, std::vector<xr::Rect2Di> rects)
 {
-	swapChainFormat = format;
-	swapChainRects = rects;
-	LOG_STEP("Vulkan", "Creating Swap Chain Image Views");
-	swapChainImageViews.clear();
-	for (auto& images : swapChainImages)
+	CreateRenderPass(format);
+	LOG_STEP("Vulkan", "Creating Swap Chains");
+
+	swapChains.clear();
+	std::vector<vk::Image> images;
+	for (int i = 0; i < swapChainImages.size(); ++i)
 	{
-		std::vector<vk::ImageView> imageViews; imageViews.clear();
-		for (auto& image : images)
+		images.clear();
+		for (auto& image : swapChainImages[i])
 		{
-			vk::ImageViewCreateInfo createInfo({}, image.image, vk::ImageViewType::e2D, format, { }, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
-			imageViews.push_back(device.createImageView(createInfo));
+			images.push_back(image.image);
 		}
-		swapChainImageViews.push_back(imageViews);
+		swapChains.push_back(std::make_shared<SwapChain>(device, renderPass, images, format, vk::Rect2D{ { rects[i].offset.x, rects[i].offset.y }, { static_cast<uint32_t>(rects[i].extent.width), static_cast<uint32_t>(rects[i].extent.height) } }));
 	}
 	LOG_SUCCESS();
 	LOG_INFO("Vulkan", std::format("Swapchain length : {}", swapChainImages[0].size()), 0);
@@ -366,19 +335,16 @@ void Noxg::VulkanInstance::InitializeSession()
 {
 	CreateCommandPool();
 	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
-	CreateDepthResources();
-	CreateRenderPass();
 	CreateDescriptors();
 	unsigned char pixels[] = { 0, 0, 0, 0 };
 	Texture::empty = std::make_shared<Texture>(pixels, 1, 1, 4);
 	CreateGraphicsPipeline();
-	CreateFrameBuffers();
 	AllocateCommandBuffers();
 }
 
-void Noxg::VulkanInstance::CreateRenderPass()
+void Noxg::VulkanInstance::CreateRenderPass(vk::Format format)
 {
-	vk::AttachmentDescription colorAttachmentDescription({ }, swapChainFormat, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+	vk::AttachmentDescription colorAttachmentDescription({ }, format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 	vk::AttachmentDescription depthAttachmentDescription({ }, Utils::findDepthFormat(), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eDontCare, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachmentDescription, depthAttachmentDescription };
 
@@ -400,11 +366,6 @@ void Noxg::VulkanInstance::CreateRenderPass()
 
 void Noxg::VulkanInstance::CreateDescriptors()
 {
-	/*vk::DescriptorSetLayoutBinding samplerLayoutBinding(0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, { });
-	
-	std::array<vk::DescriptorSetLayoutBinding, 1> bindings = { samplerLayoutBinding };
-	vk::DescriptorSetLayoutCreateInfo layoutInfo({ }, bindings);
-	textureSetLayout = device.createDescriptorSetLayout(layoutInfo);*/
 	Material::materialSetLayout = Material::getDescriptorSetLayout();
 
 	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
@@ -488,26 +449,6 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 	device.destroyShaderModule(fragShaderModule);
 }
 
-void Noxg::VulkanInstance::CreateFrameBuffers()
-{
-	LOG_STEP("Vulkan", "Creating Swap Chain Frame Buffers");
-	frameBuffers.clear();
-	int i = 0;
-	for (auto& swapChain : swapChainImageViews)
-	{
-		std::vector<vk::Framebuffer> framebuffers; framebuffers.clear();
-		for (auto& view : swapChain)
-		{
-			std::array<vk::ImageView, 2> attachments = { view, depthImageViews[i] };
-			vk::FramebufferCreateInfo createInfo({ }, renderPass, attachments, swapChainRects[i].extent.width, swapChainRects[i].extent.height, 1);
-			framebuffers.push_back(device.createFramebuffer(createInfo));
-		}
-		frameBuffers.push_back(framebuffers);
-		++i;
-	}
-	LOG_SUCCESS();
-}
-
 void Noxg::VulkanInstance::CreateCommandPool()
 {
 	LOG_STEP("Vulkan", "Creating Command Pool");
@@ -516,34 +457,20 @@ void Noxg::VulkanInstance::CreateCommandPool()
 	LOG_SUCCESS();
 }
 
-void Noxg::VulkanInstance::CreateDepthResources()
-{
-	auto depthFormat = Utils::findDepthFormat();
-	std::array<uint32_t, 1> queueFamilyIndices = { 0 };
-	
-	for (int i = 0; i < swapChainImageViews.size(); ++i)
-	{
-		vk::ImageCreateInfo imageInfo({ }, vk::ImageType::e2D, depthFormat, { static_cast<uint32_t>(swapChainRects[i].extent.width), static_cast<uint32_t>(swapChainRects[i].extent.height), 1}, 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, queueFamilyIndices, vk::ImageLayout::eUndefined);
-
-		auto [depthImage, depthImageMemory] = Utils::CreateImage(imageInfo, vk::MemoryPropertyFlagBits::eDeviceLocal);
-		auto depthImageView = Utils::createImageView(depthImage, depthFormat,1, vk::ImageAspectFlagBits::eDepth);
-		depthImages.push_back(depthImage);
-		depthImageMemories.push_back(depthImageMemory);
-		depthImageViews.push_back(depthImageView);
-	}
-}
-
 void Noxg::VulkanInstance::AllocateCommandBuffers()
 {
 	LOG_STEP("Vulkan", "Allocating Command Buffers");
-	vk::CommandBufferAllocateInfo allocateInfo(commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(swapChainImageViews.size()));
+	vk::CommandBufferAllocateInfo allocateInfo(commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(swapChains.size()));
 	commandBuffers = device.allocateCommandBuffers(allocateInfo);
 	LOG_SUCCESS();
 
+	preservedModels.clear();
+	preservedModels.resize(swapChains.size());
+
 	LOG_STEP("Vulkan", "Creating synchronizers");
 	vk::FenceCreateInfo fenceInfo(vk::FenceCreateFlagBits::eSignaled);
-	inFlights.resize(swapChainImageViews.size());
-	for (int i = 0; i < swapChainImageViews.size(); ++i)
+	inFlights.resize(swapChains.size());
+	for (int i = 0; i < swapChains.size(); ++i)
 	{
 		inFlights[i] = device.createFence(fenceInfo);
 	}
@@ -561,29 +488,20 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		throw std::runtime_error("Failed to reset Fences.");
 	}
 
+	preservedModels[view].clear();
+
 	commandBuffers[view].reset();
 
 	vk::CommandBufferBeginInfo beginInfo{ };
 	commandBuffers[view].begin(beginInfo);	// <======= Command Buffer Begin.
 
-	std::array<vk::ClearValue, 2> clearValues = {
-		vk::ClearValue{ vk::ClearColorValue{ std::array<float, 4>{ 0.7f, 0.8f, 0.5f, 1.f } } },
-		vk::ClearValue{ vk::ClearDepthStencilValue{ 1.f, 0 } },
-	};
-	vk::RenderPassBeginInfo renderPassInfo(renderPass, frameBuffers[view][imageIndex], { { }, { static_cast<uint32_t>(swapChainRects[view].extent.width), static_cast<uint32_t>(swapChainRects[view].extent.height) } }, clearValues);
-	commandBuffers[view].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);		// <======= Render Pass Begin.
+	commandBuffers[view].beginRenderPass(swapChains[view]->getRenderPassBeginInfo(imageIndex), vk::SubpassContents::eInline);		// <======= Render Pass Begin.
 
 	commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);			// <======= Bind Pipeline.
 
-	std::vector<vk::Viewport> viewports = {
-		vk::Viewport { 0.f, 0.f, static_cast<float>(swapChainRects[view].extent.width), static_cast<float>(swapChainRects[view].extent.height), 0.f, 1.f }
-	};
-	commandBuffers[view].setViewport(0, viewports);		// <======== Set Viewports.
+	commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
 
-	std::vector<vk::Rect2D> scissors = {
-		vk::Rect2D { { }, { static_cast<uint32_t>(swapChainRects[view].extent.width), static_cast<uint32_t>(swapChainRects[view].extent.height) } },
-	};
-	commandBuffers[view].setScissor(0, scissors);		// <======== Set Scissors.
+	commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
 
 	// Draw something.
 	auto pose = projectionView.pose.get();
@@ -620,6 +538,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
 				model->bind(commandBuffers[view]);
 				model->draw(commandBuffers[view]);
+				preservedModels[view].push_back(model);
 			}
 		}
 	}
@@ -632,31 +551,6 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	vk::SubmitInfo submitInfo{ }; submitInfo.commandBufferCount = 1; submitInfo.pCommandBuffers = &commandBuffers[view];
 	queue.submit(submitInfo, inFlights[view]);
 }
-
-//void Noxg::VulkanInstance::addTexture(hd::Texture texture)
-//{
-//	textures.push_back(texture);
-//
-//	std::vector<vk::DescriptorSetLayout> layouts(swapChainImageViews.size(), textureSetLayout);
-//	vk::DescriptorSetAllocateInfo allocateInfo(descriptorPool, layouts);
-//	texture->descriptorSet = device.allocateDescriptorSets(allocateInfo);
-//
-//	for (size_t i = 0; i < swapChainImageViews.size(); ++i)
-//	{
-//		std::array<vk::DescriptorImageInfo, 1> imageInfos = {
-//			vk::DescriptorImageInfo(texture->textureSampler, texture->textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal)
-//		};
-//		std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {
-//			vk::WriteDescriptorSet(texture->descriptorSet[i], 0, 0, vk::DescriptorType::eCombinedImageSampler, imageInfos)
-//		};
-//		device.updateDescriptorSets(descriptorWrites, { });
-//	}
-//}
-//
-//void Noxg::VulkanInstance::addModel(hd::MeshModel model)
-//{
-//	models.push_back(model);
-//}
 
 void Noxg::VulkanInstance::addScene(rf::Scene scene)
 {
@@ -754,14 +648,6 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 	LOG_SUCCESS();
 
 	LOG_INFO("Vulkan", std::format("Loaded {} textures and {} models", mates.size(), modls.size()), 0);
-	/*for (auto& texture : texs)
-	{
-		addTexture(texture);
-	}
-	for (auto& model : modls)
-	{
-		addModel(model);
-	}*/
 
 	hd::GameObject obj = std::make_shared<GameObject>();
 	obj->models = modls;

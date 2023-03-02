@@ -37,6 +37,7 @@
     <ClInclude Include="sources\Renderer\GraphicsInstance.h" />
     <ClInclude Include="sources\Renderer\Material.h" />
     <ClInclude Include="sources\Renderer\MeshModel.h" />
+    <ClInclude Include="sources\renderer\SwapChain.h" />
     <ClInclude Include="sources\XR\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame\NaiveGame.h" />
     <ClInclude Include="sources\physics\PhysicsTransform.h" />
@@ -68,6 +69,7 @@
     <ClCompile Include="sources\Renderer\GraphicsInstance.cpp" />
     <ClCompile Include="sources\Renderer\Material.cpp" />
     <ClCompile Include="sources\Renderer\MeshModel.cpp" />
+    <ClCompile Include="sources\renderer\SwapChain.cpp" />
     <ClCompile Include="sources\XR\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame\NaiveGame.cpp" />
     <ClCompile Include="sources\physics\PhysicsTransform.cpp" />

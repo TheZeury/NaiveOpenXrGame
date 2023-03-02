@@ -4,6 +4,7 @@
 #include "GraphicsInstance.h"
 #include "Bricks/GameObject.h"
 #include "Bricks/Scene.h"
+#include "SwapChain.h"
 
 #include <list>
 
@@ -35,17 +36,13 @@ namespace Noxg
 		void CreateLogicalDevice();
 		virtual void CreateSwapChainImageViews(std::vector<std::vector<xr::SwapchainImageVulkanKHR>>& swapChainImages, vk::Format format, std::vector<xr::Rect2Di> rects) override;
 		virtual void InitializeSession() override;
-		void CreateRenderPass();
+		void CreateRenderPass(vk::Format format);
 		void CreateDescriptors();
 		void CreateGraphicsPipeline();
-		void CreateFrameBuffers();
 		void CreateCommandPool();
-		void CreateDepthResources();
 		void AllocateCommandBuffers();
 		virtual void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format) override;
 
-		//virtual void addTexture(hd::Texture texture) override;
-		//virtual void addModel(hd::MeshModel model) override;
 		virtual void addScene(rf::Scene scene) override;
 		virtual hd::GameObject loadGameObjectFromFiles(std::string name) override;	// May creates multiple textures and models, but only a single gameObject.
 		virtual xr::GraphicsBindingVulkanKHR getGraphicsBinding() override;
@@ -62,23 +59,15 @@ namespace Noxg
 		vk::RenderPass renderPass;
 		vk::DescriptorSetLayout textureSetLayout;
 		vk::DescriptorPool descriptorPool;
-		std::vector<vk::Image> depthImages;
-		std::vector<vk::DeviceMemory> depthImageMemories;
-		std::vector<vk::ImageView> depthImageViews;
 		vk::PipelineLayout pipelineLayout;
 		vk::Pipeline pipeline;
-		std::vector<std::vector<vk::Framebuffer>> frameBuffers;
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;
+		std::vector<std::vector<hd::MeshModel>> preservedModels;	// models are preserved by a commandBuffer when they are being drawn.
 		vk::Semaphore drawDone;
 		std::vector<vk::Fence> inFlights;
-		std::vector<std::vector<vk::ImageView>> swapChainImageViews;
-		vk::Format swapChainFormat;
-		std::vector<xr::Rect2Di> swapChainRects;
+		std::vector<hd::SwapChain> swapChains;
 		xr::DispatchLoaderDynamic dispather;
-
-		std::vector<hd::MeshModel> models;
-		std::vector<hd::Texture> textures;
 
 #ifdef MIRROR_WINDOW
 		vk::SurfaceKHR mirrorSurface;
