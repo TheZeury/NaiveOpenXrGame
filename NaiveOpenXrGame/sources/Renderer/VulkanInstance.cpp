@@ -381,8 +381,8 @@ void Noxg::VulkanInstance::CreateDescriptors()
 void Noxg::VulkanInstance::CreateGraphicsPipeline()
 {
 	LOG_STEP("Vulkan", "Loading Shader Modules");
-	auto vertShaderCode = readFile("shaders/vert.spv");
-	auto fragShaderCode = readFile("shaders/frag.spv");
+	auto vertShaderCode = readFile("shaders/shader.vert.spv");
+	auto fragShaderCode = readFile("shaders/shader.frag.spv");
 	vk::ShaderModuleCreateInfo vertInfo({ }, vertShaderCode);
 	vk::ShaderModuleCreateInfo fragInfo({ }, fragShaderCode);
 	auto vertShaderModule = device.createShaderModule(vertInfo);
