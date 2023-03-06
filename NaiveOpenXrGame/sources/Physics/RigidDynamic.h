@@ -17,6 +17,10 @@ namespace Noxg
 		~RigidDynamic();
 		virtual void addShape(PxShape* shape) override;
 
+		void addForce(glm::vec3 force, PxForceMode::Enum mode);
+		void setLinearVelocity(glm::vec3 velocity);
+		void switchGravity(bool enable);
+
 	public:
 		virtual void Enable() override;
 		

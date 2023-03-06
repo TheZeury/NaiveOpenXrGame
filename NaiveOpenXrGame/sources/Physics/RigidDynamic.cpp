@@ -23,6 +23,24 @@ void Noxg::RigidDynamic::addShape(PxShape* shape)
 	}
 }
 
+void Noxg::RigidDynamic::addForce(glm::vec3 force, PxForceMode::Enum mode)
+{
+	if (pxRaw == nullptr) return;
+	pxRaw->addForce(*((PxVec3*)(&force)), mode);
+}
+
+void Noxg::RigidDynamic::setLinearVelocity(glm::vec3 velocity)
+{
+	if (pxRaw == nullptr) return;
+	pxRaw->setLinearVelocity(*((PxVec3*)(&force)));
+}
+
+void Noxg::RigidDynamic::switchGravity(bool enable)
+{
+	if (pxRaw == nullptr) return;
+	pxRaw->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !enable);
+}
+
 void Noxg::RigidDynamic::Enable()
 {
 	auto obj = gameObject.lock();
@@ -31,6 +49,7 @@ void Noxg::RigidDynamic::Enable()
 	glm::mat4 mat = obj->transform->getGlobalMatrix();
 	PxTransform pxTransform{ *((PxMat44*)(&mat)) };
 	pxRaw = physicsEngineInstance.lock()->createRigidDynamic(pxTransform);
+	pxRaw->userData = new std::weak_ptr<RigidActor>(std::static_pointer_cast<RigidActor>(shared_from_this()));	// weird.
 	std::dynamic_pointer_cast<PhysicsTransform>(obj->transform)->pxActor = pxRaw;
 	for (auto& shape : pending)
 	{

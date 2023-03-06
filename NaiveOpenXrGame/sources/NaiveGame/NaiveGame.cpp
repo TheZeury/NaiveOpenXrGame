@@ -3,6 +3,7 @@
 #include "Physics/RigidStatic.h"
 #include "Physics/ITriggerCallback.h"
 #include "XR/XrControllerActions.h"
+#include "XR/XrGrabber.h"
 #include "NaiveGame/MachineGear.h"
 
 Noxg::hd::XrControllerActions rightHandAction;
@@ -112,7 +113,7 @@ void Noxg::NaiveGame::Run()
 			float timeDelta = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastTime).count();
 			lastTime = currentTime;
 
-			physicsEngineInstance->Simulate(timeDelta);
+			physicsEngineInstance->Simulate(0.02f);
 			xrInstance->PollActions();
 			
 			scene->CalculateFrame();
@@ -251,25 +252,33 @@ void Noxg::NaiveGame::BuildScene()
 		rightHandAction = std::make_shared<XrControllerActions>(1);
 		rightHand->addComponent(rightHandAction);
 
-		hd::GameObject revolver = graphicsInstance->loadGameObjectFromFiles("revolver");
-		glm::quat rotaA = { 0.7071068f, 0.f, -0.7071068f, 0.f };
-		glm::quat rotaB = { 0.7071068f, -0.7071068f, 0.f, 0.f };
-		revolver->transform->setLocalRotation(rotaB * rotaA);
-		revolver->transform->setLocalPosition({ 0.f, -0.18f, 0.03f });
-		revolver->transform->setLocalScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
-		rightHand->transform->addChild(revolver->transform);
+		//hd::GameObject revolver = graphicsInstance->loadGameObjectFromFiles("revolver");
+		//glm::quat rotaA = { 0.7071068f, 0.f, -0.7071068f, 0.f };
+		//glm::quat rotaB = { 0.7071068f, -0.7071068f, 0.f, 0.f };
+		//revolver->transform->setLocalRotation(rotaB * rotaA);
+		//revolver->transform->setLocalPosition({ 0.f, -0.18f, 0.03f });
+		//revolver->transform->setLocalScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
+		//rightHand->transform->addChild(revolver->transform);
+
+		hd::XrGrabber grabber = std::make_shared<XrGrabber>(rightHandAction, PxBoxGeometry(0.1f, 0.1f, 0.1f));
+		rightHand->addComponent(grabber);
+
+		hd::GameObject box = std::make_shared<GameObject>();
+		box->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
+		box->models.push_back(whiteCube);
+		rightHand->transform->addChild(box->transform);
 
 		scene->addGameObject(rightHand);
-		scene->addGameObject(revolver);
+		//scene->addGameObject(revolver);
+		scene->addGameObject(box);
 	}
 
-	{
-		// Left hand.
+	{	// Left hand.
 		hd::GameObject leftHand = std::make_shared<GameObject>();
 		leftHandAction = std::make_shared<XrControllerActions>(0);
 		leftHand->addComponent(leftHandAction);
 
-		hd::GameObject triggerObject = std::make_shared<GameObject>();
+		/*hd::GameObject triggerObject = std::make_shared<GameObject>();
 		triggerObject->transform = std::make_shared<PhysicsTransform>(nullptr);
 		hd::RigidStatic rigid = std::make_shared<RigidStatic>();
 		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.1f));
@@ -283,15 +292,15 @@ void Noxg::NaiveGame::BuildScene()
 		shape->userData = static_cast<ITriggerCallback*>(new TempTriggerCallback());
 		rigid->addShape(shape);
 		triggerObject->addComponent(rigid);
-		leftHand->transform->addChild(triggerObject->transform);
+		leftHand->transform->addChild(triggerObject->transform);*/
 
 		leftHandBox = std::make_shared<GameObject>();
 		leftHandGear = std::make_shared<MachineGear>(pureWhite);
 		leftHandBox->addComponent(leftHandGear);
-		triggerObject->transform->addChild(leftHandBox->transform);
+		leftHand->transform->addChild(leftHandBox->transform);
 
 		scene->addGameObject(leftHand);
-		scene->addGameObject(triggerObject);
+		//scene->addGameObject(triggerObject);
 		scene->addGameObject(leftHandBox);
 	}
 

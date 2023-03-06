@@ -23,6 +23,7 @@ void Noxg::RigidStatic::Enable()
 	glm::mat4 mat = obj->transform->getGlobalMatrix();
 	PxTransform pxTransform{ *((PxMat44*)(&mat)) };
 	pxRaw = physicsEngineInstance.lock()->createRigidStatic(pxTransform);
+	pxRaw->userData = new std::weak_ptr<RigidActor>(std::static_pointer_cast<RigidActor>(shared_from_this()));	// weird though.
 	std::dynamic_pointer_cast<PhysicsTransform>(obj->transform)->pxActor = pxRaw;
 	for (auto& shape : pending)
 	{
