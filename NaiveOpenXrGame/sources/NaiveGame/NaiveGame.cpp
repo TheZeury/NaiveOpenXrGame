@@ -36,13 +36,6 @@ void Noxg::NaiveGame::Run()
 	xrInstance->InitializeSession();
 	graphicsInstance->InitializeSession();
 
-	/*unsigned char blackPixel[4] = { 0, 0, 0, 255 };
-	pureBlack = std::make_shared<Texture>(blackPixel, 1, 1, 4);
-	unsigned char whitePixel[4] = { 255, 255, 255, 255 };
-	pureWhite = std::make_shared<Texture>(whitePixel, 1, 1, 4);
-
-	graphicsInstance->addTexture(pureBlack);
-	graphicsInstance->addTexture(pureWhite);*/
 	pureBlack = std::make_shared<Material>(glm::vec4{ 0.f, 0.f, 0.f, 1.f });
 	pureWhite = std::make_shared<Material>(glm::vec4{ 1.f, 1.f, 1.f, 1.f });
 	
@@ -94,20 +87,42 @@ void Noxg::NaiveGame::Run()
 	};
 	blackCube = std::make_shared<MeshModel>(vertices, indices, pureBlack);
 	whiteCube = std::make_shared<MeshModel>(vertices, indices, pureWhite);
-	/*graphicsInstance->addModel(blackCube);*/
 
-	auto bulletShape = physicsEngineInstance->createShape(PxBoxGeometry(0.05f, 0.05f, 0.05f));
+	bulletShape = physicsEngineInstance->createShape(PxBoxGeometry(0.05f, 0.05f, 0.05f));
 
 	BuildScene();
 
-	LOG_INFO("GAME", "Entering into Game Loop.", 0);
+	std::jthread main{ [&] { mainLoop(); } };
+	std::jthread fixed{ [&](std::stop_token st) { fixedLoop(st); } };
+	main.join();
+	fixed.request_stop();
+	fixed.join();
+	
+	leftHandBox = nullptr;
+	leftHandAction = nullptr;
+	rightHandAction = nullptr;
+	blackCube = nullptr;
+	whiteCube = nullptr;
+	pureBlack = nullptr;
+	pureWhite = nullptr;
+	scene = nullptr;
+
+	graphicsInstance->CleanUpSession();
+	xrInstance->CleanUpSession();
+	xrInstance->CleanUpInstance();
+	graphicsInstance->CleanUpInstance();
+}
+
+void Noxg::NaiveGame::mainLoop()
+{
+	LOG_INFO("Game", "Entering into Main Loop.", 0);
 
 	auto startTime = std::chrono::high_resolution_clock::now();
 	auto lastTime = startTime;
 
 	while (xrInstance->PollEvents())
 	{
-		if(xrInstance->running())
+		if (xrInstance->running())
 		{
 			auto currentTime = std::chrono::high_resolution_clock::now();
 			float timeDelta = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastTime).count();
@@ -115,16 +130,16 @@ void Noxg::NaiveGame::Run()
 
 			physicsEngineInstance->Simulate(0.02f);
 			xrInstance->PollActions();
-			
+
 			scene->CalculateFrame();
 
 			{
 				leftHandBox->transform->setLocalPosition({ 0.f, -5.f * (leftHandAction->gripValue()), 0.f });
 
 				glm::vec2 angularVelocity = leftHandAction->primaryAxisValue();
-				if(angularVelocity != glm::vec2{ })
+				if (angularVelocity != glm::vec2{ })
 				{
-					glm::quat rotation = glm::rotate(glm::quat{ 1.f, 0.f, 0.f, 0.f }, glm::length(angularVelocity) * timeDelta, glm::normalize(glm::vec3{-angularVelocity.y, 0.f, -angularVelocity.x}));
+					glm::quat rotation = glm::rotate(glm::quat{ 1.f, 0.f, 0.f, 0.f }, glm::length(angularVelocity) * timeDelta, glm::normalize(glm::vec3{ -angularVelocity.y, 0.f, -angularVelocity.x }));
 					leftHandBox->transform->setLocalRotation(rotation * leftHandBox->transform->getLocalRotation());
 				}
 			}
@@ -175,7 +190,7 @@ void Noxg::NaiveGame::Run()
 				box->transform->setLocalScale({ 1.f, 1.f, 1.f });
 				hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
 				auto shapes = leftHandGear->getRecommendedColliders();
-				for(auto& shape : shapes)
+				for (auto& shape : shapes)
 				{
 					rigid->addShape(shape);
 				}
@@ -194,21 +209,51 @@ void Noxg::NaiveGame::Run()
 		}
 	}
 
-	LOG_INFO("GAME", "Exited from Game Loop.", 0);
+	LOG_INFO("Game", "Exited from Main Loop.", 0);
+}
 
-	leftHandBox = nullptr;
-	leftHandAction = nullptr;
-	rightHandAction = nullptr;
-	blackCube = nullptr;
-	whiteCube = nullptr;
-	pureBlack = nullptr;
-	pureWhite = nullptr;
-	scene = nullptr;
+void Noxg::NaiveGame::fixedLoop(std::stop_token st)
+{
+	LOG_INFO("Game", "Entering into Fixed Loop.", 0);
 
-	graphicsInstance->CleanUpSession();
-	xrInstance->CleanUpSession();
-	xrInstance->CleanUpInstance();
-	graphicsInstance->CleanUpInstance();
+	namespace chrono = std::chrono;
+	using namespace std::literals::chrono_literals;
+
+	const auto fixedTimeDelta = 20ms;
+	auto targetTime = chrono::high_resolution_clock::now();
+
+	int i = 0;
+	while (!st.stop_requested())
+	{
+		auto now = chrono::high_resolution_clock::now();
+		if (targetTime <= now)
+		{
+			// TODO. Do someting.
+			++i;
+			if (i == 500)
+			{
+				LOG_INFO("Game", "10 seconds of fixed loop.", 0);
+				i = 0;
+			}
+
+			targetTime = targetTime + fixedTimeDelta;
+			if (now - targetTime > 1s) // To avoid rushing advance after pausing or lagging.
+			{
+				targetTime = now + fixedTimeDelta;
+			}
+			chrono::high_resolution_clock::duration remainDelta = targetTime - chrono::high_resolution_clock::now();
+			std::this_thread::sleep_for(remainDelta);
+		}
+		else if (targetTime - now > fixedTimeDelta)	// In case that something unexpected happend that made the targetTime far later than now. Normally this can't happen.
+		{
+			targetTime = now + fixedTimeDelta;
+			LOG_ERRO("Unexpected time change. Fixed loop realigned.");
+			chrono::high_resolution_clock::duration remainDelta = targetTime - chrono::high_resolution_clock::now();
+			std::this_thread::sleep_for(remainDelta);
+		}
+	}
+
+	LOG_INFO("Game", "Exited from Fixed Loop.", 0);
 }
 
 void Noxg::NaiveGame::BuildScene()
@@ -220,7 +265,6 @@ void Noxg::NaiveGame::BuildScene()
 		auto tiles_diffuse = std::make_shared<Texture>("textures/GroundTile_diffuse.jpg");
 		auto tiles_normal = std::make_shared<Texture>("textures/GroundTile_normal.jpg");
 		auto tiles = std::make_shared<Material>(tiles_diffuse, tiles_normal);
-		/*graphicsInstance->addTexture(tiles);*/
 		std::vector<Vertex> vertices = {
 			{ { -100.f, 0.f, 100.f }, { }, { 100.f, 0.f }, { 0.f, 1.f, 0.f }, { }, { } },
 			{ { 100.f, 0.f, 100.f }, { }, { 0.f, 0.f }, { 0.f, 1.f, 0.f }, { }, { } },

@@ -17,6 +17,8 @@ namespace Noxg
 		NaiveGame();
 		virtual void Initialize() override;
 		virtual void Run() override;
+		void mainLoop();
+		void fixedLoop(std::stop_token st);
 		void BuildScene();
 	private:
 		hd::Scene scene;
@@ -24,6 +26,7 @@ namespace Noxg
 		hd::Material pureWhite;
 		hd::MeshModel blackCube;
 		hd::MeshModel whiteCube;
+		PxShape* bulletShape;
 	};
 }
 
