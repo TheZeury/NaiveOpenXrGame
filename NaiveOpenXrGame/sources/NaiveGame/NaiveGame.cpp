@@ -5,6 +5,7 @@
 #include "XR/XrControllerActions.h"
 #include "XR/XrGrabber.h"
 #include "NaiveGame/MachineGear.h"
+#include "Renderer/MeshModel.h"
 
 Noxg::hd::XrControllerActions rightHandAction;
 Noxg::hd::XrControllerActions leftHandAction;
@@ -39,56 +40,14 @@ void Noxg::NaiveGame::Run()
 	pureBlack = std::make_shared<Material>(glm::vec4{ 0.f, 0.f, 0.f, 1.f });
 	pureWhite = std::make_shared<Material>(glm::vec4{ 1.f, 1.f, 1.f, 1.f });
 	
-	std::vector<Vertex> vertices = {
-		// down
-		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
-		// up
-		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
-		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
-		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
-		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 1.f, 0.f }, { } , { }},
-		// front
-		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { }, { }},
-		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { }, { }},
-		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { } , { }},
-		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { }, { 0.f, 0.f, 1.f }, { } , { }},
-		// back
-		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
-		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
-		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
-		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
-		// left
-		Vertex{ { -0.5f, -0.5f, 0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f, 0.5f, 0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f, 0.5f, -0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f, -0.5f, -0.5f }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
-		// right
-		Vertex{ { 0.5f, -0.5f, 0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
-		Vertex{ { 0.5f, -0.5f, -0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
-		Vertex{ { 0.5f, 0.5f, -0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
-		Vertex{ { 0.5f, 0.5f, 0.5f }, { }, { }, { 1.f, 0.f, 0.f }, { }, { }},
-	};
-	std::vector<uint32_t> indices = {
-		0 + 0,  1 + 0,  2 + 0,	// down
-		2 + 0,  3 + 0,  0 + 0,
-		0 + 4,  1 + 4,  2 + 4,	// up
-		2 + 4,  3 + 4,  0 + 4,
-		0 + 8,  1 + 8,  2 + 8,	// front
-		2 + 8,  3 + 8,  0 + 8,
-		0 + 12, 1 + 12, 2 + 12,	// back
-		2 + 12, 3 + 12, 0 + 12,
-		0 + 16, 1 + 16, 2 + 16,	// left
-		2 + 16, 3 + 16, 0 + 16,
-		0 + 20, 1 + 20, 2 + 20,	// right
-		2 + 20, 3 + 20, 0 + 20,
-	};
-	blackCube = std::make_shared<MeshModel>(vertices, indices, pureBlack);
-	whiteCube = std::make_shared<MeshModel>(vertices, indices, pureWhite);
+	MeshBuilder cubeBuilder = MeshBuilder::Box(0.5f, 0.5f, 0.5f);
+	blackCube = cubeBuilder.build(pureBlack);
+	whiteCube = cubeBuilder.build(pureWhite);
+	MeshBuilder sphereBuilder = MeshBuilder::UVSphere(0.5f, 16, 32);
+	blackSphere = sphereBuilder.build(pureBlack);
+	whiteSphere = sphereBuilder.build(pureWhite);
 
-	bulletShape = physicsEngineInstance->createShape(PxBoxGeometry(0.05f, 0.05f, 0.05f));
+	bulletShape = physicsEngineInstance->createShape(PxSphereGeometry(0.05f));
 
 	BuildScene();
 
@@ -101,6 +60,8 @@ void Noxg::NaiveGame::Run()
 	leftHandBox = nullptr;
 	leftHandAction = nullptr;
 	rightHandAction = nullptr;
+	blackSphere = nullptr;
+	whiteSphere = nullptr;
 	blackCube = nullptr;
 	whiteCube = nullptr;
 	pureBlack = nullptr;
@@ -172,7 +133,7 @@ void Noxg::NaiveGame::mainLoop()
 				bullet->addComponent(rigid);
 
 				hd::GameObject bulletModel = std::make_shared<GameObject>();
-				bulletModel->models.push_back(blackCube);
+				bulletModel->models.push_back(blackSphere);
 				bulletModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
 				bullet->transform->addChild(bulletModel->transform);
 
@@ -308,7 +269,7 @@ void Noxg::NaiveGame::BuildScene()
 		rightHand->addComponent(grabber);
 
 		hd::GameObject box = std::make_shared<GameObject>();
-		box->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
+		box->transform->setLocalScale({ 0.05f, 0.05f, 0.05f });
 		box->models.push_back(whiteCube);
 		rightHand->transform->addChild(box->transform);
 
@@ -363,10 +324,10 @@ void Noxg::NaiveGame::BuildScene()
 		scene->addGameObject(steedModel);
 	}
 
-	{
+	{	// Cube
 		hd::GameObject box = std::make_shared<GameObject>();
 		box->transform = std::make_shared<PhysicsTransform>(nullptr);
-		box->transform->setLocalPosition({ 0.f, 1.f, -5.f });
+		box->transform->setLocalPosition({ -1.f, 1.f, -5.f });
 		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
 		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.5f, 0.5f, 0.5f));
 		rigid->addShape(shape);
@@ -378,6 +339,23 @@ void Noxg::NaiveGame::BuildScene()
 
 		scene->addGameObject(box);
 		scene->addGameObject(boxModel);
+	}
+
+	{	// Sphere
+		hd::GameObject sphere = std::make_shared<GameObject>();
+		sphere->transform = std::make_shared<PhysicsTransform>(nullptr);
+		sphere->transform->setLocalPosition({ 1.f, 1.f, -5.f });
+		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
+		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f));
+		rigid->addShape(shape);
+		sphere->addComponent(rigid);
+
+		hd::GameObject sphereModel = std::make_shared<GameObject>();
+		sphereModel->models.push_back(whiteSphere);
+		sphere->transform->addChild(sphereModel->transform);
+
+		scene->addGameObject(sphere);
+		scene->addGameObject(sphereModel);
 	}
 
 	sceneManager->Load(scene);

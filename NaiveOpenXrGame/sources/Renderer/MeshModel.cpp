@@ -31,9 +31,9 @@ Noxg::MeshModel::MeshModel(std::string path, hd::Material tex)
 			};
 
 			vertex.normal = {
-				attrib.normals[3 * index.vertex_index + 0],
-				attrib.normals[3 * index.vertex_index + 1],
-				attrib.normals[3 * index.vertex_index + 2],
+				attrib.normals[3 * index.normal_index + 0],
+				attrib.normals[3 * index.normal_index + 1],
+				attrib.normals[3 * index.normal_index + 2],
 			};
 
 			vertex.uv = {
@@ -180,4 +180,235 @@ void Noxg::MeshModel::calculateTangentBitangent(std::vector<Vertex>& vertices, c
 		vertices[i].tangent /= count[i];
 		vertices[i].bitangent /= count[i];
 	}
+}
+
+uint32_t Noxg::MeshBuilder::addVertex(Vertex vertex)
+{
+	if (!uniqueVertices.contains(vertex))
+	{
+		if(removedVertices.empty())
+		{
+			uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+			vertices.push_back(vertex);
+		}
+		else
+		{
+			auto index = *removedVertices.begin(); removedVertices.erase(index);
+			uniqueVertices[vertex] = index;
+			vertices[index] = vertex;
+		}
+	}
+	return uniqueVertices[vertex];
+}
+
+uint32_t Noxg::MeshBuilder::addTriangle(uint32_t v1, uint32_t v2, uint32_t v3)
+{
+	if (v1 == v2 || v2 == v3 || v3 == v1) 
+	{
+		throw std::runtime_error("Three vertices must be all different.");
+	}
+	auto tester = [&](uint32_t v) { if (v >= vertices.size() || removedVertices.contains(v)) throw std::runtime_error(std::format("Newly added vertex {} doesn't exist.", v)); };
+	tester(v1); tester(v2); tester(v3);
+
+	IndexedTriangle triangle;
+
+	if (v1 < v2 && v1 < v3) triangle = std::make_tuple(v1, v2, v3);		// deduplication.
+	else if (v2 < v3) triangle = std::make_tuple(v2, v3, v1);			//
+	else triangle = std::make_tuple(v3, v1, v2);						//
+
+	if (!uniqueTriangles.contains(triangle))
+	{
+		if(removeTriangles.empty())
+		{
+			uniqueTriangles[triangle] = static_cast<uint32_t>(triangles.size());
+			triangles.push_back(triangle);
+		}
+		else
+		{
+			auto index = *removeTriangles.begin(); removeTriangles.erase(index);
+			uniqueTriangles[triangle] = index;
+			triangles[index] = triangle;
+		}
+	}
+	return uniqueTriangles[triangle];
+}
+
+std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> Noxg::MeshBuilder::addTriangle(Vertex v1, Vertex v2, Vertex v3)
+{
+	auto i1 = addVertex(v1), i2 = addVertex(v2), i3 = addVertex(v3);
+	return std::make_tuple(addTriangle(i1, i2, i3), i1, i2, i3);
+}
+
+void Noxg::MeshBuilder::updateVertex(uint32_t v, Vertex value)
+{
+	uniqueVertices.erase(vertices[v]);
+	vertices[v] = value;
+	uniqueVertices[value] = v;
+}
+
+void Noxg::MeshBuilder::removeVertex(uint32_t v)
+{
+	// TODO
+	uniqueVertices.erase(vertices[v]);
+	removedVertices.insert(v);
+	
+	for (auto [triangle, index] : uniqueTriangles)
+	{
+		auto [v1, v2, v3] = triangle;
+		if (v1 == v || v2 == v || v3 == v)
+		{
+			removeTriangle(index);
+		}
+	}
+}
+
+void Noxg::MeshBuilder::removeTriangle(uint32_t t)
+{
+	uniqueTriangles.erase(triangles[t]);
+	removeTriangles.insert(t);
+}
+
+Noxg::Vertex Noxg::MeshBuilder::getVertex(uint32_t v)
+{
+	return vertices[v];
+}
+
+Noxg::Triangle Noxg::MeshBuilder::getTriangle(uint32_t t)
+{
+	auto [v1, v2, v3] = triangles[t];
+	return std::make_tuple(vertices[v1], vertices[v2], vertices[v3]);
+}
+
+Noxg::IndexedTriangle Noxg::MeshBuilder::getIndexedTriangle(uint32_t t)
+{
+	return triangles[t];
+}
+
+Noxg:: hd::MeshModel Noxg::MeshBuilder::build(hd::Material material)
+{
+	std::vector<Vertex> buildVertices;
+	std::vector<uint32_t> buildIndices;
+	std::vector<uint32_t> vertices_to_buildVertices_map(static_cast<size_t>(vertices.size()));
+
+	for (uint32_t v = 0; v < vertices.size(); ++v)
+	{
+		vertices_to_buildVertices_map[v] = static_cast<uint32_t>(buildVertices.size());
+		if (!removedVertices.contains(v))
+		{
+			buildVertices.push_back(vertices[v]);
+		}
+	}
+
+	for (auto& triangle : triangles)
+	{
+		auto [v1, v2, v3] = triangle;
+		buildIndices.push_back(vertices_to_buildVertices_map[v1]);
+		buildIndices.push_back(vertices_to_buildVertices_map[v2]);
+		buildIndices.push_back(vertices_to_buildVertices_map[v3]);
+	}
+	return std::make_shared<MeshModel>(buildVertices, buildIndices, material);
+}
+
+Noxg::MeshBuilder Noxg::MeshBuilder::Box(float halfX, float halfY, float halfZ)
+{
+	MeshBuilder mesh;
+	mesh.vertices = {
+		// down
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } },
+		// up
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } },
+		// front
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { }, { }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { }, { }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { }, { }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { }, { }, {  0.f,  0.f,  1.f }, { }, { } },
+		// back
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { }, { }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { }, { }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { }, { }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { }, { }, {  0.f,  0.f, -1.f }, { }, { } },
+		// left
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { }, { }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { }, { }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { }, { }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { }, { }, { -1.f,  0.f,  0.f }, { }, { } },
+		// right
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { }, { }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { }, { }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { }, { }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { }, { }, {  1.f,  0.f,  0.f }, { }, { } },
+	};
+	mesh.triangles = {
+		IndexedTriangle{ 0 +  0, 1 +  0, 2 +  0, },	// down
+		IndexedTriangle{ 2 +  0, 3 +  0, 0 +  0, },
+		IndexedTriangle{ 0 +  4, 1 +  4, 2 +  4, },	// up
+		IndexedTriangle{ 2 +  4, 3 +  4, 0 +  4, },
+		IndexedTriangle{ 0 +  8, 1 +  8, 2 +  8, },	// front
+		IndexedTriangle{ 2 +  8, 3 +  8, 0 +  8, },
+		IndexedTriangle{ 0 + 12, 1 + 12, 2 + 12, },	// back
+		IndexedTriangle{ 2 + 12, 3 + 12, 0 + 12, },
+		IndexedTriangle{ 0 + 16, 1 + 16, 2 + 16, },	// left
+		IndexedTriangle{ 2 + 16, 3 + 16, 0 + 16, },
+		IndexedTriangle{ 0 + 20, 1 + 20, 2 + 20, },	// right
+		IndexedTriangle{ 2 + 20, 3 + 20, 0 + 20, },
+	};
+	return mesh;
+}
+
+Noxg::MeshBuilder Noxg::MeshBuilder::UVSphere(float radius, uint32_t rings, uint32_t segments)
+{
+	MeshBuilder mesh;
+
+	if (rings < 2) rings = 2;
+	if (segments < 3) segments = 3;
+
+	auto v0 = mesh.addVertex(Vertex{ { 0.f, radius, 0.f }, { }, { }, { 0.f,  1.f, 0.f }, { }, { } });
+
+	for (uint32_t i = 0; i < rings - 1; ++i)
+	{
+		auto phi = glm::pi<float>() * (i + 1) / rings;
+		for (uint32_t j = 0; j < segments; ++j)
+		{
+			auto theta = 2.f * glm::pi<float>() * j / segments;
+			auto x = glm::sin(phi) * glm::cos(theta);
+			auto y = glm::cos(phi);
+			auto z = glm::sin(phi) * glm::sin(theta);
+			mesh.addVertex(Vertex{ radius * glm::vec3{ x, y, z }, { }, { }, glm::normalize(glm::vec3{ x, y, z }), { }, { } });
+		}
+	}
+
+	auto v1 = mesh.addVertex(Vertex{ { 0.f, -radius, 0.f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } });
+
+	for (uint32_t i = 0; i < segments; ++i)
+	{
+		auto i0 =                  i + 1;
+		auto i1 = (i + 1) % segments + 1;
+		mesh.addTriangle(v0, i1, i0);
+		i0 =                  i + segments * (rings - 2) + 1;
+		i1 = (i + 1) % segments + segments * (rings - 2) + 1;
+		mesh.addTriangle(v1, i0, i1);
+	}
+
+	for (uint32_t j = 0; j < rings - 2; ++j)
+	{
+		auto j0 =       j * segments + 1;
+		auto j1 = (j + 1) * segments + 1;
+		for (uint32_t i = 0; i < segments; ++i)
+		{
+			auto i0 = j0 +                  i;
+			auto i1 = j0 + (i + 1) % segments;
+			auto i2 = j1 + (i + 1) % segments;
+			auto i3 = j1 +                  i;
+			mesh.addTriangle(i0, i1, i2);
+			mesh.addTriangle(i2, i3, i0);
+		}
+	}
+
+	return mesh;
 }

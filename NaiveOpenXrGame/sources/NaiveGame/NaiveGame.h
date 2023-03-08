@@ -26,6 +26,8 @@ namespace Noxg
 		hd::Material pureWhite;
 		hd::MeshModel blackCube;
 		hd::MeshModel whiteCube;
+		hd::MeshModel blackSphere;
+		hd::MeshModel whiteSphere;
 		PxShape* bulletShape;
 	};
 }
