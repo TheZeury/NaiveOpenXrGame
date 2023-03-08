@@ -148,10 +148,7 @@ using namespace physx;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
-namespace stb
-{
-#include "..\external\stb_image.h"
-}
+import stb;
 #include "..\external\tiny_obj_loader.h"
 
 #define LOGMESSAGE

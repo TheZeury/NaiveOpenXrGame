@@ -3,7 +3,7 @@
 
 Noxg::SwapChain::SwapChain(vk::Device device, vk::RenderPass renderPass, std::vector<vk::Image>& images, vk::Format format, vk::Rect2D rect)
 {
-	this->length = images.size();
+	this->length = static_cast<uint32_t>(images.size());
 	this->format = format;
 	this->rect = rect;
 	this->device = device;

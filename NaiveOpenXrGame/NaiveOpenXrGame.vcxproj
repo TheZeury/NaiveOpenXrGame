@@ -51,11 +51,11 @@
     <ClInclude Include="sources\XR\XrGrabable.h" />
     <ClInclude Include="sources\XR\XrGrabber.h" />
     <ClInclude Include="sources\XR\XrInstance.h" />
-    <ClInclude Include="sources\XR\XrSpaceTransform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\modules\std.compat.ixx" />
     <ClCompile Include="..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\modules\std.ixx" />
+    <ClCompile Include="external\stb.ixx" />
     <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="external\tiny_obj_loader.cpp" />
     <ClCompile Include="main.cpp" />
@@ -86,8 +86,6 @@
     <ClCompile Include="sources\XR\XrControllerActions.cpp" />
     <ClCompile Include="sources\XR\XrGrabable.cpp" />
     <ClCompile Include="sources\XR\XrGrabber.cpp" />
-    <ClCompile Include="sources\XR\XrInstance.cpp" />
-    <ClCompile Include="sources\XR\XrSpaceTransform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">

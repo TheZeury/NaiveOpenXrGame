@@ -1,5 +1,4 @@
 #include "NaiveGame.h"
-#include "XR/XrSpaceTransform.h"
 #include "Physics/RigidStatic.h"
 #include "Physics/ITriggerCallback.h"
 #include "XR/XrControllerActions.h"

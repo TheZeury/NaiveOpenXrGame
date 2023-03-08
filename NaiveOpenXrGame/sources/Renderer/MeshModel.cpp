@@ -368,7 +368,7 @@ Noxg::MeshBuilder Noxg::MeshBuilder::UVSphere(float radius, uint32_t rings, uint
 	if (rings < 2) rings = 2;
 	if (segments < 3) segments = 3;
 
-	auto v0 = mesh.addVertex(Vertex{ { 0.f, radius, 0.f }, { }, { }, { 0.f,  1.f, 0.f }, { }, { } });
+	auto v0 = mesh.addVertex(Vertex{ {  0.f,  radius,  0.f }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } });
 
 	for (uint32_t i = 0; i < rings - 1; ++i)
 	{
@@ -383,7 +383,7 @@ Noxg::MeshBuilder Noxg::MeshBuilder::UVSphere(float radius, uint32_t rings, uint
 		}
 	}
 
-	auto v1 = mesh.addVertex(Vertex{ { 0.f, -radius, 0.f }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } });
+	auto v1 = mesh.addVertex(Vertex{ {  0.f, -radius,  0.f }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } });
 
 	for (uint32_t i = 0; i < segments; ++i)
 	{
