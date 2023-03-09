@@ -28,6 +28,7 @@ namespace Noxg
 		/// <seealso cref="addGameObject"/>
 		void removeGameObject(hd::GameObject obj);
 		std::unordered_set<hd::GameObject> gameObjects;
+		rf::ITransform cameraTransform;
 
 	public:
 		std::weak_ptr<SceneManager> manager;

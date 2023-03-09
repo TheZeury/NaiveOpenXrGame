@@ -503,22 +503,34 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 
 	commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
 
-	// Draw something.
-	auto pose = projectionView.pose.get();
-	XrMatrix4x4f matProjection;		// P
-	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
-	XrMatrix4x4f invView;
-	XrVector3f identity{ 1.f, 1.f, 1.f };
-	XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
-	XrMatrix4x4f matView;		// V
-	XrMatrix4x4f_InvertRigidBody(&matView, &invView);
-	XrMatrix4x4f matProjectionView;	// PV
-	XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
-	std::vector<PushConstantData> data(1);
+	const auto pose = projectionView.pose.get();
 
+	// Draw something.
 	for(auto it = scenes.begin(); it != scenes.end(); )
 	{
 		auto scene = it->lock();
+
+		XrMatrix4x4f matProjection;		// P
+		XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
+		XrMatrix4x4f invView;
+		if(scene->cameraTransform.expired())
+		{
+			XrVector3f identity{ 1.f, 1.f, 1.f };
+			XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
+		}
+		else
+		{
+			scene->cameraTransform.lock()->setLocalPosition(*(glm::vec3*)(&(pose->position)));
+			scene->cameraTransform.lock()->setLocalRotation(*(glm::quat*)(&(pose->orientation)));
+			auto glmInvView = scene->cameraTransform.lock()->getGlobalMatrix();
+			invView = *(XrMatrix4x4f*)(&glmInvView);
+		}
+		XrMatrix4x4f matView;		// V
+		XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+		XrMatrix4x4f matProjectionView;	// PV
+		XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
+		std::vector<PushConstantData> data(1);
+
 		if (scene == nullptr)
 		{
 			it = scenes.erase(it);

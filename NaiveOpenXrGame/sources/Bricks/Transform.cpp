@@ -122,6 +122,6 @@ void Noxg::Transform::setLocalMatrix(const glm::mat4& mat)
     XrMatrix4x4f_GetTranslation((XrVector3f*)&localPosition, (XrMatrix4x4f*)&mat);
     XrMatrix4x4f_GetRotation((XrQuaternionf*)&localRotation, (XrMatrix4x4f*)&mat);
     XrMatrix4x4f_GetScale((XrVector3f*)&localScale, (XrMatrix4x4f*)&mat);
-    localChanged = false;
+    localChanged = true;
     globalChanged = true;
 }

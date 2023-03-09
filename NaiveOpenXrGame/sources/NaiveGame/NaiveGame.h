@@ -29,6 +29,8 @@ namespace Noxg
 		hd::MeshModel blackSphere;
 		hd::MeshModel whiteSphere;
 		PxShape* bulletShape;
+		rf::GameObject xrOriginObject;
+		rf::GameObject cameraObject;
 	};
 }
 

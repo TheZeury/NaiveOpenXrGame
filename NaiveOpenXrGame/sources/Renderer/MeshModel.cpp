@@ -205,7 +205,8 @@ uint32_t Noxg::MeshBuilder::addTriangle(uint32_t v1, uint32_t v2, uint32_t v3)
 {
 	if (v1 == v2 || v2 == v3 || v3 == v1) 
 	{
-		throw std::runtime_error("Three vertices must be all different.");
+		// throw std::runtime_error("Three vertices must be all different."); // No need to crash, just don't do anything.
+		return UINT32_MAX;
 	}
 	auto tester = [&](uint32_t v) { if (v >= vertices.size() || removedVertices.contains(v)) throw std::runtime_error(std::format("Newly added vertex {} doesn't exist.", v)); };
 	tester(v1); tester(v2); tester(v3);

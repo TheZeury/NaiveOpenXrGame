@@ -6,6 +6,9 @@
 #include "NaiveGame/MachineGear.h"
 #include "Renderer/MeshModel.h"
 
+Noxg::rf::GameObject rightHandObject;
+Noxg::rf::GameObject leftHandObject;
+
 Noxg::hd::XrControllerActions rightHandAction;
 Noxg::hd::XrControllerActions leftHandAction;
 
@@ -104,6 +107,25 @@ void Noxg::NaiveGame::mainLoop()
 				}
 			}
 
+			if(!xrOriginObject.expired() && !cameraObject.expired())
+			{
+				if (rightHandAction->primaryButtonClicked())
+				{
+					auto matrix = rightHandObject.lock()->transform->getGlobalMatrix();
+					glm::quat orient;
+					XrMatrix4x4f_GetRotation((XrQuaternionf*)(&orient), (XrMatrix4x4f*)(&matrix));
+					xrOriginObject.lock()->transform->setLocalPosition(xrOriginObject.lock()->transform->getLocalPosition() + orient * glm::vec3{  0.f,  1.f,  0.f });
+				}
+
+				if (rightHandAction->secondaryButtonClicked())
+				{
+					auto matrix = rightHandObject.lock()->transform->getGlobalMatrix();
+					glm::quat orient;
+					XrMatrix4x4f_GetRotation((XrQuaternionf*)(&orient), (XrMatrix4x4f*)(&matrix));
+					xrOriginObject.lock()->transform->setLocalPosition(xrOriginObject.lock()->transform->getLocalPosition() + orient * glm::vec3{  0.f, -1.f,  0.f });
+				}
+			}
+
 			if (leftHandAction->primaryButtonClicked())
 			{
 				leftHandGear->setLevel(leftHandGear->level - 1);
@@ -120,12 +142,15 @@ void Noxg::NaiveGame::mainLoop()
 				xrInstance->vibrate(vibration, 1);
 
 				hd::GameObject bullet = std::make_shared<GameObject>();
-				auto pos = rightHandAction->position();
-				auto orient = rightHandAction->rotation();
-				pos = orient * glm::vec3(0.01f, -0.145f, -0.117f) + pos;
 				bullet->transform = std::make_shared<PhysicsTransform>(nullptr);
+				auto matrix = rightHandObject.lock()->transform->getGlobalMatrix();
+				/*
+				pos = orient * glm::vec3(0.01f, -0.145f, -0.117f) + pos;
 				bullet->transform->setLocalPosition(pos);
-				bullet->transform->setLocalRotation(orient);
+				bullet->transform->setLocalRotation(orient);*/
+				bullet->transform->setGlobalMatrix(matrix);
+				glm::quat orient;
+				XrMatrix4x4f_GetRotation((XrQuaternionf*)(&orient), (XrMatrix4x4f*)(&matrix));
 				auto direction = orient * glm::vec3{ 0.0f, -20.f, 0.0f };
 				hd::RigidDynamic rigid = std::make_shared<RigidDynamic>(direction);
 				rigid->addShape(bulletShape);
@@ -221,6 +246,19 @@ void Noxg::NaiveGame::BuildScene()
 	scene = std::make_shared<Scene>();
 	sceneManager->Initialize(scene);
 
+	{
+		auto origin = std::make_shared<GameObject>();
+		auto camera = std::make_shared<GameObject>();
+		origin->transform->addChild(camera->transform);
+		
+		scene->addGameObject(origin);
+		scene->addGameObject(camera);
+
+		xrOriginObject = origin;
+		cameraObject = camera;
+		scene->cameraTransform = camera->transform;
+	}
+
 	{	// Ground.
 		auto tiles_diffuse = std::make_shared<Texture>("textures/GroundTile_diffuse.jpg");
 		auto tiles_normal = std::make_shared<Texture>("textures/GroundTile_normal.jpg");
@@ -253,6 +291,10 @@ void Noxg::NaiveGame::BuildScene()
 
 	{	// Right hand.
 		hd::GameObject rightHand = std::make_shared<GameObject>();
+		if (!xrOriginObject.expired())
+		{
+			xrOriginObject.lock()->transform->addChild(rightHand->transform);
+		}
 		rightHandAction = std::make_shared<XrControllerActions>(1);
 		rightHand->addComponent(rightHandAction);
 
@@ -274,6 +316,7 @@ void Noxg::NaiveGame::BuildScene()
 		box->models.push_back(whiteCone);
 		rightHand->transform->addChild(box->transform);
 
+		rightHandObject = rightHand;
 		scene->addGameObject(rightHand);
 		//scene->addGameObject(revolver);
 		scene->addGameObject(box);
@@ -281,6 +324,10 @@ void Noxg::NaiveGame::BuildScene()
 
 	{	// Left hand.
 		hd::GameObject leftHand = std::make_shared<GameObject>();
+		if (!xrOriginObject.expired())
+		{
+			xrOriginObject.lock()->transform->addChild(leftHand->transform);
+		}
 		leftHandAction = std::make_shared<XrControllerActions>(0);
 		leftHand->addComponent(leftHandAction);
 
@@ -305,6 +352,7 @@ void Noxg::NaiveGame::BuildScene()
 		leftHandBox->addComponent(leftHandGear);
 		leftHand->transform->addChild(leftHandBox->transform);
 
+		leftHandObject = leftHand;
 		scene->addGameObject(leftHand);
 		//scene->addGameObject(triggerObject);
 		scene->addGameObject(leftHandBox);
