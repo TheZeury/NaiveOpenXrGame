@@ -412,3 +412,155 @@ Noxg::MeshBuilder Noxg::MeshBuilder::UVSphere(float radius, uint32_t rings, uint
 
 	return mesh;
 }
+
+Noxg::MeshBuilder Noxg::MeshBuilder::Icosphere(float radius, uint32_t level)
+{
+	MeshBuilder mesh;
+
+	const float phi = (1.0f + glm::sqrt(5.0f)) * 0.5f; // Golden ratio.
+	const float a = 1.0f;
+	const float b = 1.0f / phi;
+
+	// Icosahedron.
+	mesh.vertices = {
+		Vertex{ glm::normalize(glm::vec3{  0,  b, -a }), { }, { }, glm::normalize(glm::vec3{  0,  b, -a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  b,  a,  0 }), { }, { }, glm::normalize(glm::vec3{  b,  a,  0 }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -b,  a,  0 }), { }, { }, glm::normalize(glm::vec3{ -b,  a,  0 }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  0,  b,  a }), { }, { }, glm::normalize(glm::vec3{  0,  b,  a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  0, -b,  a }), { }, { }, glm::normalize(glm::vec3{  0, -b,  a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -a,  0,  b }), { }, { }, glm::normalize(glm::vec3{ -a,  0,  b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  0, -b, -a }), { }, { }, glm::normalize(glm::vec3{  0, -b, -a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  a,  0, -b }), { }, { }, glm::normalize(glm::vec3{  a,  0, -b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  a,  0,  b }), { }, { }, glm::normalize(glm::vec3{  a,  0,  b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -a,  0, -b }), { }, { }, glm::normalize(glm::vec3{ -a,  0, -b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  b, -a,  0 }), { }, { }, glm::normalize(glm::vec3{  b, -a,  0 }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -b, -a,  0 }), { }, { }, glm::normalize(glm::vec3{ -b, -a,  0 }), { }, { } },
+	};
+
+	std::vector<IndexedTriangle> readList = {
+		{  2,  1,  0 },
+		{  1,  2,  3 },
+		{  5,  4,  3 },
+		{  4,  8,  3 },
+		{  7,  6,  0 },
+		{  6,  9,  0 },
+		{ 11, 10,  4 },
+		{ 10, 11,  6 },
+		{  9,  5,  2 },
+		{  5,  9, 11 },
+		{  8,  7,  1 },
+		{  7,  8, 10 },
+		{  2,  5,  3 },
+		{  8,  1,  3 },
+		{  9,  2,  0 },
+		{  1,  7,  0 },
+		{ 11,  9,  6 },
+		{  7, 10,  6 },
+		{  5, 11,  4 },
+		{ 10,  8,  4 },
+	};
+
+	std::vector<IndexedTriangle> writeList;
+
+	auto midpoint = [](const Vertex& va, const Vertex& vb) 
+	{
+		auto position = glm::normalize((va.position + vb.position) / 2.f);
+		return Vertex{ position, { }, { }, position, { }, { } };
+	};
+
+	while (level--)
+	{
+		writeList.clear();
+		
+		for (auto& triangle : readList)
+		{
+			auto [v1, v2, v3] = triangle;
+			auto va = mesh.addVertex(midpoint(mesh.vertices[v1], mesh.vertices[v2]));
+			auto vb = mesh.addVertex(midpoint(mesh.vertices[v2], mesh.vertices[v3]));
+			auto vc = mesh.addVertex(midpoint(mesh.vertices[v3], mesh.vertices[v1]));
+
+			writeList.push_back({ v1, va, vc });
+			writeList.push_back({ v2, vb, va });
+			writeList.push_back({ v3, vc, vb });
+			writeList.push_back({ va, vb, vc });
+		}
+
+		readList = std::move(writeList);
+	}
+
+	for (auto& v : mesh.vertices)
+	{
+		v.position *= radius;
+	}
+	mesh.triangles = std::move(readList);
+
+	return mesh;
+}
+
+Noxg::MeshBuilder Noxg::MeshBuilder::Cone(float bottomRadius, float topRadius, float height, uint32_t segments)
+{
+	MeshBuilder mesh;
+
+	if (segments < 3) segments = 3;
+	if (bottomRadius < 0.f || topRadius < 0.f || height <= 0.f)
+	{
+		throw std::runtime_error("Invalid input parameters for a Cone.");
+	}
+
+	const float top = height / 2;
+	const float bottom = -height / 2;
+
+
+	// Top.
+	for (uint32_t i = 0; i < segments; ++i)
+	{
+		auto theta = 2.f * glm::pi<float>() * i / segments;
+		auto x = glm::cos(theta) * topRadius;
+		auto y = top;
+		auto z = glm::sin(theta) * topRadius;
+		mesh.vertices.push_back(Vertex{ glm::vec3{ x, y, z }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } });
+	}
+	for (uint32_t i = 1; i < segments - 1; ++i)
+	{
+		mesh.addTriangle(0, i + 1, i);
+	}
+
+	// Bottom.
+	for (uint32_t i = 0; i < segments; ++i)
+	{
+		auto theta = 2.f * glm::pi<float>() * i / segments;
+		auto x = glm::cos(theta) * bottomRadius;
+		auto y = bottom;
+		auto z = glm::sin(theta) * bottomRadius;
+		mesh.vertices.push_back(Vertex{ glm::vec3{ x, y, z }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } });
+	}
+	for (uint32_t i = 1; i < segments - 1; ++i)
+	{
+		mesh.addTriangle(segments + 0, segments + i, segments + i + 1);
+	}
+
+	// Lateral.
+	for (uint32_t i = 0; i < segments; ++i)
+	{
+		auto vt = mesh.getVertex(i);
+		auto vb = mesh.getVertex(segments + i);
+		auto segment = vt.position - vb.position;
+		auto plane = glm::normalize(glm::cross(vt.position, vb.position));
+		auto normal = glm::normalize(glm::cross(plane, segment));
+		vt.normal = normal;
+		vb.normal = normal;
+		mesh.vertices.push_back(vt);
+		mesh.vertices.push_back(vb);
+	}
+	for (uint32_t i = 0; i < segments; ++i)
+	{
+		auto v1 = 2 * segments                  + 2 * i + 0;
+		auto v2 = 2 * segments + 2 * ((i + 1) % segments) + 0;
+		auto v3 = 2 * segments + 2 * ((i + 1) % segments) + 1;
+		auto v4 = 2 * segments                  + 2 * i + 1;
+		mesh.addTriangle(v1, v2, v3);
+		mesh.addTriangle(v3, v4, v1);
+	}
+
+	return mesh;
+}

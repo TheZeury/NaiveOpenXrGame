@@ -212,5 +212,8 @@
     <ClCompile Include="external\stb.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\XR\XrInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

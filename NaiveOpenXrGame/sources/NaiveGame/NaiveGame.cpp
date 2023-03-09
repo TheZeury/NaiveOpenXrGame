@@ -42,7 +42,7 @@ void Noxg::NaiveGame::Run()
 	MeshBuilder cubeBuilder = MeshBuilder::Box(0.5f, 0.5f, 0.5f);
 	blackCube = cubeBuilder.build(pureBlack);
 	whiteCube = cubeBuilder.build(pureWhite);
-	MeshBuilder sphereBuilder = MeshBuilder::UVSphere(0.5f, 16, 32);
+	MeshBuilder sphereBuilder = MeshBuilder::Icosphere(0.5f, 3);
 	blackSphere = sphereBuilder.build(pureBlack);
 	whiteSphere = sphereBuilder.build(pureWhite);
 
@@ -267,9 +267,11 @@ void Noxg::NaiveGame::BuildScene()
 		hd::XrGrabber grabber = std::make_shared<XrGrabber>(rightHandAction, PxBoxGeometry(0.1f, 0.1f, 0.1f));
 		rightHand->addComponent(grabber);
 
+		auto whiteCone = MeshBuilder::Cone(0.5f, 0.1f, 1.f, 16).build(pureWhite);
+
 		hd::GameObject box = std::make_shared<GameObject>();
-		box->transform->setLocalScale({ 0.05f, 0.05f, 0.05f });
-		box->models.push_back(whiteCube);
+		box->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
+		box->models.push_back(whiteCone);
 		rightHand->transform->addChild(box->transform);
 
 		scene->addGameObject(rightHand);
@@ -355,6 +357,25 @@ void Noxg::NaiveGame::BuildScene()
 
 		scene->addGameObject(sphere);
 		scene->addGameObject(sphereModel);
+	}
+
+	{	// Cone
+		hd::GameObject cone = std::make_shared<GameObject>();
+		cone->transform = std::make_shared<PhysicsTransform>(nullptr);
+		cone->transform->setLocalPosition({ 3.f, 1.f, -5.f });
+		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
+		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f));
+		rigid->addShape(shape);
+		cone->addComponent(rigid);
+
+		auto whiteCone = MeshBuilder::Cone(0.5f, 0.2f, 1.f, 12).build(pureWhite);
+
+		hd::GameObject coneModel = std::make_shared<GameObject>();
+		coneModel->models.push_back(whiteCone);
+		cone->transform->addChild(coneModel->transform);
+
+		scene->addGameObject(cone);
+		scene->addGameObject(coneModel);
 	}
 
 	sceneManager->Load(scene);

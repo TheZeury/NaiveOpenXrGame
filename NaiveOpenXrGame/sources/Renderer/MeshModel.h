@@ -141,6 +141,8 @@ namespace Noxg
 	public:
 		static MeshBuilder Box(float halfX, float halfY, float halfZ);
 		static MeshBuilder UVSphere(float radius, uint32_t rings, uint32_t segments);
+		static MeshBuilder Icosphere(float radius, uint32_t level);
+		static MeshBuilder Cone(float bottomRadius, float topRadius, float height, uint32_t segments);
 
 	private:
 		std::vector<Vertex> vertices;

@@ -86,6 +86,7 @@
     <ClCompile Include="sources\XR\XrControllerActions.cpp" />
     <ClCompile Include="sources\XR\XrGrabable.cpp" />
     <ClCompile Include="sources\XR\XrGrabber.cpp" />
+    <ClCompile Include="sources\XR\XrInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">
