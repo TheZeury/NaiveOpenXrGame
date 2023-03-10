@@ -3,6 +3,7 @@
 #include "Physics/ITriggerCallback.h"
 #include "XR/XrControllerActions.h"
 #include "XR/XrGrabber.h"
+#include "XR/XrGrabable.h"
 #include "NaiveGame/MachineGear.h"
 #include "Renderer/MeshModel.h"
 
@@ -144,8 +145,7 @@ void Noxg::NaiveGame::mainLoop()
 				hd::GameObject bullet = std::make_shared<GameObject>();
 				bullet->transform = std::make_shared<PhysicsTransform>(nullptr);
 				auto matrix = rightHandObject.lock()->transform->getGlobalMatrix();
-				/*
-				pos = orient * glm::vec3(0.01f, -0.145f, -0.117f) + pos;
+				/*pos = orient * glm::vec3(0.01f, -0.145f, -0.117f) + pos;
 				bullet->transform->setLocalPosition(pos);
 				bullet->transform->setLocalRotation(orient);*/
 				bullet->transform->setGlobalMatrix(matrix);
@@ -381,6 +381,10 @@ void Noxg::NaiveGame::BuildScene()
 		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.5f, 0.5f, 0.5f));
 		rigid->addShape(shape);
 		box->addComponent(rigid);
+		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
+		grabable->freeGrabbing = true;
+		rigid->grabable = grabable;
+		box->addComponent(grabable);
 
 		hd::GameObject boxModel = std::make_shared<GameObject>();
 		boxModel->models.push_back(whiteCube);
@@ -398,6 +402,10 @@ void Noxg::NaiveGame::BuildScene()
 		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f));
 		rigid->addShape(shape);
 		sphere->addComponent(rigid);
+		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
+		grabable->freeGrabbing = true;
+		rigid->grabable = grabable;
+		sphere->addComponent(grabable);
 
 		hd::GameObject sphereModel = std::make_shared<GameObject>();
 		sphereModel->models.push_back(whiteSphere);

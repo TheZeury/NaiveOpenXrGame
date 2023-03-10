@@ -5,6 +5,7 @@
 #include "PhysicsTransform.h"
 #include "Bricks/GameObject.h"
 #include "RigidActor.h"
+#include "XR/XrGrabable.h"
 
 namespace Noxg
 {
@@ -24,6 +25,8 @@ namespace Noxg
 	public:
 		virtual void Enable() override;
 		
+		rf::XrGrabable grabable;
+
 	public:
 		rf::PhysicsEngineInstance physicsEngineInstance;
 		glm::vec3 force;

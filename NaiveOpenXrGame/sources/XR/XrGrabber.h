@@ -20,7 +20,7 @@ namespace Noxg
 		virtual void CalculateFrame() override;
 
 		bool grabbing = false;
-		rf::GameObject grabbedGameObject;
+		rf::XrGrabable grabbedGrabable;
 		rf::RigidDynamic rigid;
 		rf::XrControllerActions controller;
 		std::shared_ptr<PxGeometry> shape;

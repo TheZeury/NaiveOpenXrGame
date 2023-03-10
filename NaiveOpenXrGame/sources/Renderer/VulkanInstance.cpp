@@ -504,14 +504,14 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
 
 	const auto pose = projectionView.pose.get();
+	XrMatrix4x4f matProjection;		// P
+	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
 
 	// Draw something.
 	for(auto it = scenes.begin(); it != scenes.end(); )
 	{
 		auto scene = it->lock();
 
-		XrMatrix4x4f matProjection;		// P
-		XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
 		XrMatrix4x4f invView;
 		if(scene->cameraTransform.expired())
 		{
