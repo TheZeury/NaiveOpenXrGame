@@ -58,13 +58,16 @@ void Noxg::XrGrabber::CalculateFrame()
 			gameObject.lock()->scene.lock()->physicsScene->overlap(PxBoxGeometry(0.05f, 0.05f, 0.05f), transform, overlapBuffer);
 			if (overlapBuffer.hasAnyHits()) 
 			{
-				rigid = std::static_pointer_cast<RigidDynamic>(reinterpret_cast<rf::RigidActor*>(overlapBuffer.block.actor->userData)->lock());
-				rigid.lock()->switchGravity(false);
-				grabbedGrabable = rigid.lock()->grabable;
-				if (!grabbedGrabable.expired())
+				rigid = std::dynamic_pointer_cast<RigidDynamic>(reinterpret_cast<rf::RigidActor*>(overlapBuffer.block.actor->userData)->lock());
+				if(!rigid.expired())
 				{
-					grabbedGrabable.lock()->controller = controller;
-					grabbedGrabable.lock()->OnGrab();
+					rigid.lock()->switchGravity(false);
+					grabbedGrabable = rigid.lock()->grabable;
+					if (!grabbedGrabable.expired())
+					{
+						grabbedGrabable.lock()->controller = controller;
+						grabbedGrabable.lock()->OnGrab();
+					}
 				}
 			}
 		}

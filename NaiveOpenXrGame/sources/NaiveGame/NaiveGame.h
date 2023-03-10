@@ -31,6 +31,8 @@ namespace Noxg
 		PxShape* bulletShape;
 		rf::GameObject xrOriginObject;
 		rf::GameObject cameraObject;
+
+		rf::GameObject revolverObject;
 	};
 }
 

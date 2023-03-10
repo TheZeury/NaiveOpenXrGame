@@ -141,28 +141,6 @@ void Noxg::NaiveGame::mainLoop()
 			{
 				xr::HapticVibration vibration(xr::Duration::minHaptic(), XR_FREQUENCY_UNSPECIFIED, 1.f);
 				xrInstance->vibrate(vibration, 1);
-
-				hd::GameObject bullet = std::make_shared<GameObject>();
-				bullet->transform = std::make_shared<PhysicsTransform>(nullptr);
-				auto matrix = rightHandObject.lock()->transform->getGlobalMatrix();
-				/*pos = orient * glm::vec3(0.01f, -0.145f, -0.117f) + pos;
-				bullet->transform->setLocalPosition(pos);
-				bullet->transform->setLocalRotation(orient);*/
-				bullet->transform->setGlobalMatrix(matrix);
-				glm::quat orient;
-				XrMatrix4x4f_GetRotation((XrQuaternionf*)(&orient), (XrMatrix4x4f*)(&matrix));
-				auto direction = orient * glm::vec3{ 0.0f, -20.f, 0.0f };
-				hd::RigidDynamic rigid = std::make_shared<RigidDynamic>(direction);
-				rigid->addShape(bulletShape);
-				bullet->addComponent(rigid);
-
-				hd::GameObject bulletModel = std::make_shared<GameObject>();
-				bulletModel->models.push_back(blackSphere);
-				bulletModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
-				bullet->transform->addChild(bulletModel->transform);
-
-				scene->addGameObject(bullet);
-				scene->addGameObject(bulletModel);
 			}
 			if (leftHandAction->triggerClicked())
 			{
@@ -246,7 +224,7 @@ void Noxg::NaiveGame::BuildScene()
 	scene = std::make_shared<Scene>();
 	sceneManager->Initialize(scene);
 
-	{
+	{	// XR Origin
 		auto origin = std::make_shared<GameObject>();
 		auto camera = std::make_shared<GameObject>();
 		origin->transform->addChild(camera->transform);
@@ -298,14 +276,6 @@ void Noxg::NaiveGame::BuildScene()
 		rightHandAction = std::make_shared<XrControllerActions>(1);
 		rightHand->addComponent(rightHandAction);
 
-		//hd::GameObject revolver = graphicsInstance->loadGameObjectFromFiles("revolver");
-		//glm::quat rotaA = { 0.7071068f, 0.f, -0.7071068f, 0.f };
-		//glm::quat rotaB = { 0.7071068f, -0.7071068f, 0.f, 0.f };
-		//revolver->transform->setLocalRotation(rotaB * rotaA);
-		//revolver->transform->setLocalPosition({ 0.f, -0.18f, 0.03f });
-		//revolver->transform->setLocalScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
-		//rightHand->transform->addChild(revolver->transform);
-
 		hd::XrGrabber grabber = std::make_shared<XrGrabber>(rightHandAction, PxBoxGeometry(0.1f, 0.1f, 0.1f));
 		rightHand->addComponent(grabber);
 
@@ -318,7 +288,6 @@ void Noxg::NaiveGame::BuildScene()
 
 		rightHandObject = rightHand;
 		scene->addGameObject(rightHand);
-		//scene->addGameObject(revolver);
 		scene->addGameObject(box);
 	}
 
@@ -423,6 +392,10 @@ void Noxg::NaiveGame::BuildScene()
 		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f));
 		rigid->addShape(shape);
 		cone->addComponent(rigid);
+		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
+		grabable->freeGrabbing = true;
+		rigid->grabable = grabable;
+		cone->addComponent(grabable);
 
 		auto whiteCone = MeshBuilder::Cone(0.5f, 0.2f, 1.f, 12).build(pureWhite);
 
@@ -432,6 +405,63 @@ void Noxg::NaiveGame::BuildScene()
 
 		scene->addGameObject(cone);
 		scene->addGameObject(coneModel);
+	}
+
+	{	// Revolver
+		hd::GameObject revolver = std::make_shared<GameObject>(); 
+		revolverObject = revolver;
+		revolver->transform = std::make_shared<PhysicsTransform>(nullptr);
+		revolver->transform->setLocalPosition({ 0.f, 1.f, -1.f });
+		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
+		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.2f, 0.1f, 0.02f));
+		shape->setLocalPose(PxTransform(PxVec3{ 0.f, 0.05f, 0.f }));
+		rigid->addShape(shape);
+		revolver->addComponent(rigid);
+		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
+		grabable->freeGrabbing = false;
+		{	// Using a temporary Transform to help calculating the attachTransformation.
+			glm::quat rotaA = { 0.7071068f, 0.f, -0.7071068f, 0.f };
+			glm::quat rotaB = { 0.7071068f, -0.7071068f, 0.f, 0.f };
+			glm::vec3 offset = { 0.f, -0.18f, 0.03f };
+			hd::Transform tempTransform = std::make_shared<Transform>();
+			tempTransform->setLocalRotation(rotaB * rotaA);
+			tempTransform->setLocalPosition(offset);
+			grabable->attachTransformation = tempTransform->getLocalMatrix();
+		}
+		auto RevolverCalculateFrame = [&](hd::XrControllerActions controller)
+		{
+			if (controller->triggerClicked())
+			{
+				hd::GameObject bullet = std::make_shared<GameObject>();
+				bullet->transform = std::make_shared<PhysicsTransform>(nullptr);
+				glm::vec3 pos{ -0.25f, 0.14f, 0.f };
+				bullet->transform->setLocalPosition(revolverObject.lock()->transform->getGlobalMatrix() * glm::vec4(pos, 1.f));
+				glm::quat orient = revolverObject.lock()->transform->getLocalRotation();
+				auto direction = orient * glm::vec3{ -20.0f, 0.f, 0.0f };
+				hd::RigidDynamic rigid = std::make_shared<RigidDynamic>(direction);
+				rigid->addShape(bulletShape);
+				bullet->addComponent(rigid);
+
+				hd::GameObject bulletModel = std::make_shared<GameObject>();
+				bulletModel->models.push_back(blackSphere);
+				bulletModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
+				bullet->transform->addChild(bulletModel->transform);
+
+				scene->addGameObject(bullet);
+				scene->addGameObject(bulletModel);
+			}
+		};
+		grabable->GrabbingFrameCalculateFunction = RevolverCalculateFrame;
+		rigid->grabable = grabable;
+		revolver->addComponent(grabable);
+
+		hd::GameObject revolverModel = graphicsInstance->loadGameObjectFromFiles("revolver");
+		revolverModel->transform->setLocalPosition({ 0.0f, 0.f, 0.01f });
+		revolverModel->transform->setLocalScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
+		revolver->transform->addChild(revolverModel->transform);
+
+		scene->addGameObject(revolver);
+		scene->addGameObject(revolverModel);
 	}
 
 	sceneManager->Load(scene);

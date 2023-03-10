@@ -2,7 +2,7 @@
 
 void Noxg::XrGrabable::Enable()
 {
-	attachTransformation = glm::mat4{ 1.f };
+	
 }
 
 void Noxg::XrGrabable::OnGrab()
@@ -15,13 +15,24 @@ void Noxg::XrGrabable::OnGrab()
 		XrMatrix4x4f_InvertRigidBody(&invController, (XrMatrix4x4f*)(&controllerTransform));
 		XrMatrix4x4f_Multiply((XrMatrix4x4f*)(&attachTransformation), &invController, (XrMatrix4x4f*)(&objectTransform));
 	}
+	if(OnGrabFunction != nullptr)
+	{
+		OnGrabFunction(controller.lock());
+	}
 }
 
 void Noxg::XrGrabable::OnRelease()
 {
-	LOG_INFO("Game", "Released.", 0);
+	if (OnReleaseFunction != nullptr)
+	{
+		OnReleaseFunction(controller.lock());
+	}
 }
 
 void Noxg::XrGrabable::GrabbingFrameCalculate()
 {
+	if (GrabbingFrameCalculateFunction != nullptr)
+	{
+		GrabbingFrameCalculateFunction(controller.lock());
+	}
 }
