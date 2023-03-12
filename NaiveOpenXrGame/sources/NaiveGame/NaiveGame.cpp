@@ -10,11 +10,14 @@
 Noxg::rf::GameObject rightHandObject;
 Noxg::rf::GameObject leftHandObject;
 
+Noxg::rf::GameObject selfControllerObject;
+Noxg::rf::RigidDynamic selfControllerRigid;
+
 Noxg::hd::XrControllerActions rightHandAction;
 Noxg::hd::XrControllerActions leftHandAction;
 
-Noxg::hd::GameObject leftHandBox;
-Noxg::hd::MachineGear leftHandGear;
+//Noxg::hd::GameObject leftHandBox;
+//Noxg::hd::MachineGear leftHandGear;
 
 Noxg::NaiveGame::NaiveGame()
 {
@@ -50,7 +53,7 @@ void Noxg::NaiveGame::Run()
 	blackSphere = sphereBuilder.build(pureBlack);
 	whiteSphere = sphereBuilder.build(pureWhite);
 
-	bulletShape = physicsEngineInstance->createShape(PxSphereGeometry(0.05f));
+	bulletShape = physicsEngineInstance->createShape(PxSphereGeometry(0.05f), NaiveGameSimulationFilters::CommonInWorld);
 
 	BuildScene();
 
@@ -60,7 +63,7 @@ void Noxg::NaiveGame::Run()
 	fixed.request_stop();
 	fixed.join();
 	
-	leftHandBox = nullptr;
+	//leftHandBox = nullptr;
 	leftHandAction = nullptr;
 	rightHandAction = nullptr;
 	blackSphere = nullptr;
@@ -97,7 +100,7 @@ void Noxg::NaiveGame::mainLoop()
 
 			scene->CalculateFrame();
 
-			{
+			/*{
 				leftHandBox->transform->setLocalPosition({ 0.f, -5.f * (leftHandAction->gripValue()), 0.f });
 
 				glm::vec2 angularVelocity = leftHandAction->primaryAxisValue();
@@ -106,9 +109,9 @@ void Noxg::NaiveGame::mainLoop()
 					glm::quat rotation = glm::rotate(glm::quat{ 1.f, 0.f, 0.f, 0.f }, glm::length(angularVelocity) * timeDelta, glm::normalize(glm::vec3{ -angularVelocity.y, 0.f, -angularVelocity.x }));
 					leftHandBox->transform->setLocalRotation(rotation * leftHandBox->transform->getLocalRotation());
 				}
-			}
+			}*/
 
-			if(!xrOriginObject.expired() && !cameraObject.expired())
+			/*if(!xrOriginObject.expired() && !cameraObject.expired())
 			{
 				if (rightHandAction->primaryButtonClicked())
 				{
@@ -125,9 +128,9 @@ void Noxg::NaiveGame::mainLoop()
 					XrMatrix4x4f_GetRotation((XrQuaternionf*)(&orient), (XrMatrix4x4f*)(&matrix));
 					xrOriginObject.lock()->transform->setLocalPosition(xrOriginObject.lock()->transform->getLocalPosition() + orient * glm::vec3{  0.f, -1.f,  0.f });
 				}
-			}
+			}*/
 
-			if (leftHandAction->primaryButtonClicked())
+			/*if (leftHandAction->primaryButtonClicked())
 			{
 				leftHandGear->setLevel(leftHandGear->level - 1);
 			}
@@ -135,12 +138,14 @@ void Noxg::NaiveGame::mainLoop()
 			if (leftHandAction->secondaryButtonClicked())
 			{
 				leftHandGear->setLevel(leftHandGear->level + 1);
-			}
+			}*/
 
-			if (rightHandAction->triggerClicked())
+			/*if (rightHandAction->triggerClicked())
 			{
-				xr::HapticVibration vibration(xr::Duration::minHaptic(), XR_FREQUENCY_UNSPECIFIED, 1.f);
-				xrInstance->vibrate(vibration, 1);
+				auto pos = revolverObject.lock()->transform->getLocalPosition();
+				auto rotate = revolverObject.lock()->transform->getLocalRotation();
+				LOG_INFO("Game", std::format("Pos: [ {}, {}, {} ]", pos.x, pos.y, pos.z), 0);
+				LOG_INFO("Game", std::format("Rotate: [ {}, {}, {}, {} ]", rotate.w, rotate.x, rotate.y, rotate.z), 0);
 			}
 			if (leftHandAction->triggerClicked())
 			{
@@ -166,7 +171,7 @@ void Noxg::NaiveGame::mainLoop()
 
 				scene->addGameObject(box);
 				scene->addGameObject(boxModel);
-			}
+			}*/
 
 			xrInstance->Update();
 		}
@@ -258,7 +263,7 @@ void Noxg::NaiveGame::BuildScene()
 		auto collider = std::make_shared<GameObject>();
 		collider->transform = std::make_shared<PhysicsTransform>(nullptr);
 		auto rigid = std::make_shared<RigidStatic>();
-		auto shape = physicsEngineInstance->createShape(PxPlaneGeometry());
+		auto shape = physicsEngineInstance->createShape(PxPlaneGeometry(), NaiveGameSimulationFilters::CommonInWorld);
 		shape->setLocalPose(PxTransform(PxShortestRotation({ 1.f, 0.f, 0.f }, { 0.f, 1.f, 0.f })));
 		rigid->addShape(shape);
 		collider->addComponent(rigid);
@@ -281,14 +286,14 @@ void Noxg::NaiveGame::BuildScene()
 
 		auto whiteCone = MeshBuilder::Cone(0.5f, 0.1f, 1.f, 16).build(pureWhite);
 
-		hd::GameObject box = std::make_shared<GameObject>();
-		box->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
-		box->models.push_back(whiteCone);
-		rightHand->transform->addChild(box->transform);
+		hd::GameObject rightHandModel = std::make_shared<GameObject>();
+		rightHandModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
+		rightHandModel->models.push_back(whiteCone);
+		rightHand->transform->addChild(rightHandModel->transform);
 
 		rightHandObject = rightHand;
 		scene->addGameObject(rightHand);
-		scene->addGameObject(box);
+		scene->addGameObject(rightHandModel);
 	}
 
 	{	// Left hand.
@@ -299,6 +304,16 @@ void Noxg::NaiveGame::BuildScene()
 		}
 		leftHandAction = std::make_shared<XrControllerActions>(0);
 		leftHand->addComponent(leftHandAction);
+
+		hd::XrGrabber grabber = std::make_shared<XrGrabber>(leftHandAction, PxBoxGeometry(0.1f, 0.1f, 0.1f));
+		leftHand->addComponent(grabber);
+
+		auto blackCone = MeshBuilder::Cone(0.5f, 0.1f, 1.f, 16).build(pureBlack);
+
+		hd::GameObject leftHandModel = std::make_shared<GameObject>();
+		leftHandModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
+		leftHandModel->models.push_back(blackCone);
+		leftHand->transform->addChild(leftHandModel->transform);
 
 		/*hd::GameObject triggerObject = std::make_shared<GameObject>();
 		triggerObject->transform = std::make_shared<PhysicsTransform>(nullptr);
@@ -316,15 +331,15 @@ void Noxg::NaiveGame::BuildScene()
 		triggerObject->addComponent(rigid);
 		leftHand->transform->addChild(triggerObject->transform);*/
 
-		leftHandBox = std::make_shared<GameObject>();
+		/*leftHandBox = std::make_shared<GameObject>();
 		leftHandGear = std::make_shared<MachineGear>(pureWhite);
 		leftHandBox->addComponent(leftHandGear);
-		leftHand->transform->addChild(leftHandBox->transform);
+		leftHand->transform->addChild(leftHandBox->transform);*/
 
 		leftHandObject = leftHand;
 		scene->addGameObject(leftHand);
 		//scene->addGameObject(triggerObject);
-		scene->addGameObject(leftHandBox);
+		scene->addGameObject(leftHandModel);
 	}
 
 	{	// Steed.
@@ -347,7 +362,7 @@ void Noxg::NaiveGame::BuildScene()
 		box->transform = std::make_shared<PhysicsTransform>(nullptr);
 		box->transform->setLocalPosition({ -1.f, 1.f, -5.f });
 		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
-		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.5f, 0.5f, 0.5f));
+		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.5f, 0.5f, 0.5f), NaiveGameSimulationFilters::CommonInWorld);
 		rigid->addShape(shape);
 		box->addComponent(rigid);
 		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
@@ -368,7 +383,7 @@ void Noxg::NaiveGame::BuildScene()
 		sphere->transform = std::make_shared<PhysicsTransform>(nullptr);
 		sphere->transform->setLocalPosition({ 1.f, 1.f, -5.f });
 		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
-		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f));
+		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f), NaiveGameSimulationFilters::CommonInWorld);
 		rigid->addShape(shape);
 		sphere->addComponent(rigid);
 		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
@@ -389,7 +404,7 @@ void Noxg::NaiveGame::BuildScene()
 		cone->transform = std::make_shared<PhysicsTransform>(nullptr);
 		cone->transform->setLocalPosition({ 3.f, 1.f, -5.f });
 		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
-		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f));
+		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.5f), NaiveGameSimulationFilters::CommonInWorld);
 		rigid->addShape(shape);
 		cone->addComponent(rigid);
 		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
@@ -407,13 +422,31 @@ void Noxg::NaiveGame::BuildScene()
 		scene->addGameObject(coneModel);
 	}
 
+	{	// Wooden Table
+		hd::GameObject table = std::make_shared<GameObject>();
+		table->transform = std::make_shared<PhysicsTransform>(nullptr);
+		table->transform->setLocalPosition({ 1.f, 0.f, 0.f });
+		auto rigid = std::make_shared<RigidStatic>();
+		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.56f, 0.49f, 1.2f), NaiveGameSimulationFilters::CommonInWorld);
+		shape->setLocalPose(PxTransform(PxVec3{ 0.f, 0.49f, 0.f }));
+		rigid->addShape(shape);
+		table->addComponent(rigid);
+
+		auto tableModel = graphicsInstance->loadGameObjectFromFiles("wooden_table");
+		table->transform->addChild(tableModel->transform);
+
+		scene->addGameObject(table);
+		scene->addGameObject(tableModel);
+	}
+
 	{	// Revolver
 		hd::GameObject revolver = std::make_shared<GameObject>(); 
 		revolverObject = revolver;
 		revolver->transform = std::make_shared<PhysicsTransform>(nullptr);
-		revolver->transform->setLocalPosition({ 0.f, 1.f, -1.f });
+		revolver->transform->setLocalPosition({ 0.7025244f, 1.0002166f, -0.0175f });
+		revolver->transform->setLocalRotation({ -0.039216336f, -0.038507517f, 0.70616245f, -0.7059135f });
 		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
-		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.2f, 0.1f, 0.02f));
+		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.2f, 0.1f, 0.02f), NaiveGameSimulationFilters::CommonInWorld);
 		shape->setLocalPose(PxTransform(PxVec3{ 0.f, 0.05f, 0.f }));
 		rigid->addShape(shape);
 		revolver->addComponent(rigid);
@@ -432,6 +465,8 @@ void Noxg::NaiveGame::BuildScene()
 		{
 			if (controller->triggerClicked())
 			{
+				controller->vibrate();
+
 				hd::GameObject bullet = std::make_shared<GameObject>();
 				bullet->transform = std::make_shared<PhysicsTransform>(nullptr);
 				glm::vec3 pos{ -0.25f, 0.14f, 0.f };
@@ -462,6 +497,61 @@ void Noxg::NaiveGame::BuildScene()
 
 		scene->addGameObject(revolver);
 		scene->addGameObject(revolverModel);
+	}
+
+	{	// Self Controller ( Provide movement )
+		hd::GameObject selfController = std::make_shared<GameObject>();
+		selfControllerObject = selfController;
+		selfController->transform = std::make_shared<PhysicsTransform>(nullptr);
+		selfController->transform->setLocalPosition({ -0.2f, 1.0f, -0.2f });
+		hd::RigidDynamic rigid = std::make_shared<RigidDynamic>();
+		selfControllerRigid = rigid;
+		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.05f), NaiveGameSimulationFilters::CommonUIHovering);
+		rigid->addShape(shape);
+		selfController->addComponent(rigid);
+		hd::XrGrabable grabable = std::make_shared<XrGrabable>();
+		grabable->freeGrabbing = false;
+		auto selfControllerCalculateFrame = [&](hd::XrControllerActions controller)
+		{
+			if (!xrOriginObject.expired() && !cameraObject.expired())
+			{
+				if (controller->primaryButtonClicked())
+				{
+					auto matrix = controller->gameObject.lock()->transform->getGlobalMatrix();
+					glm::quat orient;
+					XrMatrix4x4f_GetRotation((XrQuaternionf*)(&orient), (XrMatrix4x4f*)(&matrix));
+					xrOriginObject.lock()->transform->setLocalPosition(xrOriginObject.lock()->transform->getLocalPosition() + orient * glm::vec3{ 0.f,  1.f,  0.f });
+				}
+
+				if (controller->secondaryButtonClicked())
+				{
+					auto matrix = controller->gameObject.lock()->transform->getGlobalMatrix();
+					glm::quat orient;
+					XrMatrix4x4f_GetRotation((XrQuaternionf*)(&orient), (XrMatrix4x4f*)(&matrix));
+					xrOriginObject.lock()->transform->setLocalPosition(xrOriginObject.lock()->transform->getLocalPosition() + orient * glm::vec3{ 0.f, -1.f,  0.f });
+				}
+			}
+		};
+		auto selfControllerOnRelease = [&](hd::XrControllerActions controller)
+		{
+			selfControllerRigid.lock()->switchGravity(false);
+			selfControllerObject.lock()->transform->setLocalPosition({ -0.2f, 1.0f, -0.2f });
+		};
+		grabable->GrabbingFrameCalculateFunction = selfControllerCalculateFrame;
+		grabable->OnReleaseFunction = selfControllerOnRelease;
+		rigid->grabable = grabable;
+		selfController->addComponent(grabable);
+		xrOriginObject.lock()->transform->addChild(selfController->transform);
+
+		hd::GameObject selfControllerModel = std::make_shared<GameObject>();
+		selfControllerModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
+		selfControllerModel->models.push_back(whiteSphere);
+		selfController->transform->addChild(selfControllerModel->transform);
+
+		scene->addGameObject(selfController);
+		scene->addGameObject(selfControllerModel);
+		rigid->switchGravity(false);
+		
 	}
 
 	sceneManager->Load(scene);

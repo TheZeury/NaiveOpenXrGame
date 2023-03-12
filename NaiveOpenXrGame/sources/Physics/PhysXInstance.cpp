@@ -33,6 +33,34 @@ class EventCallback : public PxSimulationEventCallback
 	virtual void onAdvance(const PxRigidBody* const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) { }
 };
 
+PxFilterFlags SimulationFilterShader(
+	PxFilterObjectAttributes attributes0, PxFilterData filterData0, 
+	PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+	PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
+{
+	// Let triggers through.
+	if (PxFilterObjectIsTrigger(attributes0) || PxFilterObjectIsTrigger(attributes1))
+	{
+		pairFlags = PxPairFlag::eTRIGGER_DEFAULT;
+		return PxFilterFlag::eDEFAULT;
+	}
+
+	// Filter test.
+	// word0: mask.
+	// word1: bits to filter out if counter's mask contains any.
+	// word2: bits that counter's mask must contains all.
+	// word3: friend mask, ignore word0, word1 and word2 as long as two friend masks overlap.
+	if (!(filterData0.word3 & filterData0.word3) && (
+		(filterData0.word1 & filterData1.word0) || (filterData1.word1 & filterData0.word0) ||
+		(filterData0.word2 & filterData1.word0 ^ filterData0.word2) || (filterData1.word2 & filterData0.word0 ^ filterData1.word2)))
+	{
+		return PxFilterFlag::eKILL;
+	}
+
+	pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+	return PxFilterFlag::eDEFAULT;
+}
+
 void Noxg::PhysXInstance::Initialize()
 {
 	LOG_STEP("PhysX", "Initializing PhysX");
@@ -80,7 +108,7 @@ PxScene* Noxg::PhysXInstance::createScene() const
 		sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 		sceneDesc.cpuDispatcher = dispatcher;
 		sceneDesc.simulationEventCallback = new EventCallback();
-		sceneDesc.filterShader = PxDefaultSimulationFilterShader;
+		sceneDesc.filterShader = SimulationFilterShader;// PxDefaultSimulationFilterShader;
 	}
 	return physics->createScene(sceneDesc);
 }
@@ -95,7 +123,9 @@ PxRigidStatic* Noxg::PhysXInstance::createRigidStatic(const PxTransform& pose) c
 	return physics->createRigidStatic(pose);
 }
 
-PxShape* Noxg::PhysXInstance::createShape(const PxGeometry& geometry) const
+PxShape* Noxg::PhysXInstance::createShape(const PxGeometry& geometry, const PxFilterData& simulationFilterData) const
 {
-	return physics->createShape(geometry, *material);
+	auto shape = physics->createShape(geometry, *material);
+	shape->setSimulationFilterData(simulationFilterData);
+	return shape;
 }

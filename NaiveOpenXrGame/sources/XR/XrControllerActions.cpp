@@ -205,3 +205,9 @@ glm::vec2 Noxg::XrControllerActions::primaryAxisValue()
 	if (xr == nullptr) return { };
 	return { xr->inputState.thumbstickXStates[hand].currentState, xr->inputState.thumbstickYStates[hand].currentState };
 }
+
+void Noxg::XrControllerActions::vibrate(const xr::Duration& duration, float frequency, float amplitude)
+{
+	xr::HapticVibration vibration(duration, frequency, amplitude);
+	xrInstance.lock()->vibrate(vibration, hand);
+}

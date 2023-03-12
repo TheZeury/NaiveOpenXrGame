@@ -103,9 +103,9 @@ std::vector<PxShape*> Noxg::MachineGear::getRecommendedColliders()
 	hd::PhysicsEngineInstance physics = gameObject.lock()->scene.lock()->manager.lock()->defaultPhysicsEngineInstance.lock();
 	std::vector<PxShape*> shapes;
 	PxBoxGeometry box(level * baseSize * 0.5f, level * baseSize * 0.5f, thickness * 0.5f);
-	PxShape* shape = physics->createShape(box);
+	PxShape* shape = physics->createShape(box, NaiveGameSimulationFilters::CommonInWorld);
 	shapes.push_back(shape);
-	shape = physics->createShape(box);
+	shape = physics->createShape(box, NaiveGameSimulationFilters::CommonInWorld);
 	glm::quat rotation = glm::rotate(glm::quat{ 1.f, 0.f, 0.f, 0.f }, glm::pi<float>() * 0.5f, { 0.f, 0.f, 1.f });
 	shape->setLocalPose(PxTransform(*(PxQuat*)(&rotation)));
 	shapes.push_back(shape);

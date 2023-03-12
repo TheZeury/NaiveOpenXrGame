@@ -38,6 +38,9 @@ namespace Noxg
 		bool secondaryButtonValue();
 
 		glm::vec2 primaryAxisValue();
+
+		void vibrate(const xr::Duration& duration = xr::Duration::minHaptic(), float frequency = XR_FREQUENCY_UNSPECIFIED, float amplitude = 1.f);
+
 	private:
 		int hand;
 		bool m_triggerClicked = false;

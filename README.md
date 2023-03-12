@@ -16,7 +16,7 @@ NVIDIA PhysX version : 5.1.2.32190885
 
 **OpenXR SDK (including openxr_loader), Vulkan SDK and PhysX SDK are not uploaded with this repo.** To properly build this repo, one should download them separately from their official sites/repos and do the *including* and *linking* works.
 
-## Free libraries (other than OpenXR SDK and Vulkan SDK):
+## Free libraries (other than OpenXR SDK, Vulkan SDK, and PhysX SDK):
 
 1. [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)
 
@@ -39,6 +39,10 @@ NVIDIA PhysX version : 5.1.2.32190885
 2. *Revolver Navy Colt 1851 Silver* by Johan Pindeville. 
 [repo](NaiveOpenXrGame/models/revolver) | 
 [source](https://sketchfab.com/3d-models/revolver-navy-colt-1851-silver-c254bb8ee01a4d9db9e6bbdc652d6c11)
+
+3. *Wooden Table* by shedmon.
+[repo](NaiveOpenXrGame/models/wooden_table) | 
+[source](https://sketchfab.com/3d-models/wooden-table-acd1cef307b94803846d624b251a4e63)
 
 ## Compression
 
