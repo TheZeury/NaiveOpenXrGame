@@ -57,11 +57,15 @@ void Noxg::NaiveGame::Run()
 
 	BuildScene();
 
+	LOG_INFO("Game", "Entering into Main Loop.", 0);
 	std::jthread main{ [&] { mainLoop(); } };
+	LOG_INFO("Game", "Entering into Fixed Loop.", 0);
 	std::jthread fixed{ [&](std::stop_token st) { fixedLoop(st); } };
 	main.join();
+	LOG_INFO("Game", "Exited from Main Loop.", 0);
 	fixed.request_stop();
 	fixed.join();
+	LOG_INFO("Game", "Exited from Fixed Loop.", 0);
 	
 	//leftHandBox = nullptr;
 	leftHandAction = nullptr;
@@ -82,12 +86,14 @@ void Noxg::NaiveGame::Run()
 
 void Noxg::NaiveGame::mainLoop()
 {
-	LOG_INFO("Game", "Entering into Main Loop.", 0);
-
 	auto startTime = std::chrono::high_resolution_clock::now();
 	auto lastTime = startTime;
 
+#ifdef MIRROR_WINDOW
+	while (xrInstance->PollEvents() && graphicsInstance->PollEvents())
+#else
 	while (xrInstance->PollEvents())
+#endif
 	{
 		if (xrInstance->running())
 		{
@@ -176,14 +182,10 @@ void Noxg::NaiveGame::mainLoop()
 			xrInstance->Update();
 		}
 	}
-
-	LOG_INFO("Game", "Exited from Main Loop.", 0);
 }
 
 void Noxg::NaiveGame::fixedLoop(std::stop_token st)
 {
-	LOG_INFO("Game", "Entering into Fixed Loop.", 0);
-
 	namespace chrono = std::chrono;
 	using namespace std::literals::chrono_literals;
 
@@ -220,8 +222,6 @@ void Noxg::NaiveGame::fixedLoop(std::stop_token st)
 			std::this_thread::sleep_for(remainDelta);
 		}
 	}
-
-	LOG_INFO("Game", "Exited from Fixed Loop.", 0);
 }
 
 void Noxg::NaiveGame::BuildScene()

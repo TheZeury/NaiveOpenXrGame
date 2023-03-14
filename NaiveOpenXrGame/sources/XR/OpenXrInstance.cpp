@@ -195,7 +195,7 @@ void Noxg::OpenXrInstance::CreateSwapChains()
 	for (const auto& view : configViews)
 	{
 		LOG_STEP("OpenXR", "Creating SwapChain");
-		xr::SwapchainCreateInfo swapChainInfo({}, xr::SwapchainUsageFlagBits::Sampled | xr::SwapchainUsageFlagBits::ColorAttachment, (uint64_t)swapChainFormat, view.recommendedSwapchainSampleCount, view.recommendedImageRectWidth, view.recommendedImageRectHeight, 1, 1, 1);
+		xr::SwapchainCreateInfo swapChainInfo({}, xr::SwapchainUsageFlagBits::Sampled | xr::SwapchainUsageFlagBits::ColorAttachment | xr::SwapchainUsageFlagBits::TransferSrc, (uint64_t)swapChainFormat, view.recommendedSwapchainSampleCount, view.recommendedImageRectWidth, view.recommendedImageRectHeight, 1, 1, 1);
 		auto swapChain = session.createSwapchain(swapChainInfo);
 		swapChains.push_back(swapChain);
 		swapChainRects.push_back({ { 0, 0 }, { static_cast<int32_t>(view.recommendedImageRectWidth), static_cast<int32_t>(view.recommendedImageRectHeight) } });

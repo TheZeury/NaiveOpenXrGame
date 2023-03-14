@@ -24,7 +24,7 @@ namespace Noxg
 		vk::Viewport* getViewport();
 		vk::Rect2D* getScissor();
 
-	private:
+	public:
 		std::vector<vk::Image> images;
 		std::vector<vk::ImageView> imageViews;
 		std::vector<vk::Framebuffer> framebuffers;

@@ -32,6 +32,8 @@ void Noxg::VulkanInstance::Initialize(rf::XrInstance xrInstance)
 	CreateLogicalDevice();
 	Utils::vkDevice = device;
 	Utils::vkPhysicalDevice = physicalDevice;
+	CreateCommandPool();
+	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
 }
 
 void Noxg::VulkanInstance::CleanUpInstance()
@@ -112,7 +114,7 @@ void Noxg::VulkanInstance::CreateWindow()
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	window = glfwCreateWindow(1920, 1080, "Hello", nullptr, nullptr);
+	window = glfwCreateWindow(1920, 1080, "Naive OpenXR Game", nullptr, nullptr);
 }
 
 void Noxg::VulkanInstance::CreateInstance()
@@ -219,7 +221,7 @@ void Noxg::VulkanInstance::CreateLogicalDevice()
 	queueFamilyIndex = -1;
 	for (int i = 0; i < queueFamilyProperties.size(); ++i)
 	{
-		if (queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics)
+		if ((queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics)/* && physicalDevice.getSurfaceSupportKHR(i, mirrorSurface) // we'll check it later. */)
 		{
 			queueFamilyIndex = i;
 			break;
@@ -312,9 +314,8 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 
 #ifdef MIRROR_WINDOW
 	LOG_STEP("Vulkan", "Creating Mirror Window Swap Chain");
-#ifndef MIDDLE_EYE_MIRRORING
-	glfwSetWindowSize(window, rects[0].extent.width * 1080 / rects[0].extent.height, 1080);
-#endif // !MIDDLE_EYE_MIRRORING
+
+	glfwSetWindowSize(window, rects[0].extent.width * mirrorImageHeight / rects[0].extent.height, mirrorImageHeight);
 	VkSurfaceKHR surface;
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
 	{
@@ -326,6 +327,76 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 		throw std::runtime_error("Presentation not supported.");
 	}
 
+	vk::SurfaceCapabilitiesKHR capabilities = physicalDevice.getSurfaceCapabilitiesKHR(mirrorSurface);
+	auto surfaceFormats = physicalDevice.getSurfaceFormatsKHR(mirrorSurface);
+	auto presentModes = physicalDevice.getSurfacePresentModesKHR(mirrorSurface);
+	if (surfaceFormats.empty() || presentModes.empty())
+	{
+		throw std::runtime_error("Swapchain not supported.");
+	}
+	vk::SurfaceFormatKHR choosedMirrorSurfaceFormat; bool surfaceFormatFound = false;
+	for (const auto& surfaceFormat : surfaceFormats)
+	{
+		if (surfaceFormat.format == format && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear)
+		{
+			choosedMirrorSurfaceFormat = surfaceFormat;
+			surfaceFormatFound = true;
+			break;
+		}
+	}
+	if (!surfaceFormatFound)
+	{
+		throw std::runtime_error(std::format("Can's find desired surface format({}, {}) for mirror window.", vk::to_string(format), vk::to_string(vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear)));
+	}
+	vk::PresentModeKHR choosedPresentMode; bool presentModefound = false;
+	for (const auto& presentMode : presentModes)
+	{
+		if (presentMode == vk::PresentModeKHR::eMailbox)
+		{
+			choosedPresentMode = presentMode;
+			presentModefound = true;
+			break;
+		}
+	}
+	if (!presentModefound) for (const auto& presentMode : presentModes)
+	{
+		if (presentMode == vk::PresentModeKHR::eImmediate)
+		{
+			choosedPresentMode = presentMode;
+			presentModefound = true;
+			break;
+		}
+	}
+	if (!presentModefound)
+	{
+		throw std::runtime_error(std::format("Can't find desired present mode({} or {}) for mirror window", vk::to_string(vk::PresentModeKHR::eMailbox), vk::to_string(vk::PresentModeKHR::eImmediate)));
+	}
+	vk::Extent2D mirrorWindowExtent;
+	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+	{
+		mirrorWindowExtent = capabilities.currentExtent;
+	}
+	else
+	{
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		mirrorWindowExtent.width = std::clamp(static_cast<uint32_t>(width), capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		mirrorWindowExtent.height = std::clamp(static_cast<uint32_t>(height), capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+	}
+	std::cout << "Extent: [" << mirrorWindowExtent.width << ", " << mirrorWindowExtent.height << "]\t";
+	uint32_t imageCount = capabilities.maxImageCount ? std::min(capabilities.maxImageCount, capabilities.minImageCount + 1) : (capabilities.minImageCount + 1);
+	
+	vk::SwapchainCreateInfoKHR mirrorSwapchainCreateInfo({ }, mirrorSurface, imageCount, choosedMirrorSurfaceFormat.format, choosedMirrorSurfaceFormat.colorSpace, mirrorWindowExtent,
+		1, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eColorAttachment, vk::SharingMode::eExclusive, { },
+		capabilities.currentTransform, vk::CompositeAlphaFlagBitsKHR::eOpaque, choosedPresentMode, VK_FALSE, { });
+	mirrorVkSwaphain = device.createSwapchainKHR(mirrorSwapchainCreateInfo);
+
+	auto mirrorSwapchainImages = device.getSwapchainImagesKHR(mirrorVkSwaphain);
+	mirrorSwapchain = std::make_shared<SwapChain>(device, nullptr, mirrorSwapchainImages, choosedMirrorSurfaceFormat.format, vk::Rect2D{ { }, mirrorWindowExtent });
+
+	vk::SemaphoreCreateInfo semaphoreInfo{ };
+	mirrorImageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
+
 	LOG_SUCCESS();
 #endif // MIRROR_WINDOW
 
@@ -333,8 +404,6 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 
 void Noxg::VulkanInstance::InitializeSession()
 {
-	CreateCommandPool();
-	Utils::passInGraphicsInformation(instance, physicalDevice, device, commandPool, queue);
 	CreateDescriptors();
 	unsigned char pixels[] = { 0, 0, 0, 0 };
 	Texture::empty = std::make_shared<Texture>(pixels, 1, 1, 4);
@@ -488,6 +557,10 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		throw std::runtime_error("Failed to reset Fences.");
 	}
 
+#ifdef MIRROR_WINDOW
+	uint32_t mirrorImageIndex = device.acquireNextImageKHR(mirrorVkSwaphain, UINT64_MAX, mirrorImageAvailableSemaphore, { }).value;
+#endif
+
 	//preservedModels[view].clear();
 
 	commandBuffers[view].reset();
@@ -558,10 +631,66 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 
 	commandBuffers[view].endRenderPass();		// <========= Render Pass End.
 
+#ifdef MIRROR_WINDOW
+	if (view == mirrorView)
+	{
+		vk::ImageMemoryBarrier barrier(vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferWrite, vk::ImageLayout::ePresentSrcKHR, vk::ImageLayout::eTransferDstOptimal, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, mirrorSwapchain->images[mirrorImageIndex], { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+		barrier.image = mirrorSwapchain->images[mirrorImageIndex];
+		barrier.oldLayout = vk::ImageLayout::eUndefined;
+		barrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+		commandBuffers[view].pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, { }, { }, { }, { barrier });
+		
+		barrier.image = swapChains[view]->images[imageIndex];
+		barrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		barrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+		commandBuffers[view].pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, { }, { }, { }, { barrier });
+		
+		vk::ImageBlit blit(
+			{ vk::ImageAspectFlagBits::eColor, 0, 0, 1 },
+			std::array<vk::Offset3D, 2>({ { 0, 0, 0 }, { static_cast<int32_t>(swapChains[view]->rect.extent.width) , static_cast<int32_t>(swapChains[view]->rect.extent.height), 1 } }),
+			{ vk::ImageAspectFlagBits::eColor, 0, 0, 1 },
+			std::array<vk::Offset3D, 2>({ { 0, 0, 0 }, { static_cast<int32_t>(mirrorSwapchain->rect.extent.width) , static_cast<int32_t>(mirrorSwapchain->rect.extent.height), 1 } })
+		);
+		commandBuffers[view].blitImage(swapChains[view]->images[imageIndex], vk::ImageLayout::eTransferSrcOptimal, mirrorSwapchain->images[mirrorImageIndex], vk::ImageLayout::eTransferDstOptimal, { blit }, vk::Filter::eLinear);
+		
+		barrier.image = mirrorSwapchain->images[mirrorImageIndex];
+		barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+		barrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
+		commandBuffers[view].pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, { }, { }, { }, { barrier });
+
+		barrier.image = swapChains[view]->images[imageIndex];
+		barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+		barrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		commandBuffers[view].pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, { }, { }, { }, { barrier });
+	}
+#endif // MIRROR_WINDOW
+
 	commandBuffers[view].end();		// <========= Command Buffer End.
 
 	vk::SubmitInfo submitInfo{ }; submitInfo.commandBufferCount = 1; submitInfo.pCommandBuffers = &commandBuffers[view];
+#ifdef MIRROR_WINDOW
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &mirrorImageAvailableSemaphore;
+#endif // MIRROR_WINDOW
+
 	queue.submit(submitInfo, inFlights[view]);
+
+#ifdef MIRROR_WINDOW
+	vk::PresentInfoKHR presentInfo(0, nullptr, 1, &mirrorVkSwaphain, &mirrorImageIndex, nullptr);
+	if (queue.presentKHR(presentInfo) != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to present to mirror window.");
+	}
+#endif
+}
+
+bool Noxg::VulkanInstance::PollEvents()
+{
+#ifdef MIRROR_WINDOW
+	if (glfwWindowShouldClose(window)) return false;
+	glfwPollEvents();
+#endif
+	return true;
 }
 
 void Noxg::VulkanInstance::addScene(rf::Scene scene)

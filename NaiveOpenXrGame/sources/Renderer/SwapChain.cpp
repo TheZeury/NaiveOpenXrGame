@@ -18,19 +18,22 @@ Noxg::SwapChain::SwapChain(vk::Device device, vk::RenderPass renderPass, std::ve
 		imageViews.push_back(device.createImageView(createInfo));
 	}
 
-	// Depth.
-	auto depthFormat = Utils::findDepthFormat();
-	std::array<uint32_t, 1> queueFamilyIndices = { 0 };
-	vk::ImageCreateInfo imageInfo({ }, vk::ImageType::e2D, depthFormat, { static_cast<uint32_t>(rect.extent.width), static_cast<uint32_t>(rect.extent.height), 1 }, 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, queueFamilyIndices, vk::ImageLayout::eUndefined);
-	std::tie(depthImage,depthImageMemory) = Utils::CreateImage(imageInfo, vk::MemoryPropertyFlagBits::eDeviceLocal);
-	depthImageView = Utils::createImageView(depthImage, depthFormat, 1, vk::ImageAspectFlagBits::eDepth);
-
-	// Framebuffer.
-	for (auto& view : imageViews)
+	if(renderPass)
 	{
-		std::array<vk::ImageView, 2> attachments = { view, depthImageView };
-		vk::FramebufferCreateInfo createInfo({ }, renderPass, attachments, rect.extent.width, rect.extent.height, 1);
-		framebuffers.push_back(device.createFramebuffer(createInfo));
+		// Depth.
+		auto depthFormat = Utils::findDepthFormat();
+		std::array<uint32_t, 1> queueFamilyIndices = { 0 };
+		vk::ImageCreateInfo imageInfo({ }, vk::ImageType::e2D, depthFormat, { static_cast<uint32_t>(rect.extent.width), static_cast<uint32_t>(rect.extent.height), 1 }, 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, queueFamilyIndices, vk::ImageLayout::eUndefined);
+		std::tie(depthImage, depthImageMemory) = Utils::CreateImage(imageInfo, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		depthImageView = Utils::createImageView(depthImage, depthFormat, 1, vk::ImageAspectFlagBits::eDepth);
+
+		// Framebuffer.
+		for (auto& view : imageViews)
+		{
+			std::array<vk::ImageView, 2> attachments = { view, depthImageView };
+			vk::FramebufferCreateInfo createInfo({ }, renderPass, attachments, rect.extent.width, rect.extent.height, 1);
+			framebuffers.push_back(device.createFramebuffer(createInfo));
+		}
 	}
 }
 
@@ -42,19 +45,23 @@ Noxg::SwapChain::~SwapChain()
 		device.destroyFramebuffer(framebuffer);
 	}
 
-	// Depth.
-	Utils::destroyImage(depthImage, depthImageMemory);
-	device.destroyImageView(depthImageView);
-
-	// ImageViews.
-	for (auto& view : imageViews)
+	if(renderPass)
 	{
-		device.destroyImageView(view);
+		// Depth.
+		Utils::destroyImage(depthImage, depthImageMemory);
+		device.destroyImageView(depthImageView);
+
+		// ImageViews.
+		for (auto& view : imageViews)
+		{
+			device.destroyImageView(view);
+		}
 	}
 }
 
 vk::RenderPassBeginInfo Noxg::SwapChain::getRenderPassBeginInfo(uint32_t imageIndex)
 {
+	assert(renderPass != nullptr);
 	std::array<vk::ClearValue, 2> clearValues = {
 		vk::ClearValue{ vk::ClearColorValue{ std::array<float, 4>{ 0.7f, 0.8f, 0.5f, 1.f } } },
 		vk::ClearValue{ vk::ClearDepthStencilValue{ 1.f, 0 } },

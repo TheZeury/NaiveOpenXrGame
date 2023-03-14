@@ -58,6 +58,7 @@
     <ClCompile Include="external\stb.ixx" />
     <ClCompile Include="external\stb_image.cpp" />
     <ClCompile Include="external\tiny_obj_loader.cpp" />
+    <ClCompile Include="libraries\NoxgMath.ixx" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sources\Bricks\GameComponent.cpp" />
     <ClCompile Include="sources\Bricks\GameInstance.cpp" />
@@ -119,6 +120,9 @@
     <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\SceneQuery.vcxproj">
       <Project>{1d969c44-4c78-3576-8bb0-ae3f7c8cc633}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
