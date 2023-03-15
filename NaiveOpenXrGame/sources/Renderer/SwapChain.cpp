@@ -39,23 +39,23 @@ Noxg::SwapChain::SwapChain(vk::Device device, vk::RenderPass renderPass, std::ve
 
 Noxg::SwapChain::~SwapChain()
 {
-	// Framebuffers.
-	for (auto& framebuffer : framebuffers)
-	{
-		device.destroyFramebuffer(framebuffer);
-	}
-
 	if(renderPass)
 	{
+		// Framebuffers.
+		for (auto& framebuffer : framebuffers)
+		{
+			device.destroyFramebuffer(framebuffer);
+		}
+
 		// Depth.
 		Utils::destroyImage(depthImage, depthImageMemory);
 		device.destroyImageView(depthImageView);
+	}
 
-		// ImageViews.
-		for (auto& view : imageViews)
-		{
-			device.destroyImageView(view);
-		}
+	// ImageViews.
+	for (auto& view : imageViews)
+	{
+		device.destroyImageView(view);
 	}
 }
 

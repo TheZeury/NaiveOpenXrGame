@@ -1,8 +1,5 @@
 #pragma once
 
-#ifdef _WIN32
-#define MIRROR_WINDOW
-#endif
 #include "mainCommon.h"
 #include "GraphicsInstance.h"
 #include "Bricks/GameObject.h"
@@ -31,8 +28,10 @@ namespace Noxg
 		virtual void Initialize(rf::XrInstance xrInstance) override;
 		virtual void CleanUpInstance() override;
 		virtual void CleanUpSession() override;
+#ifdef MIRROR_WINDOW
 		void CreateWindow();
 		GLFWwindow* getWindow() { return window; }
+#endif
 		void CreateInstance();
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
@@ -52,14 +51,12 @@ namespace Noxg
 		std::vector<uint32_t> readFile(const std::string& filepath);
 
 	private: // Owning. Responsible to destroy them. Or value types.
-		GLFWwindow* window;
 		vk::Instance instance;
 		vk::PhysicalDevice physicalDevice;
 		vk::Device device;
 		uint32_t queueFamilyIndex;
 		vk::Queue queue;
 		vk::RenderPass renderPass;
-		vk::DescriptorSetLayout textureSetLayout;
 		vk::DescriptorPool descriptorPool;
 		vk::PipelineLayout pipelineLayout;
 		vk::Pipeline pipeline;
@@ -72,6 +69,7 @@ namespace Noxg
 		xr::DispatchLoaderDynamic dispather;
 
 #ifdef MIRROR_WINDOW
+		GLFWwindow* window = nullptr;
 		vk::SurfaceKHR mirrorSurface;
 		vk::SwapchainKHR mirrorVkSwaphain;
 		hd::SwapChain mirrorSwapchain;

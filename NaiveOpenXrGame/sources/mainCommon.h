@@ -139,8 +139,15 @@ import std;
 #define _SILENCE_CXX20_CISO646_REMOVED_WARNING
 #include <PxPhysicsAPI.h>
 using namespace physx;
+
+#ifdef _WIN32
+#define MIRROR_WINDOW
+#endif
+
+#ifdef MIRROR_WINDOW
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
+#endif
 
 #define GLM_FORCE_RADIANS
 #define GLM_ENABLE_EXPERIMENTAL

@@ -13,7 +13,6 @@ void GlfwErrorCallback(int code, const char* description)
 
 Noxg::VulkanInstance::VulkanInstance()
 {
-	window = nullptr;
 	queueFamilyIndex = 0;
 }
 
@@ -64,6 +63,9 @@ void Noxg::VulkanInstance::CleanUpSession()
 	queue.waitIdle();
 
 #ifdef MIRROR_WINDOW
+	device.destroySemaphore(mirrorImageAvailableSemaphore);
+	device.destroySwapchainKHR(mirrorVkSwaphain);
+	mirrorSwapchain = nullptr;
 	instance.destroySurfaceKHR(mirrorSurface);
 #endif
 
@@ -76,7 +78,7 @@ void Noxg::VulkanInstance::CleanUpSession()
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Descriptor Set Layout");
-	device.destroyDescriptorSetLayout(textureSetLayout);
+	device.destroyDescriptorSetLayout(Material::materialSetLayout);
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Fences");
@@ -114,6 +116,7 @@ void Noxg::VulkanInstance::CleanUpSession()
 	LOG_SUCCESS();
 }
 
+#ifdef MIRROR_WINDOW
 void Noxg::VulkanInstance::CreateWindow()
 {
 	glfwInit();
@@ -122,6 +125,7 @@ void Noxg::VulkanInstance::CreateWindow()
 	window = glfwCreateWindow(1920, 1080, "Naive OpenXR Game", nullptr, nullptr);
 	glfwSetErrorCallback(GlfwErrorCallback);
 }
+#endif
 
 void Noxg::VulkanInstance::CreateInstance()
 {
@@ -140,9 +144,11 @@ void Noxg::VulkanInstance::CreateInstance()
 	}
 
 	std::vector<const char*> extensions;
+#ifdef MIRROR_WINDOW
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 	for (uint32_t i = 0; i < glfwExtensionCount; ++i) extensions.push_back(glfwExtensions[i]);
+#endif
 	LOG_INFO("Vulkan", std::format("List of total {} required Vulkan Instance Extension(s):", extensions.size()), 0);
 	for (const auto& ext : extensions)
 	{
@@ -448,7 +454,7 @@ void Noxg::VulkanInstance::CreateDescriptors()
 		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, 20 },
 	};
 
-	vk::DescriptorPoolCreateInfo poolInfo({ }, 10, poolSizes);
+	vk::DescriptorPoolCreateInfo poolInfo(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 10, poolSizes);	// TODO performance concern.
 	descriptorPool = device.createDescriptorPool(poolInfo);
 	Material::descriptorPool = descriptorPool;
 }
