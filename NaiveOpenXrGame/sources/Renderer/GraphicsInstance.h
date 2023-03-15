@@ -19,7 +19,6 @@ namespace Noxg
 		virtual void InitializeSession() = 0; 
 		virtual void CreateSwapChainImageViews(std::vector<std::vector<xr::SwapchainImageVulkanKHR>>& swapChainImages, vk::Format format, std::vector<xr::Rect2Di> rects) = 0;
 		virtual void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format) = 0;
-		virtual bool PollEvents() = 0;
 
 	public:
 		/*virtual void addTexture(hd::Texture texture) = 0;

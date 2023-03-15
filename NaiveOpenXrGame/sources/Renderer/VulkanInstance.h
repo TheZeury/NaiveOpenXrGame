@@ -32,6 +32,7 @@ namespace Noxg
 		virtual void CleanUpInstance() override;
 		virtual void CleanUpSession() override;
 		void CreateWindow();
+		GLFWwindow* getWindow() { return window; }
 		void CreateInstance();
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
@@ -43,7 +44,6 @@ namespace Noxg
 		void CreateCommandPool();
 		void AllocateCommandBuffers();
 		virtual void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format) override;
-		virtual bool PollEvents() override;
 
 		virtual void addScene(rf::Scene scene) override;
 		virtual hd::GameObject loadGameObjectFromFiles(std::string name) override;	// May creates multiple textures and models, but only a single gameObject.

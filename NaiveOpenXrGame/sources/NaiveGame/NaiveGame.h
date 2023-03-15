@@ -17,7 +17,7 @@ namespace Noxg
 		NaiveGame();
 		virtual void Initialize() override;
 		virtual void Run() override;
-		void mainLoop();
+		void mainLoop(std::stop_token st);
 		void fixedLoop(std::stop_token st);
 		void BuildScene();
 	private:

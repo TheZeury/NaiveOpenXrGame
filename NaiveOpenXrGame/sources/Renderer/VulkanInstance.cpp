@@ -6,6 +6,11 @@
 #include "XR/OpenXrInstance.h"
 #include "Physics/RigidDynamic.h"
 
+void GlfwErrorCallback(int code, const char* description)
+{
+	LOG_ERRO(std::format("GLFW ERROR [{}]:\t{}", code, description));
+}
+
 Noxg::VulkanInstance::VulkanInstance()
 {
 	window = nullptr;
@@ -115,6 +120,7 @@ void Noxg::VulkanInstance::CreateWindow()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	window = glfwCreateWindow(1920, 1080, "Naive OpenXR Game", nullptr, nullptr);
+	glfwSetErrorCallback(GlfwErrorCallback);
 }
 
 void Noxg::VulkanInstance::CreateInstance()
@@ -558,7 +564,8 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	}
 
 #ifdef MIRROR_WINDOW
-	uint32_t mirrorImageIndex = device.acquireNextImageKHR(mirrorVkSwaphain, UINT64_MAX, mirrorImageAvailableSemaphore, { }).value;
+	bool iconified = glfwGetWindowAttrib(window, GLFW_ICONIFIED);
+	uint32_t mirrorImageIndex = (view == mirrorView && !iconified) ? device.acquireNextImageKHR(mirrorVkSwaphain, UINT64_MAX, mirrorImageAvailableSemaphore, {}).value : UINT32_MAX;
 #endif
 
 	//preservedModels[view].clear();
@@ -632,7 +639,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	commandBuffers[view].endRenderPass();		// <========= Render Pass End.
 
 #ifdef MIRROR_WINDOW
-	if (view == mirrorView)
+	if (view == mirrorView && !iconified)
 	{
 		vk::ImageMemoryBarrier barrier(vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferWrite, vk::ImageLayout::ePresentSrcKHR, vk::ImageLayout::eTransferDstOptimal, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, mirrorSwapchain->images[mirrorImageIndex], { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
 		barrier.image = mirrorSwapchain->images[mirrorImageIndex];
@@ -669,28 +676,25 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 
 	vk::SubmitInfo submitInfo{ }; submitInfo.commandBufferCount = 1; submitInfo.pCommandBuffers = &commandBuffers[view];
 #ifdef MIRROR_WINDOW
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &mirrorImageAvailableSemaphore;
+	if (view == mirrorView && !iconified)
+	{
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &mirrorImageAvailableSemaphore;
+	}
 #endif // MIRROR_WINDOW
 
 	queue.submit(submitInfo, inFlights[view]);
 
 #ifdef MIRROR_WINDOW
-	vk::PresentInfoKHR presentInfo(0, nullptr, 1, &mirrorVkSwaphain, &mirrorImageIndex, nullptr);
-	if (queue.presentKHR(presentInfo) != vk::Result::eSuccess)
+	if (view == mirrorView && !iconified)
 	{
-		throw std::runtime_error("Failed to present to mirror window.");
+		vk::PresentInfoKHR presentInfo(0, nullptr, 1, &mirrorVkSwaphain, &mirrorImageIndex, nullptr);
+		if (queue.presentKHR(presentInfo) != vk::Result::eSuccess)
+		{
+			throw std::runtime_error("Failed to present to mirror window.");
+		}
 	}
 #endif
-}
-
-bool Noxg::VulkanInstance::PollEvents()
-{
-#ifdef MIRROR_WINDOW
-	if (glfwWindowShouldClose(window)) return false;
-	glfwPollEvents();
-#endif
-	return true;
 }
 
 void Noxg::VulkanInstance::addScene(rf::Scene scene)

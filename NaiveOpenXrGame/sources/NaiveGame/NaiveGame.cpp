@@ -57,10 +57,26 @@ void Noxg::NaiveGame::Run()
 
 	BuildScene();
 
+	std::atomic<bool> mainLoopDone{ false };
 	LOG_INFO("Game", "Entering into Main Loop.", 0);
-	std::jthread main{ [&] { mainLoop(); } };
+	std::jthread main{ [&](std::stop_token st) { mainLoop(st); mainLoopDone = true; } };
 	LOG_INFO("Game", "Entering into Fixed Loop.", 0);
 	std::jthread fixed{ [&](std::stop_token st) { fixedLoop(st); } };
+	
+#ifdef MIRROR_WINDOW
+	auto window = std::static_pointer_cast<VulkanInstance>(graphicsInstance)->getWindow();
+	while (!mainLoopDone) 
+	{
+		if (glfwWindowShouldClose(window))
+		{
+			main.request_stop();
+			break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		glfwPollEvents();
+	}
+#endif
+
 	main.join();
 	LOG_INFO("Game", "Exited from Main Loop.", 0);
 	fixed.request_stop();
@@ -84,16 +100,12 @@ void Noxg::NaiveGame::Run()
 	graphicsInstance->CleanUpInstance();
 }
 
-void Noxg::NaiveGame::mainLoop()
+void Noxg::NaiveGame::mainLoop(std::stop_token st)
 {
 	auto startTime = std::chrono::high_resolution_clock::now();
 	auto lastTime = startTime;
 
-#ifdef MIRROR_WINDOW
-	while (xrInstance->PollEvents() && graphicsInstance->PollEvents())
-#else
-	while (xrInstance->PollEvents())
-#endif
+	while (!st.stop_requested() && xrInstance->PollEvents())
 	{
 		if (xrInstance->running())
 		{
