@@ -20,7 +20,7 @@ NVIDIA PhysX version : 5.1.2.32190885
 
 1. [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)
 
-2. [stb_image](https://github.com/nothings/stb)
+2. [stb](https://github.com/nothings/stb)
 
 ## Other free resources:
 
@@ -43,6 +43,12 @@ NVIDIA PhysX version : 5.1.2.32190885
 3. *Wooden Table* by shedmon.
 [repo](NaiveOpenXrGame/models/wooden_table) | 
 [source](https://sketchfab.com/3d-models/wooden-table-acd1cef307b94803846d624b251a4e63)
+
+### Fonts
+
+1. Anonymous Pro
+[repo](NaiveOpenXrGame/fonts/Anonymous_Pro.ttf) | 
+[source](https://www.marksimonson.com/fonts/view/anonymous-pro)
 
 ## Compression
 

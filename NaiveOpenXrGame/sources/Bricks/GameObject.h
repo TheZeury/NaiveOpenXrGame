@@ -4,6 +4,7 @@
 #include "GameComponent.h"
 #include "Transform.h"
 #include "Renderer/MeshModel.h"
+#include "Renderer/TextModel.h"
 
 namespace Noxg
 {
@@ -23,6 +24,7 @@ namespace Noxg
 		hd::ITransform transform;
 
 		std::vector<hd::MeshModel> models;
+		std::vector<hd::TextModel> texts;
 
 		std::vector<hd::GameComponent> components;
 	private:

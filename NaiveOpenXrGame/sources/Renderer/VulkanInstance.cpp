@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include "XR/OpenXrInstance.h"
 #include "Physics/RigidDynamic.h"
+#include "TextModel.h"
 
 void GlfwErrorCallback(int code, const char* description)
 {
@@ -102,9 +103,9 @@ void Noxg::VulkanInstance::CleanUpSession()
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Pipeline");
-	device.destroyPipeline(pipeline);
+	device.destroyPipeline(pipelines.textPipeline);
+	device.destroyPipeline(pipelines.meshPipeline);
 	LOG_SUCCESS();
-
 
 	LOG_STEP("Vulkan", "Destroying Pipeline Layout");
 	device.destroyPipelineLayout(pipelineLayout);
@@ -448,33 +449,49 @@ void Noxg::VulkanInstance::CreateRenderPass(vk::Format format)
 void Noxg::VulkanInstance::CreateDescriptors()
 {
 	Material::materialSetLayout = Material::getDescriptorSetLayout();
+	CharactorBitmap::bitmapSetLayout = CharactorBitmap::getDescriptorSetLayout();
 
 	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
 		vk::DescriptorPoolSize{ vk::DescriptorType::eUniformBuffer, 10 },
-		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, 20 },
+		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, 30 },
 	};
 
 	vk::DescriptorPoolCreateInfo poolInfo(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 10, poolSizes);	// TODO performance concern.
 	descriptorPool = device.createDescriptorPool(poolInfo);
 	Material::descriptorPool = descriptorPool;
+	CharactorBitmap::descriptorPool = descriptorPool;
 }
 
 void Noxg::VulkanInstance::CreateGraphicsPipeline()
 {
 	LOG_STEP("Vulkan", "Loading Shader Modules");
-	auto vertShaderCode = readFile("shaders/shader.vert.spv");
-	auto fragShaderCode = readFile("shaders/shader.frag.spv");
-	vk::ShaderModuleCreateInfo vertInfo({ }, vertShaderCode);
-	vk::ShaderModuleCreateInfo fragInfo({ }, fragShaderCode);
-	auto vertShaderModule = device.createShaderModule(vertInfo);
-	auto fragShaderModule = device.createShaderModule(fragInfo);
+	auto meshVertShaderCode = readFile("shaders/shader.vert.spv");
+	auto meshFragShaderCode = readFile("shaders/shader.frag.spv");
+	vk::ShaderModuleCreateInfo meshVertInfo({ }, meshVertShaderCode);
+	vk::ShaderModuleCreateInfo meshFragInfo({ }, meshFragShaderCode);
+	auto meshVertShaderModule = device.createShaderModule(meshVertInfo);
+	auto meshFragShaderModule = device.createShaderModule(meshFragInfo);
+
+	auto textVertShaderCode = readFile("shaders/text.vert.spv");
+	auto textFragShaderCode = readFile("shaders/text.frag.spv");
+	vk::ShaderModuleCreateInfo textVertInfo({ }, textVertShaderCode);
+	vk::ShaderModuleCreateInfo textFragInfo({ }, textFragShaderCode);
+	auto textVertShaderModule = device.createShaderModule(textVertInfo);
+	auto textFragShaderModule = device.createShaderModule(textFragInfo);
 	LOG_SUCCESS();
 
-	vk::PipelineShaderStageCreateInfo vertexStageInfo({ }, vk::ShaderStageFlagBits::eVertex, vertShaderModule, "main");
-	vk::PipelineShaderStageCreateInfo fragmentStageInfo({ }, vk::ShaderStageFlagBits::eFragment, fragShaderModule, "main");
-	std::vector<vk::PipelineShaderStageCreateInfo> stageInfos = {
-		vertexStageInfo,
-		fragmentStageInfo,
+	vk::PipelineShaderStageCreateInfo meshVertexStageInfo({ }, vk::ShaderStageFlagBits::eVertex, meshVertShaderModule, "main");
+	vk::PipelineShaderStageCreateInfo meshFragmentStageInfo({ }, vk::ShaderStageFlagBits::eFragment, meshFragShaderModule, "main");
+	std::vector<vk::PipelineShaderStageCreateInfo> meshStageInfos = {
+		meshVertexStageInfo,
+		meshFragmentStageInfo,
+	};
+
+	vk::PipelineShaderStageCreateInfo textVertexStageInfo({ }, vk::ShaderStageFlagBits::eVertex, textVertShaderModule, "main");
+	vk::PipelineShaderStageCreateInfo textFragmentStageInfo({ }, vk::ShaderStageFlagBits::eFragment, textFragShaderModule, "main");
+	std::vector<vk::PipelineShaderStageCreateInfo> textStageInfos = {
+		textVertexStageInfo,
+		textFragmentStageInfo,
 	};
 
 	std::vector<vk::DynamicState> dynamicStates = {
@@ -484,10 +501,13 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo({ }, dynamicStates);
 
-	auto vertexBindingDescriptions = MeshModel::Vertex::getBindingDescriptions();
-	auto vertexAttributeDescriptions = MeshModel::Vertex::getAttributeDescriptions();
+	auto meshVertexBindingDescriptions = MeshModel::Vertex::getBindingDescriptions();
+	auto meshVertexAttributeDescriptions = MeshModel::Vertex::getAttributeDescriptions();
+	vk::PipelineVertexInputStateCreateInfo meshVertexInputInfo{ { }, meshVertexBindingDescriptions, meshVertexAttributeDescriptions };
 
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ { }, vertexBindingDescriptions, vertexAttributeDescriptions };
+	auto textVertexBindingDescriptions = TextModel::TextVertex::getBindingDescriptions();
+	auto textVertexAttributeDescriptions = TextModel::TextVertex::getAttributeDescriptions();
+	vk::PipelineVertexInputStateCreateInfo textVertexInputInfo{ { }, textVertexBindingDescriptions, textVertexAttributeDescriptions };
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo({}, vk::PrimitiveTopology::eTriangleList, VK_FALSE);
 
@@ -503,8 +523,9 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineColorBlendStateCreateInfo colorBlendInfo{ }; colorBlendInfo.attachmentCount = 1; colorBlendInfo.pAttachments = &colorBlendAttachment;
 
-	std::array<vk::DescriptorSetLayout, 1> setLayouts = {
+	std::array<vk::DescriptorSetLayout, 2> setLayouts = {
 		Material::materialSetLayout,
+		CharactorBitmap::bitmapSetLayout,
 	};
 
 	std::vector<vk::PushConstantRange> pushConstantRanges = {
@@ -517,17 +538,27 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Creating Graphics Pipeline");
-	vk::GraphicsPipelineCreateInfo createInfo({ }, stageInfos, &vertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &rasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
-	auto result = device.createGraphicsPipeline({ }, createInfo);
+	vk::GraphicsPipelineCreateInfo textPipelineCreateInfo({ }, textStageInfos, &textVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &rasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	auto result = device.createGraphicsPipeline({ }, textPipelineCreateInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
-		throw std::runtime_error("Failed to create graphics pipeline.");
+		throw std::runtime_error("Failed to create text graphics pipeline.");
 	}
-	pipeline = result.value;
-	LOG_SUCCESS();
+	pipelines.textPipeline = result.value;
+	
+	vk::GraphicsPipelineCreateInfo meshPipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &rasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	result = device.createGraphicsPipeline({ }, meshPipelineCreateInfo);
+	if (result.result != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to create mesh graphics pipeline.");
+	}
+	pipelines.meshPipeline = result.value;
+LOG_SUCCESS();
 
-	device.destroyShaderModule(vertShaderModule);
-	device.destroyShaderModule(fragShaderModule);
+	device.destroyShaderModule(meshVertShaderModule);
+	device.destroyShaderModule(meshFragShaderModule);
+	device.destroyShaderModule(textVertShaderModule);
+	device.destroyShaderModule(textFragShaderModule);
 }
 
 void Noxg::VulkanInstance::CreateCommandPool()
@@ -583,20 +614,80 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 
 	commandBuffers[view].beginRenderPass(swapChains[view]->getRenderPassBeginInfo(imageIndex), vk::SubpassContents::eInline);		// <======= Render Pass Begin.
 
-	commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);			// <======= Bind Pipeline.
+	const auto pose = projectionView.pose.get();
+	XrMatrix4x4f matProjection;		// P
+	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
+
+	commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.textPipeline);			// <======= Bind Text Pipeline.
 
 	commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
 
 	commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
 
-	const auto pose = projectionView.pose.get();
-	XrMatrix4x4f matProjection;		// P
-	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
+	// Draw something.
+	for (auto it = scenes.begin(); it != scenes.end(); )
+	{
+		auto scene = it->lock();
+		if (scene == nullptr)
+		{
+			it = scenes.erase(it);
+			continue;
+		}
+		++it;
+
+		XrMatrix4x4f invView;
+		if (scene->cameraTransform.expired())
+		{
+			XrVector3f identity{ 1.f, 1.f, 1.f };
+			XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
+		}
+		else
+		{
+			scene->cameraTransform.lock()->setLocalPosition(*(glm::vec3*)(&(pose->position)));
+			scene->cameraTransform.lock()->setLocalRotation(*(glm::quat*)(&(pose->orientation)));
+			auto glmInvView = scene->cameraTransform.lock()->getGlobalMatrix();
+			invView = *(XrMatrix4x4f*)(&glmInvView);
+		}
+		XrMatrix4x4f matView;		// V
+		XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+		XrMatrix4x4f matProjectionView;	// PV
+		XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
+		std::vector<PushConstantData> data(1);
+
+		auto& gameObjects = scene->gameObjects;
+		for (auto& obj : gameObjects)
+		{
+			auto matTransform = obj->transform->getGlobalMatrix();	// M
+			data[0].modelMatrix = matTransform;
+			XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+			commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+			for (auto& model : obj->texts)
+			{
+				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
+				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, { model->bitmap->descriptorSet }, { });
+				model->bind(commandBuffers[view]);
+				model->draw(commandBuffers[view]);
+			}
+		}
+	}
+	// End Draw.
+
+	commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshPipeline);			// <======= Bind Mesh Pipeline.
+
+	commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
+
+	commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
 
 	// Draw something.
 	for(auto it = scenes.begin(); it != scenes.end(); )
 	{
 		auto scene = it->lock();
+		if (scene == nullptr)
+		{
+			it = scenes.erase(it);
+			continue;
+		}
+		++it;
 
 		XrMatrix4x4f invView;
 		if(scene->cameraTransform.expired())
@@ -616,13 +707,6 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		XrMatrix4x4f matProjectionView;	// PV
 		XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
 		std::vector<PushConstantData> data(1);
-
-		if (scene == nullptr)
-		{
-			it = scenes.erase(it);
-			continue;
-		}
-		++it;
 
 		auto& gameObjects = scene->gameObjects;
 		for (auto& obj : gameObjects)
@@ -801,7 +885,7 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 	LOG_INFO("Vulkan", std::format("Loaded {} textures and {} models", mates.size(), modls.size()), 0);
 
 	hd::GameObject obj = std::make_shared<GameObject>();
-	obj->models = modls;
+	obj->models = std::move(modls);
 	return obj;
 }
 

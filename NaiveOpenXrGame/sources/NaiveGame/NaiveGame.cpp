@@ -6,6 +6,8 @@
 #include "XR/XrGrabable.h"
 #include "NaiveGame/MachineGear.h"
 #include "Renderer/MeshModel.h"
+#include "Renderer/CharactorBitmap.h"
+#include "Renderer/TextModel.h"
 
 Noxg::rf::GameObject rightHandObject;
 Noxg::rf::GameObject leftHandObject;
@@ -564,6 +566,20 @@ void Noxg::NaiveGame::BuildScene()
 		scene->addGameObject(selfControllerModel);
 		rigid->switchGravity(false);
 		
+	}
+
+	{	// Poem
+		auto poem = std::make_shared<GameObject>();
+		poem->transform->setLocalPosition({ -20.f, 20.f, -20.f });
+		auto bitmap = std::make_shared<CharactorBitmap>("fonts/Anonymous_Pro.ttf");
+		std::string text = "I wandered lonely as a cloud\nThat floats on high o'er vales and hills,\nWhen all at once I saw a crowd,\nA host, of golden daffodils;\nBeside the lake, beneath the trees,\nFluttering and dancing in the breeze.\n";
+		text += "\nIt was the best of times, it was the worst of times,\nit was the age of wisdom, it was the age of foolishness,\nit was the epoch of belief, it was the epoch of incredulity,\nit was the season of Light, it was the season of Darkness,\nit was the spring of hope, it was the winter of despair,";
+		auto texture = std::make_shared<Texture>("textures/robert-lukeman-PH0HYjsf2n8-unsplash.jpg");
+		auto material = std::make_shared<Material>(texture);
+		auto poemText = std::make_shared<TextModel>(text, material, bitmap, 1.5f);
+		poem->texts.push_back(poemText);
+
+		scene->addGameObject(poem);
 	}
 
 	sceneManager->Load(scene);

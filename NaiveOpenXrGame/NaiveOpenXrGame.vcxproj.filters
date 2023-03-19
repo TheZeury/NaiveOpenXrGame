@@ -111,6 +111,15 @@
     <ClInclude Include="sources\XR\XrGrabable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sources\Renderer\CharactorBitmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Renderer\TextModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Renderer\IModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\NaiveGame\NaiveGame.cpp">
@@ -218,8 +227,22 @@
     <ClCompile Include="libraries\NoxgMath.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\Renderer\CharactorBitmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="external\stb_truetype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Renderer\TextModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\Renderer\IModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
+    <None Include="shaders\text.vert" />
+    <None Include="shaders\text.frag" />
   </ItemGroup>
 </Project>

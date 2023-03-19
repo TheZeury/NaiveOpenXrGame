@@ -47,8 +47,8 @@ namespace Noxg
 		virtual void addScene(rf::Scene scene) override;
 		virtual hd::GameObject loadGameObjectFromFiles(std::string name) override;	// May creates multiple textures and models, but only a single gameObject.
 		virtual xr::GraphicsBindingVulkanKHR getGraphicsBinding() override;
-	private: // help functions.
-		std::vector<uint32_t> readFile(const std::string& filepath);
+	public: // help functions.
+		static std::vector<uint32_t> readFile(const std::string& filepath);
 
 	private: // Owning. Responsible to destroy them. Or value types.
 		vk::Instance instance;
@@ -59,7 +59,10 @@ namespace Noxg
 		vk::RenderPass renderPass;
 		vk::DescriptorPool descriptorPool;
 		vk::PipelineLayout pipelineLayout;
-		vk::Pipeline pipeline;
+		struct {
+			vk::Pipeline meshPipeline;
+			vk::Pipeline textPipeline;
+		} pipelines;
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;
 		// std::vector<std::vector<hd::MeshModel>> preservedModels;	// models are preserved by a commandBuffer when they are being drawn.

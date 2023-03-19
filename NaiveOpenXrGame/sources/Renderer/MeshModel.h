@@ -2,12 +2,13 @@
 
 #include "mainCommon.h"
 #include "Material.h"
+#include "IModel.h"
 
 namespace Noxg
 {
 	MAKE_HANDLE(MeshModel);
 
-	class MeshModel
+	class MeshModel : public IModel
 	{
 	public:
 		struct Vertex
