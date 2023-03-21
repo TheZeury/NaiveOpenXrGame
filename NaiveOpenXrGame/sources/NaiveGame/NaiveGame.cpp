@@ -9,6 +9,8 @@
 #include "Renderer/CharactorBitmap.h"
 #include "Renderer/TextModel.h"
 
+import NoxgMath;
+
 Noxg::rf::GameObject rightHandObject;
 Noxg::rf::GameObject leftHandObject;
 
@@ -20,6 +22,44 @@ Noxg::hd::XrControllerActions leftHandAction;
 
 //Noxg::hd::GameObject leftHandBox;
 //Noxg::hd::MachineGear leftHandGear;
+
+auto createModelObjectFromPhysicsShape(PxShape& shape, Noxg::hd::Material material) -> Noxg::hd::GameObject
+{
+	using namespace Noxg;
+
+	auto object = std::make_shared<GameObject>();
+	object->transform->setLocalMatrix(cnv<glm::mat4>(PxMat44(shape.getLocalPose())));
+
+	switch (shape.getGeometryType())
+	{
+	case PxGeometryType::eBOX:
+	{
+		PxBoxGeometry geometry;
+		shape.getBoxGeometry(geometry);
+		auto mesh = MeshBuilder::Box(geometry.halfExtents.x, geometry.halfExtents.y, geometry.halfExtents.z);
+		object->models.push_back(mesh.build(material));
+		break;
+	}
+	case PxGeometryType::eSPHERE:
+	{
+		PxSphereGeometry geometry;
+		shape.getSphereGeometry(geometry);
+		auto mesh = MeshBuilder::Icosphere(geometry.radius, 3);
+		object->models.push_back(mesh.build(material));
+		break;
+	}
+	case PxGeometryType::ePLANE:
+	{
+		break;
+	}
+	default:
+	{
+		break;
+	}
+	}
+
+	return object;
+}
 
 Noxg::NaiveGame::NaiveGame()
 {
@@ -47,13 +87,16 @@ void Noxg::NaiveGame::Run()
 
 	pureBlack = std::make_shared<Material>(glm::vec4{ 0.f, 0.f, 0.f, 1.f });
 	pureWhite = std::make_shared<Material>(glm::vec4{ 1.f, 1.f, 1.f, 1.f });
+	neutrGray = std::make_shared<Material>(glm::vec4{ .4f, .4f, .4f, 1.f });
+	limeGreen = std::make_shared<Material>(glm::vec4{ .2f, .8f, .2f, 1.f });
+	cyanBlue  = std::make_shared<Material>(glm::vec4{ 0.f, .7f, .9f, 1.f });
 	
 	MeshBuilder cubeBuilder = MeshBuilder::Box(0.5f, 0.5f, 0.5f);
 	blackCube = cubeBuilder.build(pureBlack);
-	whiteCube = cubeBuilder.build(pureWhite);
+	whiteCube = cubeBuilder.build(neutrGray);
 	MeshBuilder sphereBuilder = MeshBuilder::Icosphere(0.5f, 3);
 	blackSphere = sphereBuilder.build(pureBlack);
-	whiteSphere = sphereBuilder.build(pureWhite);
+	whiteSphere = sphereBuilder.build(neutrGray);
 
 	bulletShape = physicsEngineInstance->createShape(PxSphereGeometry(0.05f), NaiveGameSimulationFilters::CommonInWorld);
 
@@ -94,6 +137,9 @@ void Noxg::NaiveGame::Run()
 	whiteCube = nullptr;
 	pureBlack = nullptr;
 	pureWhite = nullptr;
+	neutrGray = nullptr;
+	limeGreen = nullptr;
+	cyanBlue = nullptr;
 	scene = nullptr;
 
 	graphicsInstance->CleanUpSession();
@@ -216,7 +262,7 @@ void Noxg::NaiveGame::fixedLoop(std::stop_token st)
 			++i;
 			if (i == 500)
 			{
-				LOG_INFO("Game", "10 seconds of fixed loop.", 0);
+				//LOG_INFO("Game", "10 seconds of fixed loop.", 0);
 				i = 0;
 			}
 
@@ -241,7 +287,11 @@ void Noxg::NaiveGame::fixedLoop(std::stop_token st)
 void Noxg::NaiveGame::BuildScene()
 {
 	scene = std::make_shared<Scene>();
+	auto physxDebugScene = std::make_shared<Scene>();
 	sceneManager->Initialize(scene);
+	sceneManager->Initialize(physxDebugScene);
+	scene->debugScene = physxDebugScene;
+	scene->onlyDebug = false;
 
 	{	// XR Origin
 		auto origin = std::make_shared<GameObject>();
@@ -254,6 +304,7 @@ void Noxg::NaiveGame::BuildScene()
 		xrOriginObject = origin;
 		cameraObject = camera;
 		scene->cameraTransform = camera->transform;
+		physxDebugScene->cameraTransform = camera->transform;
 	}
 
 	{	// Ground.
@@ -298,7 +349,7 @@ void Noxg::NaiveGame::BuildScene()
 		hd::XrGrabber grabber = std::make_shared<XrGrabber>(rightHandAction, PxBoxGeometry(0.1f, 0.1f, 0.1f));
 		rightHand->addComponent(grabber);
 
-		auto whiteCone = MeshBuilder::Cone(0.5f, 0.1f, 1.f, 16).build(pureWhite);
+		auto whiteCone = MeshBuilder::Cone(0.5f, 0.1f, 1.f, 16).build(neutrGray);
 
 		hd::GameObject rightHandModel = std::make_shared<GameObject>();
 		rightHandModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
@@ -388,8 +439,13 @@ void Noxg::NaiveGame::BuildScene()
 		boxModel->models.push_back(whiteCube);
 		box->transform->addChild(boxModel->transform);
 
+		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
+		box->transform->addChild(shapeModel->transform);
+
 		scene->addGameObject(box);
 		scene->addGameObject(boxModel);
+
+		physxDebugScene->addGameObject(shapeModel);
 	}
 
 	{	// Sphere
@@ -409,8 +465,13 @@ void Noxg::NaiveGame::BuildScene()
 		sphereModel->models.push_back(whiteSphere);
 		sphere->transform->addChild(sphereModel->transform);
 
+		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
+		sphere->transform->addChild(shapeModel->transform);
+
 		scene->addGameObject(sphere);
 		scene->addGameObject(sphereModel);
+
+		physxDebugScene->addGameObject(shapeModel);
 	}
 
 	{	// Cone
@@ -426,14 +487,19 @@ void Noxg::NaiveGame::BuildScene()
 		rigid->grabable = grabable;
 		cone->addComponent(grabable);
 
-		auto whiteCone = MeshBuilder::Cone(0.5f, 0.2f, 1.f, 12).build(pureWhite);
+		auto whiteCone = MeshBuilder::Cone(0.5f, 0.2f, 1.f, 12).build(neutrGray);
 
 		hd::GameObject coneModel = std::make_shared<GameObject>();
 		coneModel->models.push_back(whiteCone);
 		cone->transform->addChild(coneModel->transform);
 
+		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
+		cone->transform->addChild(shapeModel->transform);
+
 		scene->addGameObject(cone);
 		scene->addGameObject(coneModel);
+
+		physxDebugScene->addGameObject(shapeModel);
 	}
 
 	{	// Wooden Table
@@ -449,8 +515,13 @@ void Noxg::NaiveGame::BuildScene()
 		auto tableModel = graphicsInstance->loadGameObjectFromFiles("wooden_table");
 		table->transform->addChild(tableModel->transform);
 
+		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
+		table->transform->addChild(shapeModel->transform);
+
 		scene->addGameObject(table);
 		scene->addGameObject(tableModel);
+
+		physxDebugScene->addGameObject(shapeModel);
 	}
 
 	{	// Revolver
@@ -496,8 +567,13 @@ void Noxg::NaiveGame::BuildScene()
 				bulletModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
 				bullet->transform->addChild(bulletModel->transform);
 
+				auto shapeModel = createModelObjectFromPhysicsShape(*bulletShape, limeGreen);
+				bullet->transform->addChild(shapeModel->transform);
+
 				scene->addGameObject(bullet);
 				scene->addGameObject(bulletModel);
+
+				scene->debugScene->addGameObject(shapeModel);
 			}
 		};
 		grabable->GrabbingFrameCalculateFunction = RevolverCalculateFrame;
@@ -509,8 +585,13 @@ void Noxg::NaiveGame::BuildScene()
 		revolverModel->transform->setLocalScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
 		revolver->transform->addChild(revolverModel->transform);
 
+		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
+		revolver->transform->addChild(shapeModel->transform);
+
 		scene->addGameObject(revolver);
 		scene->addGameObject(revolverModel);
+
+		physxDebugScene->addGameObject(shapeModel);
 	}
 
 	{	// Self Controller ( Provide movement )
@@ -562,9 +643,14 @@ void Noxg::NaiveGame::BuildScene()
 		selfControllerModel->models.push_back(whiteSphere);
 		selfController->transform->addChild(selfControllerModel->transform);
 
+		auto shapeModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
+		selfController->transform->addChild(shapeModel->transform);
+
 		scene->addGameObject(selfController);
 		scene->addGameObject(selfControllerModel);
 		rigid->switchGravity(false);
+
+		physxDebugScene->addGameObject(shapeModel);
 		
 	}
 
@@ -584,4 +670,6 @@ void Noxg::NaiveGame::BuildScene()
 
 	sceneManager->Load(scene);
 	sceneManager->Mobilize(scene);
+	//sceneManager->Load(physxDebugScene);
+	//sceneManager->Mobilize(physxDebugScene);
 }

@@ -39,7 +39,7 @@ namespace Noxg
 		virtual void InitializeSession() override;
 		void CreateRenderPass(vk::Format format);
 		void CreateDescriptors();
-		void CreateGraphicsPipeline();
+		void CreateGraphicsPipelines();
 		void CreateCommandPool();
 		void AllocateCommandBuffers();
 		virtual void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format) override;
@@ -62,6 +62,7 @@ namespace Noxg
 		struct {
 			vk::Pipeline meshPipeline;
 			vk::Pipeline textPipeline;
+			vk::Pipeline wireframePipeline;
 		} pipelines;
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;

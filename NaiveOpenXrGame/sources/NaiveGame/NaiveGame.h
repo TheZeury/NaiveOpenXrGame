@@ -24,6 +24,9 @@ namespace Noxg
 		hd::Scene scene;
 		hd::Material pureBlack;
 		hd::Material pureWhite;
+		hd::Material neutrGray;
+		hd::Material limeGreen;
+		hd::Material cyanBlue;
 		hd::MeshModel blackCube;
 		hd::MeshModel whiteCube;
 		hd::MeshModel blackSphere;

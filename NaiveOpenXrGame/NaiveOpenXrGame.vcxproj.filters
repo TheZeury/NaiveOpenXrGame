@@ -36,13 +36,7 @@
     <ClInclude Include="sources\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="external\stb_image.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\Renderer\Texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="external\tiny_obj_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\Bricks\GameObject.h">
@@ -143,10 +137,10 @@
     <ClCompile Include="sources\Renderer\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="external\stb_image.cpp">
+    <ClCompile Include="external\stb.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="external\tiny_obj_loader.cpp">
+    <ClCompile Include="external\tinyobj.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Bricks\GameObject.cpp">
@@ -230,19 +224,21 @@
     <ClCompile Include="sources\Renderer\CharactorBitmap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="external\stb_truetype.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sources\Renderer\TextModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Renderer\IModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="external\tinyobj.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <None Include="shaders\text.vert" />
+    <None Include="shaders\shader.frag" />
+    <None Include="shaders\shader.vert" />
     <None Include="shaders\text.frag" />
+    <None Include="shaders\text.vert" />
   </ItemGroup>
 </Project>

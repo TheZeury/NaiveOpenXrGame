@@ -105,6 +105,7 @@ void Noxg::VulkanInstance::CleanUpSession()
 	LOG_STEP("Vulkan", "Destroying Pipeline");
 	device.destroyPipeline(pipelines.textPipeline);
 	device.destroyPipeline(pipelines.meshPipeline);
+	device.destroyPipeline(pipelines.wireframePipeline);
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Pipeline Layout");
@@ -420,7 +421,7 @@ void Noxg::VulkanInstance::InitializeSession()
 	CreateDescriptors();
 	unsigned char pixels[] = { 0, 0, 0, 0 };
 	Texture::empty = std::make_shared<Texture>(pixels, 1, 1, 4);
-	CreateGraphicsPipeline();
+	CreateGraphicsPipelines();
 	AllocateCommandBuffers();
 }
 
@@ -456,13 +457,13 @@ void Noxg::VulkanInstance::CreateDescriptors()
 		vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, 30 },
 	};
 
-	vk::DescriptorPoolCreateInfo poolInfo(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 10, poolSizes);	// TODO performance concern.
+	vk::DescriptorPoolCreateInfo poolInfo(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 100, poolSizes);	// TODO performance concern.
 	descriptorPool = device.createDescriptorPool(poolInfo);
 	Material::descriptorPool = descriptorPool;
 	CharactorBitmap::descriptorPool = descriptorPool;
 }
 
-void Noxg::VulkanInstance::CreateGraphicsPipeline()
+void Noxg::VulkanInstance::CreateGraphicsPipelines()
 {
 	LOG_STEP("Vulkan", "Loading Shader Modules");
 	auto meshVertShaderCode = readFile("shaders/shader.vert.spv");
@@ -513,7 +514,9 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 
 	vk::PipelineViewportStateCreateInfo viewportInfo({ }, 1, nullptr, 1, nullptr);
 
-	vk::PipelineRasterizationStateCreateInfo rasterizationInfo({ }, VK_FALSE, VK_FALSE, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise, VK_FALSE, { }, { }, { }, 1.f);
+	vk::PipelineRasterizationStateCreateInfo fillRasterizationInfo({ }, VK_FALSE, VK_FALSE, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise, VK_FALSE, { }, { }, { }, 1.f);
+
+	vk::PipelineRasterizationStateCreateInfo wireRasterizationInfo({ }, VK_FALSE, VK_FALSE, vk::PolygonMode::eLine, vk::CullModeFlagBits::eNone, vk::FrontFace::eCounterClockwise, VK_FALSE, { }, { }, { }, 1.f);
 
 	vk::PipelineMultisampleStateCreateInfo multisampleInfo{ };
 
@@ -537,8 +540,8 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 	pipelineLayout = device.createPipelineLayout(pipelineLayoutInfo);
 	LOG_SUCCESS();
 
-	LOG_STEP("Vulkan", "Creating Graphics Pipeline");
-	vk::GraphicsPipelineCreateInfo textPipelineCreateInfo({ }, textStageInfos, &textVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &rasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	LOG_STEP("Vulkan", "Creating Graphics Pipelines");
+	vk::GraphicsPipelineCreateInfo textPipelineCreateInfo({ }, textStageInfos, &textVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &fillRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
 	auto result = device.createGraphicsPipeline({ }, textPipelineCreateInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
@@ -546,14 +549,22 @@ void Noxg::VulkanInstance::CreateGraphicsPipeline()
 	}
 	pipelines.textPipeline = result.value;
 	
-	vk::GraphicsPipelineCreateInfo meshPipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &rasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	vk::GraphicsPipelineCreateInfo meshPipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &fillRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
 	result = device.createGraphicsPipeline({ }, meshPipelineCreateInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("Failed to create mesh graphics pipeline.");
 	}
 	pipelines.meshPipeline = result.value;
-LOG_SUCCESS();
+
+	vk::GraphicsPipelineCreateInfo wireframePipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &wireRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	result = device.createGraphicsPipeline({ }, wireframePipelineCreateInfo);
+	if (result.result != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to create mesh graphics pipeline.");
+	}
+	pipelines.wireframePipeline = result.value;
+	LOG_SUCCESS();
 
 	device.destroyShaderModule(meshVertShaderModule);
 	device.destroyShaderModule(meshFragShaderModule);
@@ -672,6 +683,8 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	}
 	// End Draw.
 
+	bool hasDebug = false;
+
 	commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshPipeline);			// <======= Bind Mesh Pipeline.
 
 	commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
@@ -688,6 +701,8 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 			continue;
 		}
 		++it;
+		if (scene->debugScene != nullptr) hasDebug = true;
+		if (scene->onlyDebug) continue;
 
 		XrMatrix4x4f invView;
 		if(scene->cameraTransform.expired())
@@ -725,6 +740,65 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		}
 	}
 	// End Draw.
+
+	if(hasDebug)
+	{
+		commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.wireframePipeline);			// <======= Bind Wireframe Pipeline.
+
+		commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
+
+		commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
+
+		// Draw something.
+		for (auto it = scenes.begin(); it != scenes.end(); )
+		{
+			auto scene = it->lock();
+			if (scene == nullptr)
+			{
+				it = scenes.erase(it);
+				continue;
+			}
+			++it;
+			if (scene->debugScene == nullptr) continue;
+			scene = scene->debugScene;
+
+			XrMatrix4x4f invView;
+			if (scene->cameraTransform.expired())
+			{
+				XrVector3f identity{ 1.f, 1.f, 1.f };
+				XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
+			}
+			else
+			{
+				scene->cameraTransform.lock()->setLocalPosition(*(glm::vec3*)(&(pose->position)));
+				scene->cameraTransform.lock()->setLocalRotation(*(glm::quat*)(&(pose->orientation)));
+				auto glmInvView = scene->cameraTransform.lock()->getGlobalMatrix();
+				invView = *(XrMatrix4x4f*)(&glmInvView);
+			}
+			XrMatrix4x4f matView;		// V
+			XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+			XrMatrix4x4f matProjectionView;	// PV
+			XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
+			std::vector<PushConstantData> data(1);
+
+			auto& gameObjects = scene->gameObjects;
+			for (auto& obj : gameObjects)
+			{
+				auto matTransform = obj->transform->getGlobalMatrix();	// M
+				data[0].modelMatrix = matTransform;
+				XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+				commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+				for (auto& model : obj->models)
+				{
+					commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
+					model->bind(commandBuffers[view]);
+					model->draw(commandBuffers[view]);
+					//preservedModels[view].push_back(model);
+				}
+			}
+		}
+		// End Draw.
+	}
 
 	commandBuffers[view].endRenderPass();		// <========= Render Pass End.
 
@@ -804,7 +878,7 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 	std::string warn, err;
 
 	LOG_STEP("Vulkan", "Loading Model File");
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str(), modelDirectory.c_str()))
+	if (!tinyobj::loadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str(), modelDirectory.c_str()))
 	{
 		throw std::runtime_error(warn + err);
 	}

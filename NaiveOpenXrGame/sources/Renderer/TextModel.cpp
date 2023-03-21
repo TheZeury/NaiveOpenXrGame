@@ -17,7 +17,7 @@ void Noxg::TextModel::createTextModel(const std::string& text, float height)
 	glm::vec2 currentPoint{ };
 	for (auto c : text)
 	{
-		index = textVertices.size();
+		index = static_cast<uint32_t>(textVertices.size());
 
 		if (c == '\n')
 		{
@@ -52,7 +52,6 @@ void Noxg::TextModel::createTextModel(const std::string& text, float height)
 		for (auto& v : charVertices)
 		{
 			textVertices.push_back(v);
-			std::cout << std::format("[{}, {}], ", textVertices[textVertices.size() - 1].position.x, textVertices[textVertices.size() - 1].position.y);
 		}
 		std::cout << std::endl;
 

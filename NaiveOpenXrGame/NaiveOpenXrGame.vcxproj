@@ -19,8 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="external\stb_image.h" />
-    <ClInclude Include="external\tiny_obj_loader.h" />
     <ClInclude Include="external\xr_linear.h" />
     <ClInclude Include="sources\Bricks\GameComponent.h" />
     <ClInclude Include="sources\Bricks\GameInstance.h" />
@@ -59,9 +57,9 @@
     <ClCompile Include="..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\modules\std.compat.ixx" />
     <ClCompile Include="..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\modules\std.ixx" />
     <ClCompile Include="external\stb.ixx" />
-    <ClCompile Include="external\stb_image.cpp" />
-    <ClCompile Include="external\stb_truetype.cpp" />
-    <ClCompile Include="external\tiny_obj_loader.cpp" />
+    <ClCompile Include="external\stb.cxx" />
+    <ClCompile Include="external\tinyobj.cxx" />
+    <ClCompile Include="external\tinyobj.ixx" />
     <ClCompile Include="libraries\NoxgMath.ixx" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sources\Bricks\GameComponent.cpp" />
@@ -130,6 +128,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
+    <None Include="shaders\shader.frag" />
+    <None Include="shaders\shader.vert" />
     <None Include="shaders\text.frag" />
     <None Include="shaders\text.vert" />
   </ItemGroup>

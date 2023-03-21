@@ -29,6 +29,8 @@ namespace Noxg
 		void removeGameObject(hd::GameObject obj);
 		std::unordered_set<hd::GameObject> gameObjects;
 		rf::ITransform cameraTransform;
+		hd::Scene debugScene;
+		bool onlyDebug = false;
 
 	public:
 		std::weak_ptr<SceneManager> manager;

@@ -9,7 +9,7 @@ Noxg::MeshModel::MeshModel(std::string path, hd::Material tex)
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), "models"))
+	if (!tinyobj::loadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str(), "models"))
 	{
 		throw std::runtime_error(warn + err);
 	}

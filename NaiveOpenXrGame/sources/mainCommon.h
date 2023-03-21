@@ -156,7 +156,7 @@ using namespace physx;
 #include <glm/gtx/hash.hpp>
 
 import stb;
-#include "..\external\tiny_obj_loader.h"
+import tinyobj;
 
 #define LOGMESSAGE
 #if !defined(LOGMESSAGE)
