@@ -1,6 +1,5 @@
 #version 450
 
-//layout (location = 0) in vec3 fragColor; 
 layout (location = 0) in vec3 fragPosition;
 layout (location = 1) in vec3 fragNormal;
 layout (location = 2) in vec2 FragUv;
@@ -32,8 +31,4 @@ void main() {
     {
         discard;
     }
-    //outColor = vec4(normal, 1.0);
-    //outColor = vec4(0.5 * (normalize(normal) + 1.0), 1.0);
-    //if(outColor == vec4(0.0, 0.0, 0.0, 1.0)) outColor = vec4(1.0, 1.0, 1.0, 1.0);
-    //outColor = vec4(FragUv, 0.0, 1.0);
 }

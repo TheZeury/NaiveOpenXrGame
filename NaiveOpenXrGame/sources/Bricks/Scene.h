@@ -2,6 +2,7 @@
 
 #include "mainCommon.h"
 #include "GameObject.h"
+#include "Renderer/UIElement.h"
 
 namespace Noxg
 {
@@ -27,10 +28,24 @@ namespace Noxg
 		/// <param name="obj"> the gameObject to be removed. </param>
 		/// <seealso cref="addGameObject"/>
 		void removeGameObject(hd::GameObject obj);
+
+		auto addModel(hd::MeshModel model, hd::ITransform transform) -> void;
+		auto addText(hd::TextModel text, hd::ITransform transform) -> void;
+		auto addUIElement(hd::UIElement element, hd::ITransform transform) -> void;
+
+		auto removeModel(hd::MeshModel model, hd::ITransform transform) -> void;
+		auto removeText(hd::TextModel text, hd::ITransform transform) -> void;
+		auto removeUIElement(hd::UIElement element, hd::ITransform transform) -> void;
+
 		std::unordered_set<hd::GameObject> gameObjects;
 		rf::ITransform cameraTransform;
 		hd::Scene debugScene;
 		bool onlyDebug = false;
+
+		std::set<std::pair<hd::MeshModel, hd::ITransform>> models;
+		std::set<std::pair<hd::TextModel, hd::ITransform>> texts;
+		std::set<std::pair<hd::MeshModel, hd::ITransform>> wireModels;
+		std::set<std::pair<hd::UIElement, hd::ITransform>> uiElements;
 
 	public:
 		std::weak_ptr<SceneManager> manager;

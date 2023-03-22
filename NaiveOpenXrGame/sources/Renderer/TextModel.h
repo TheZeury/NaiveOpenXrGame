@@ -2,7 +2,7 @@
 
 #include "mainCommon.h"
 #include "Material.h"
-#include "CharactorBitmap.h"
+#include "CharacterBitmap.h"
 #include "IModel.h"
 
 namespace Noxg
@@ -46,7 +46,7 @@ namespace Noxg
 			}
 		};
 
-		TextModel(const std::string& text, hd::Material material, hd::CharactorBitmap bitmap, float height = 0.1f);
+		TextModel(const std::string& text, hd::Material material, hd::CharacterBitmap bitmap, float height = 0.1f);
 
 		void createTextModel(const std::string& text, float height);
 
@@ -55,7 +55,7 @@ namespace Noxg
 
 	public:
 		hd::Material material;
-		hd::CharactorBitmap bitmap;
+		hd::CharacterBitmap bitmap;
 
 	private:
 		uint32_t vertexCount;

@@ -32,13 +32,14 @@
     <ClInclude Include="sources\Physics\PhysicsShape.h" />
     <ClInclude Include="sources\Physics\RigidActor.h" />
     <ClInclude Include="sources\Physics\RigidStatic.h" />
-    <ClInclude Include="sources\Renderer\CharactorBitmap.h" />
+    <ClInclude Include="sources\Renderer\CharacterBitmap.h" />
     <ClInclude Include="sources\Renderer\GraphicsInstance.h" />
     <ClInclude Include="sources\Renderer\IModel.h" />
     <ClInclude Include="sources\Renderer\Material.h" />
     <ClInclude Include="sources\Renderer\MeshModel.h" />
     <ClInclude Include="sources\renderer\SwapChain.h" />
     <ClInclude Include="sources\Renderer\TextModel.h" />
+    <ClInclude Include="sources\Renderer\UIElement.h" />
     <ClInclude Include="sources\XR\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame\NaiveGame.h" />
     <ClInclude Include="sources\physics\PhysicsTransform.h" />
@@ -73,13 +74,14 @@
     <ClCompile Include="sources\Physics\PhysicsShape.cpp" />
     <ClCompile Include="sources\Physics\RigidActor.cpp" />
     <ClCompile Include="sources\Physics\RigidStatic.cpp" />
-    <ClCompile Include="sources\Renderer\CharactorBitmap.cpp" />
+    <ClCompile Include="sources\Renderer\CharacterBitmap.cpp" />
     <ClCompile Include="sources\Renderer\GraphicsInstance.cpp" />
     <ClCompile Include="sources\Renderer\IModel.cpp" />
     <ClCompile Include="sources\Renderer\Material.cpp" />
     <ClCompile Include="sources\Renderer\MeshModel.cpp" />
     <ClCompile Include="sources\renderer\SwapChain.cpp" />
     <ClCompile Include="sources\Renderer\TextModel.cpp" />
+    <ClCompile Include="sources\Renderer\UIElement.cpp" />
     <ClCompile Include="sources\XR\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame\NaiveGame.cpp" />
     <ClCompile Include="sources\physics\PhysicsTransform.cpp" />
@@ -128,10 +130,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <None Include="shaders\shader.frag" />
-    <None Include="shaders\shader.vert" />
+    <None Include="shaders\mesh.frag" />
+    <None Include="shaders\mesh.vert" />
     <None Include="shaders\text.frag" />
     <None Include="shaders\text.vert" />
+    <None Include="shaders\ui.frag" />
+    <None Include="shaders\ui.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

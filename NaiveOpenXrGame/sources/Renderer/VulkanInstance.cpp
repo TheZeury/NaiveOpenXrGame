@@ -6,6 +6,9 @@
 #include "XR/OpenXrInstance.h"
 #include "Physics/RigidDynamic.h"
 #include "TextModel.h"
+#include "UIElement.h"
+
+import NoxgMath;
 
 void GlfwErrorCallback(int code, const char* description)
 {
@@ -28,7 +31,7 @@ void Noxg::VulkanInstance::Initialize(rf::XrInstance xrInstance)
 	openXrInstance = xrInst->getInstance();
 	openXrSystemId = xrInst->getSystemId();
 	xrInst = nullptr;
-	dispather = xr::DispatchLoaderDynamic{ openXrInstance };
+	dispatcher = xr::DispatchLoaderDynamic{ openXrInstance };
 #ifdef MIRROR_WINDOW
 	CreateWindow();
 #endif
@@ -65,7 +68,7 @@ void Noxg::VulkanInstance::CleanUpSession()
 
 #ifdef MIRROR_WINDOW
 	device.destroySemaphore(mirrorImageAvailableSemaphore);
-	device.destroySwapchainKHR(mirrorVkSwaphain);
+	device.destroySwapchainKHR(mirrorVkSwapchain);
 	mirrorSwapchain = nullptr;
 	instance.destroySurfaceKHR(mirrorSurface);
 #endif
@@ -109,7 +112,7 @@ void Noxg::VulkanInstance::CleanUpSession()
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Destroying Pipeline Layout");
-	device.destroyPipelineLayout(pipelineLayout);
+	device.destroyPipelineLayout(pipelineLayouts.worldPipelineLayout);
 	LOG_SUCCESS();
 
 
@@ -158,7 +161,7 @@ void Noxg::VulkanInstance::CreateInstance()
 	}
 
 	// Get VulkanGraphicsRequirements.
-	xr::GraphicsRequirementsVulkanKHR requirement = openXrInstance.getVulkanGraphicsRequirements2KHR(openXrSystemId, dispather);
+	xr::GraphicsRequirementsVulkanKHR requirement = openXrInstance.getVulkanGraphicsRequirements2KHR(openXrSystemId, dispatcher);
 	LOG_INFO("Vulkan", "Vulkan API Version Information: ", 0);
 	LOG_INFO("Vulkan", 
 		std::format("Lowest supported API version = {}.{}.{} ", 
@@ -204,7 +207,7 @@ void Noxg::VulkanInstance::CreateInstance()
 	// Xr Create Vulkan Instance.
 	VkInstance vkInstance;
 	VkResult vkResult;
-	openXrInstance.createVulkanInstanceKHR(createInfo, &vkInstance, &vkResult, dispather);
+	openXrInstance.createVulkanInstanceKHR(createInfo, &vkInstance, &vkResult, dispatcher);
 	if (vkResult != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Vulkan instance.");
 	}
@@ -217,7 +220,7 @@ void Noxg::VulkanInstance::PickPhysicalDevice()
 {
 	LOG_STEP("Vulkan", "Picking Physical Device");
 	xr::VulkanGraphicsDeviceGetInfoKHR getInfo(openXrSystemId, instance);
-	physicalDevice = openXrInstance.getVulkanGraphicsDevice2KHR(getInfo, dispather);
+	physicalDevice = openXrInstance.getVulkanGraphicsDevice2KHR(getInfo, dispatcher);
 	LOG_SUCCESS();
 	auto properties = physicalDevice.getProperties();
 	LOG_INFO("Vulkan", ("Physical Device Name : " + static_cast<std::string>(properties.deviceName.data())), 0);
@@ -293,7 +296,7 @@ void Noxg::VulkanInstance::CreateLogicalDevice()
 	LOG_STEP("Vulkan", "Creating Vulkan Logical Device");
 	VkDevice vkDevice;
 	VkResult vkResult;
-	openXrInstance.createVulkanDeviceKHR(createInfo, &vkDevice, &vkResult, dispather);
+	openXrInstance.createVulkanDeviceKHR(createInfo, &vkDevice, &vkResult, dispatcher);
 	if (vkResult != VK_SUCCESS)
 	{
 		throw std::runtime_error("Can't create logical device.");
@@ -403,9 +406,9 @@ void Noxg::VulkanInstance::CreateSwapChainImageViews(std::vector<std::vector<xr:
 	vk::SwapchainCreateInfoKHR mirrorSwapchainCreateInfo({ }, mirrorSurface, imageCount, choosedMirrorSurfaceFormat.format, choosedMirrorSurfaceFormat.colorSpace, mirrorWindowExtent,
 		1, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eColorAttachment, vk::SharingMode::eExclusive, { },
 		capabilities.currentTransform, vk::CompositeAlphaFlagBitsKHR::eOpaque, choosedPresentMode, VK_FALSE, { });
-	mirrorVkSwaphain = device.createSwapchainKHR(mirrorSwapchainCreateInfo);
+	mirrorVkSwapchain = device.createSwapchainKHR(mirrorSwapchainCreateInfo);
 
-	auto mirrorSwapchainImages = device.getSwapchainImagesKHR(mirrorVkSwaphain);
+	auto mirrorSwapchainImages = device.getSwapchainImagesKHR(mirrorVkSwapchain);
 	mirrorSwapchain = std::make_shared<SwapChain>(device, nullptr, mirrorSwapchainImages, choosedMirrorSurfaceFormat.format, vk::Rect2D{ { }, mirrorWindowExtent });
 
 	vk::SemaphoreCreateInfo semaphoreInfo{ };
@@ -450,7 +453,7 @@ void Noxg::VulkanInstance::CreateRenderPass(vk::Format format)
 void Noxg::VulkanInstance::CreateDescriptors()
 {
 	Material::materialSetLayout = Material::getDescriptorSetLayout();
-	CharactorBitmap::bitmapSetLayout = CharactorBitmap::getDescriptorSetLayout();
+	CharacterBitmap::bitmapSetLayout = CharacterBitmap::getDescriptorSetLayout();
 
 	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
 		vk::DescriptorPoolSize{ vk::DescriptorType::eUniformBuffer, 10 },
@@ -460,14 +463,14 @@ void Noxg::VulkanInstance::CreateDescriptors()
 	vk::DescriptorPoolCreateInfo poolInfo(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 100, poolSizes);	// TODO performance concern.
 	descriptorPool = device.createDescriptorPool(poolInfo);
 	Material::descriptorPool = descriptorPool;
-	CharactorBitmap::descriptorPool = descriptorPool;
+	CharacterBitmap::descriptorPool = descriptorPool;
 }
 
 void Noxg::VulkanInstance::CreateGraphicsPipelines()
 {
 	LOG_STEP("Vulkan", "Loading Shader Modules");
-	auto meshVertShaderCode = readFile("shaders/shader.vert.spv");
-	auto meshFragShaderCode = readFile("shaders/shader.frag.spv");
+	auto meshVertShaderCode = readFile("shaders/mesh.vert.spv");
+	auto meshFragShaderCode = readFile("shaders/mesh.frag.spv");
 	vk::ShaderModuleCreateInfo meshVertInfo({ }, meshVertShaderCode);
 	vk::ShaderModuleCreateInfo meshFragInfo({ }, meshFragShaderCode);
 	auto meshVertShaderModule = device.createShaderModule(meshVertInfo);
@@ -479,6 +482,13 @@ void Noxg::VulkanInstance::CreateGraphicsPipelines()
 	vk::ShaderModuleCreateInfo textFragInfo({ }, textFragShaderCode);
 	auto textVertShaderModule = device.createShaderModule(textVertInfo);
 	auto textFragShaderModule = device.createShaderModule(textFragInfo);
+
+	auto uiVertShaderCode = readFile("shaders/ui.vert.spv");
+	auto uiFragShaderCode = readFile("shaders/ui.frag.spv");
+	vk::ShaderModuleCreateInfo uiVertInfo({ }, uiVertShaderCode);
+	vk::ShaderModuleCreateInfo uiFragInfo({ }, uiFragShaderCode);
+	auto uiVertShaderModule = device.createShaderModule(uiVertInfo);
+	auto uiFragShaderModule = device.createShaderModule(uiFragInfo);
 	LOG_SUCCESS();
 
 	vk::PipelineShaderStageCreateInfo meshVertexStageInfo({ }, vk::ShaderStageFlagBits::eVertex, meshVertShaderModule, "main");
@@ -495,6 +505,13 @@ void Noxg::VulkanInstance::CreateGraphicsPipelines()
 		textFragmentStageInfo,
 	};
 
+	vk::PipelineShaderStageCreateInfo uiVertexStageInfo({ }, vk::ShaderStageFlagBits::eVertex, uiVertShaderModule, "main");
+	vk::PipelineShaderStageCreateInfo uiFragmentStageInfo({ }, vk::ShaderStageFlagBits::eFragment, uiFragShaderModule, "main");
+	std::vector<vk::PipelineShaderStageCreateInfo> uiStageInfos = {
+		uiVertexStageInfo,
+		uiFragmentStageInfo,
+	};
+
 	std::vector<vk::DynamicState> dynamicStates = {
 		vk::DynamicState::eViewport,
 		vk::DynamicState::eScissor,
@@ -509,6 +526,10 @@ void Noxg::VulkanInstance::CreateGraphicsPipelines()
 	auto textVertexBindingDescriptions = TextModel::TextVertex::getBindingDescriptions();
 	auto textVertexAttributeDescriptions = TextModel::TextVertex::getAttributeDescriptions();
 	vk::PipelineVertexInputStateCreateInfo textVertexInputInfo{ { }, textVertexBindingDescriptions, textVertexAttributeDescriptions };
+
+	auto uiVertexBindingDescriptions = UIElement::UIVertex::getBindingDescriptions();
+	auto uiVertexAttributeDescriptions = UIElement::UIVertex::getAttributeDescriptions();
+	vk::PipelineVertexInputStateCreateInfo uiVertexInputInfo{ { }, uiVertexBindingDescriptions, uiVertexAttributeDescriptions };
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo({}, vk::PrimitiveTopology::eTriangleList, VK_FALSE);
 
@@ -528,7 +549,7 @@ void Noxg::VulkanInstance::CreateGraphicsPipelines()
 
 	std::array<vk::DescriptorSetLayout, 2> setLayouts = {
 		Material::materialSetLayout,
-		CharactorBitmap::bitmapSetLayout,
+		CharacterBitmap::bitmapSetLayout,
 	};
 
 	std::vector<vk::PushConstantRange> pushConstantRanges = {
@@ -537,11 +558,11 @@ void Noxg::VulkanInstance::CreateGraphicsPipelines()
 
 	LOG_STEP("Vulkan", "Creating Pipeline Layout");
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo({ }, setLayouts, pushConstantRanges);
-	pipelineLayout = device.createPipelineLayout(pipelineLayoutInfo);
+	pipelineLayouts.worldPipelineLayout = device.createPipelineLayout(pipelineLayoutInfo);
 	LOG_SUCCESS();
 
 	LOG_STEP("Vulkan", "Creating Graphics Pipelines");
-	vk::GraphicsPipelineCreateInfo textPipelineCreateInfo({ }, textStageInfos, &textVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &fillRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	vk::GraphicsPipelineCreateInfo textPipelineCreateInfo({ }, textStageInfos, &textVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &fillRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayouts.worldPipelineLayout, renderPass, 0, { }, -1);
 	auto result = device.createGraphicsPipeline({ }, textPipelineCreateInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
@@ -549,7 +570,7 @@ void Noxg::VulkanInstance::CreateGraphicsPipelines()
 	}
 	pipelines.textPipeline = result.value;
 	
-	vk::GraphicsPipelineCreateInfo meshPipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &fillRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	vk::GraphicsPipelineCreateInfo meshPipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &fillRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayouts.worldPipelineLayout, renderPass, 0, { }, -1);
 	result = device.createGraphicsPipeline({ }, meshPipelineCreateInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
@@ -557,13 +578,21 @@ void Noxg::VulkanInstance::CreateGraphicsPipelines()
 	}
 	pipelines.meshPipeline = result.value;
 
-	vk::GraphicsPipelineCreateInfo wireframePipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &wireRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayout, renderPass, 0, { }, -1);
+	vk::GraphicsPipelineCreateInfo wireframePipelineCreateInfo({ }, meshStageInfos, &meshVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &wireRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayouts.worldPipelineLayout, renderPass, 0, { }, -1);
 	result = device.createGraphicsPipeline({ }, wireframePipelineCreateInfo);
 	if (result.result != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("Failed to create mesh graphics pipeline.");
 	}
 	pipelines.wireframePipeline = result.value;
+
+	vk::GraphicsPipelineCreateInfo uiPipelineCreateInfo({ }, uiStageInfos, &uiVertexInputInfo, &inputAssemblyInfo, { }, &viewportInfo, &fillRasterizationInfo, &multisampleInfo, &depthStencilInfo, &colorBlendInfo, &dynamicStateInfo, pipelineLayouts.worldPipelineLayout, renderPass, 0, { }, -1);
+	result = device.createGraphicsPipeline({ }, uiPipelineCreateInfo);
+	if (result.result != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Failed to create UI graphics pipeline.");
+	}
+	pipelines.uiPipeline = result.value;
 	LOG_SUCCESS();
 
 	device.destroyShaderModule(meshVertShaderModule);
@@ -613,7 +642,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 
 #ifdef MIRROR_WINDOW
 	bool iconified = glfwGetWindowAttrib(window, GLFW_ICONIFIED);
-	uint32_t mirrorImageIndex = (view == mirrorView && !iconified) ? device.acquireNextImageKHR(mirrorVkSwaphain, UINT64_MAX, mirrorImageAvailableSemaphore, {}).value : UINT32_MAX;
+	uint32_t mirrorImageIndex = (view == mirrorView && !iconified) ? device.acquireNextImageKHR(mirrorVkSwapchain, UINT64_MAX, mirrorImageAvailableSemaphore, {}).value : UINT32_MAX;
 #endif
 
 	//preservedModels[view].clear();
@@ -629,119 +658,206 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 	XrMatrix4x4f matProjection;		// P
 	XrMatrix4x4f_CreateProjectionFov(&matProjection, GRAPHICS_VULKAN, projectionView.fov, DEFAULT_NEAR_Z, INFINITE_FAR_Z);
 
-	commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.textPipeline);			// <======= Bind Text Pipeline.
+	std::vector<hd::Scene> scenes;
+	bool haveText = false;
+	bool haveMesh = false;
+	bool haveUI = false;
+	bool haveDebug = false;
 
-	commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
+	XrMatrix4x4f noCameraInvView; 
+	XrVector3f identity{ 1.f, 1.f, 1.f };
+	XrMatrix4x4f_CreateTranslationRotationScale(&noCameraInvView, &(pose->position), &(pose->orientation), &identity);
+	XrMatrix4x4f noCameraView;
+	XrMatrix4x4f_InvertRigidBody(&noCameraView, &noCameraInvView);
 
-	commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
-
-	// Draw something.
-	for (auto it = scenes.begin(); it != scenes.end(); )
+	for (auto it = this->scenes.begin(); it != this->scenes.end(); )
 	{
 		auto scene = it->lock();
 		if (scene == nullptr)
 		{
-			it = scenes.erase(it);
+			it = this->scenes.erase(it);
 			continue;
 		}
 		++it;
 
-		XrMatrix4x4f invView;
-		if (scene->cameraTransform.expired())
-		{
-			XrVector3f identity{ 1.f, 1.f, 1.f };
-			XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
-		}
-		else
+		scenes.push_back(scene);
+
+		haveText |= !(scene->onlyDebug || scene->texts.empty());
+		haveMesh |= !(scene->onlyDebug || scene->models.empty());
+		haveUI |= !(scene->uiElements.empty());	// No `scene->onlyDebug` like above because we till want to have UI even in debug view.
+		haveDebug |= !(scene->debugScene == nullptr || scene->debugScene->models.empty());
+
+		if (!scene->cameraTransform.expired())
 		{
 			scene->cameraTransform.lock()->setLocalPosition(*(glm::vec3*)(&(pose->position)));
 			scene->cameraTransform.lock()->setLocalRotation(*(glm::quat*)(&(pose->orientation)));
-			auto glmInvView = scene->cameraTransform.lock()->getGlobalMatrix();
-			invView = *(XrMatrix4x4f*)(&glmInvView);
-		}
-		XrMatrix4x4f matView;		// V
-		XrMatrix4x4f_InvertRigidBody(&matView, &invView);
-		XrMatrix4x4f matProjectionView;	// PV
-		XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
-		std::vector<PushConstantData> data(1);
-
-		auto& gameObjects = scene->gameObjects;
-		for (auto& obj : gameObjects)
-		{
-			auto matTransform = obj->transform->getGlobalMatrix();	// M
-			data[0].modelMatrix = matTransform;
-			XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
-			commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
-			for (auto& model : obj->texts)
-			{
-				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
-				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, { model->bitmap->descriptorSet }, { });
-				model->bind(commandBuffers[view]);
-				model->draw(commandBuffers[view]);
-			}
 		}
 	}
-	// End Draw.
-
-	bool hasDebug = false;
-
-	commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshPipeline);			// <======= Bind Mesh Pipeline.
-
-	commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
-
-	commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
-
-	// Draw something.
-	for(auto it = scenes.begin(); it != scenes.end(); )
+	
+	if(haveText)
 	{
-		auto scene = it->lock();
-		if (scene == nullptr)
-		{
-			it = scenes.erase(it);
-			continue;
-		}
-		++it;
-		if (scene->debugScene != nullptr) hasDebug = true;
-		if (scene->onlyDebug) continue;
+		commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.textPipeline);			// <======= Bind Text Pipeline.
 
-		XrMatrix4x4f invView;
-		if(scene->cameraTransform.expired())
-		{
-			XrVector3f identity{ 1.f, 1.f, 1.f };
-			XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
-		}
-		else
-		{
-			scene->cameraTransform.lock()->setLocalPosition(*(glm::vec3*)(&(pose->position)));
-			scene->cameraTransform.lock()->setLocalRotation(*(glm::quat*)(&(pose->orientation)));
-			auto glmInvView = scene->cameraTransform.lock()->getGlobalMatrix();
-			invView = *(XrMatrix4x4f*)(&glmInvView);
-		}
-		XrMatrix4x4f matView;		// V
-		XrMatrix4x4f_InvertRigidBody(&matView, &invView);
-		XrMatrix4x4f matProjectionView;	// PV
-		XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
-		std::vector<PushConstantData> data(1);
+		commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
 
-		auto& gameObjects = scene->gameObjects;
-		for (auto& obj : gameObjects)
+		commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
+
+		// Draw something.
+		for (auto scene : scenes)
 		{
-			auto matTransform = obj->transform->getGlobalMatrix();	// M
-			data[0].modelMatrix = matTransform;
-			XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
-			commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
-			for (auto& model : obj->models)
+			if (scene->onlyDebug || scene->texts.empty()) continue;
+
+			XrMatrix4x4f matView;		// V
+			if (scene->cameraTransform.expired())
 			{
-				commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
-				model->bind(commandBuffers[view]);
-				model->draw(commandBuffers[view]);
-				//preservedModels[view].push_back(model);
+				matView = noCameraView;
+			}
+			else
+			{
+				XrMatrix4x4f invView = cnv<XrMatrix4x4f>(scene->cameraTransform.lock()->getGlobalMatrix());
+				XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+			}
+
+			XrMatrix4x4f matProjectionView;	// PV
+			XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
+			std::vector<PushConstantData> data(1);
+
+			std::pair<hd::TextModel, hd::ITransform> last = { nullptr, nullptr };
+			for (auto& pair : scene->texts)
+			{
+				auto text = pair.first;
+				if (text != last.first) 
+				{
+					text->bind(commandBuffers[view]);
+					commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.worldPipelineLayout, 0, { text->material->descriptorSet }, { });
+					commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.worldPipelineLayout, 1, { text->bitmap->descriptorSet }, { });
+					last.first = text;
+				}
+
+				auto transform = pair.second;
+				if (transform != last.second)
+				{
+					auto matTransform = pair.second->getGlobalMatrix();	// M
+					data[0].modelMatrix = matTransform;
+					XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+					commandBuffers[view].pushConstants<PushConstantData>(pipelineLayouts.worldPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+				}
+
+				text->draw(commandBuffers[view]);
 			}
 		}
+		// End Draw.
 	}
-	// End Draw.
 
-	if(hasDebug)
+	if (haveMesh)
+	{
+		commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshPipeline);			// <======= Bind Mesh Pipeline.
+
+		commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
+
+		commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
+
+		// Draw something.
+		for (auto scene : scenes)
+		{
+			if (scene->onlyDebug || scene->models.empty()) continue;
+
+			XrMatrix4x4f matView;		// V
+			if (scene->cameraTransform.expired())
+			{
+				matView = noCameraView;
+			}
+			else
+			{
+				XrMatrix4x4f invView = cnv<XrMatrix4x4f>(scene->cameraTransform.lock()->getGlobalMatrix());
+				XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+			}
+
+			XrMatrix4x4f matProjectionView;	// PV
+			XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
+			std::vector<PushConstantData> data(1);
+
+			std::pair<hd::MeshModel, hd::ITransform> last = { nullptr, nullptr };
+			for (auto& pair : scene->models)
+			{
+				auto model = pair.first;
+				if (model != last.first)
+				{
+					model->bind(commandBuffers[view]);
+					commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.worldPipelineLayout, 0, { model->material->descriptorSet }, { });
+					last.first = model;
+				}
+
+				auto transform = pair.second;
+				if (transform != last.second)
+				{
+					auto matTransform = pair.second->getGlobalMatrix();	// M
+					data[0].modelMatrix = matTransform;
+					XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+					commandBuffers[view].pushConstants<PushConstantData>(pipelineLayouts.worldPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+				}
+
+				model->draw(commandBuffers[view]);
+			}
+		}
+		// End Draw.
+	}
+
+	if (haveUI)
+	{
+		commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.uiPipeline);			// <======= Bind UI Pipeline.
+
+		commandBuffers[view].setViewport(0, 1, swapChains[view]->getViewport());		// <======== Set Viewports.
+
+		commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
+
+		// Draw something.
+		for (auto scene : scenes)
+		{
+			if (scene->uiElements.empty()) continue;	// No `scene->onlyDebug` like above because we till want to have UI even in debug view.
+
+			XrMatrix4x4f matView;		// V
+			if (scene->cameraTransform.expired())
+			{
+				matView = noCameraView;
+			}
+			else
+			{
+				XrMatrix4x4f invView = cnv<XrMatrix4x4f>(scene->cameraTransform.lock()->getGlobalMatrix());
+				XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+			}
+
+			XrMatrix4x4f matProjectionView;	// PV
+			XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
+			std::vector<PushConstantData> data(1);
+
+			std::pair<hd::UIElement, hd::ITransform> last = { nullptr, nullptr };
+			for (auto& pair : scene->uiElements)
+			{
+				auto element = pair.first;
+				if (element != last.first)
+				{
+					element->bind(commandBuffers[view]);
+					commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.worldPipelineLayout, 1, { element->bitmap->descriptorSet }, { });
+					last.first = element;
+				}
+
+				auto transform = pair.second;
+				if (transform != last.second)
+				{
+					auto matTransform = pair.second->getGlobalMatrix();	// M
+					data[0].modelMatrix = matTransform;
+					XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+					commandBuffers[view].pushConstants<PushConstantData>(pipelineLayouts.worldPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+				}
+
+				element->draw(commandBuffers[view]);
+			}
+		}
+		// End Draw.
+	}
+
+	if(haveDebug)
 	{
 		commandBuffers[view].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.wireframePipeline);			// <======= Bind Wireframe Pipeline.
 
@@ -750,51 +866,47 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		commandBuffers[view].setScissor(0, 1, swapChains[view]->getScissor());		// <======== Set Scissors.
 
 		// Draw something.
-		for (auto it = scenes.begin(); it != scenes.end(); )
+		for (auto scene : scenes)
 		{
-			auto scene = it->lock();
-			if (scene == nullptr)
-			{
-				it = scenes.erase(it);
-				continue;
-			}
-			++it;
-			if (scene->debugScene == nullptr) continue;
 			scene = scene->debugScene;
+			if (scene == nullptr || scene->models.empty()) continue;
 
-			XrMatrix4x4f invView;
+			XrMatrix4x4f matView;		// V
 			if (scene->cameraTransform.expired())
 			{
-				XrVector3f identity{ 1.f, 1.f, 1.f };
-				XrMatrix4x4f_CreateTranslationRotationScale(&invView, &(pose->position), &(pose->orientation), &identity);
+				matView = noCameraView;
 			}
 			else
 			{
-				scene->cameraTransform.lock()->setLocalPosition(*(glm::vec3*)(&(pose->position)));
-				scene->cameraTransform.lock()->setLocalRotation(*(glm::quat*)(&(pose->orientation)));
-				auto glmInvView = scene->cameraTransform.lock()->getGlobalMatrix();
-				invView = *(XrMatrix4x4f*)(&glmInvView);
+				XrMatrix4x4f invView = cnv<XrMatrix4x4f>(scene->cameraTransform.lock()->getGlobalMatrix());
+				XrMatrix4x4f_InvertRigidBody(&matView, &invView);
 			}
-			XrMatrix4x4f matView;		// V
-			XrMatrix4x4f_InvertRigidBody(&matView, &invView);
+
 			XrMatrix4x4f matProjectionView;	// PV
 			XrMatrix4x4f_Multiply(&matProjectionView, &matProjection, &matView);
 			std::vector<PushConstantData> data(1);
 
-			auto& gameObjects = scene->gameObjects;
-			for (auto& obj : gameObjects)
+			std::pair<hd::MeshModel, hd::ITransform> last = { nullptr, nullptr };
+			for (auto& pair : scene->models)
 			{
-				auto matTransform = obj->transform->getGlobalMatrix();	// M
-				data[0].modelMatrix = matTransform;
-				XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
-				commandBuffers[view].pushConstants<PushConstantData>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
-				for (auto& model : obj->models)
+				auto model = pair.first;
+				if (model != last.first)
 				{
-					commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { model->material->descriptorSet }, { });
 					model->bind(commandBuffers[view]);
-					model->draw(commandBuffers[view]);
-					//preservedModels[view].push_back(model);
+					commandBuffers[view].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.worldPipelineLayout, 0, { model->material->descriptorSet }, { });
+					last.first = model;
 				}
+
+				auto transform = pair.second;
+				if (transform != last.second)
+				{
+					auto matTransform = pair.second->getGlobalMatrix();	// M
+					data[0].modelMatrix = matTransform;
+					XrMatrix4x4f_Multiply(&(data[0].projectionView), &matProjectionView, (XrMatrix4x4f*)&matTransform);	// PVM
+					commandBuffers[view].pushConstants<PushConstantData>(pipelineLayouts.worldPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, data);
+				}
+
+				model->draw(commandBuffers[view]);
 			}
 		}
 		// End Draw.
@@ -852,7 +964,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 #ifdef MIRROR_WINDOW
 	if (view == mirrorView && !iconified)
 	{
-		vk::PresentInfoKHR presentInfo(0, nullptr, 1, &mirrorVkSwaphain, &mirrorImageIndex, nullptr);
+		vk::PresentInfoKHR presentInfo(0, nullptr, 1, &mirrorVkSwapchain, &mirrorImageIndex, nullptr);
 		if (queue.presentKHR(presentInfo) != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("Failed to present to mirror window.");
@@ -885,7 +997,7 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 	LOG_SUCCESS();
 
 	std::vector<hd::Material> mates;
-	std::vector<hd::MeshModel> modls;
+	std::unordered_set<hd::MeshModel> modls;
 
 	LOG_STEP("Vulkan", "Creating Textures");
 	for (auto& material : materials)
@@ -927,10 +1039,6 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 				1.f - attrib.texcoords[2 * index.texcoord_index + 1],
 			};
 
-			vertex.color = {
-				1.f, 1.f, 1.f, 1.f
-			};
-
 			if (uniqueVertices.count(vertex) == 0)
 			{
 				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
@@ -942,12 +1050,12 @@ Noxg::hd::GameObject Noxg::VulkanInstance::loadGameObjectFromFiles(std::string n
 
 		if (++shapeCount >= shapes.size())	// last shape.
 		{
-			modls.push_back(std::make_shared<MeshModel>(vertices, indices, mates[materialId]));	// make current model.
+			modls.insert(std::make_shared<MeshModel>(vertices, indices, mates[materialId]));	// make current model.
 			// no need to manually clear the containers.
 		}
 		else if (materialId != shapes[shapeCount].mesh.material_ids[0])	// the next shape has different texture.
 		{
-			modls.push_back(std::make_shared<MeshModel>(vertices, indices, mates[materialId]));	// make current model.
+			modls.insert(std::make_shared<MeshModel>(vertices, indices, mates[materialId]));	// make current model.
 			vertices.clear();	// clear.
 			indices.clear();
 			uniqueVertices.clear();

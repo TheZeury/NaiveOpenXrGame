@@ -14,7 +14,6 @@ namespace Noxg
 		struct Vertex
 		{
 			glm::vec3 position;
-			glm::vec4 color;
 			glm::vec2 uv;
 			glm::vec3 normal;
 			glm::vec3 tangent;
@@ -27,15 +26,14 @@ namespace Noxg
 				};
 			}
 
-			static std::array<vk::VertexInputAttributeDescription, 6> getAttributeDescriptions()
+			static std::array<vk::VertexInputAttributeDescription, 5> getAttributeDescriptions()
 			{
 				return {
 					vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, position) },
-					vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32A32Sfloat, offsetof(Vertex, color) },
-					vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) },
-					vk::VertexInputAttributeDescription{ 3, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal) },
-					vk::VertexInputAttributeDescription{ 4, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, tangent) },
-					vk::VertexInputAttributeDescription{ 5, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, bitangent) },
+					vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) },
+					vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal) },
+					vk::VertexInputAttributeDescription{ 3, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, tangent) },
+					vk::VertexInputAttributeDescription{ 4, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, bitangent) },
 				};
 			}
 

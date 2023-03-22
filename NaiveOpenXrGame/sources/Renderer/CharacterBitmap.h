@@ -7,13 +7,14 @@ namespace Noxg
 {
 	using CharInfo = stb::stbtt_bakedchar;
 
-	MAKE_HANDLE(CharactorBitmap);
+	MAKE_HANDLE(CharacterBitmap);
 
-	class CharactorBitmap
+	class CharacterBitmap
 	{
 	public:
-		CharactorBitmap(const std::string& fontPath, uint32_t width = 1024, uint32_t height = 1024, float pixelHeight = 150.f);
-		~CharactorBitmap();
+		CharacterBitmap(const std::string& fontPath, uint32_t width = 1024, uint32_t height = 1024, float pixelHeight = 150.f);
+		CharacterBitmap(hd::Texture texture);
+		~CharacterBitmap();
 
 		hd::Texture bitmap;
 		CharInfo charInfos[128];

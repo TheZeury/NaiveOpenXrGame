@@ -1,6 +1,6 @@
 #include "TextModel.h"
 
-Noxg::TextModel::TextModel(const std::string& text, hd::Material material, hd::CharactorBitmap bitmap, float height) : material{ material }, bitmap{ bitmap }
+Noxg::TextModel::TextModel(const std::string& text, hd::Material material, hd::CharacterBitmap bitmap, float height) : material{ material }, bitmap{ bitmap }
 {
 	createTextModel(text, height);
 }
@@ -48,12 +48,10 @@ void Noxg::TextModel::createTextModel(const std::string& text, float height)
 		charVertices[3].position = glm::vec3(currentPoint + scale * glm::vec2(info.xoff + extent.x, -info.yoff           ), 0.f); // top right
 		charVertices[3].bitmapUv = glm::vec2(info.x1, info.y0) / 1024.f;
 
-		std::cout << c << ": ";
 		for (auto& v : charVertices)
 		{
 			textVertices.push_back(v);
 		}
-		std::cout << std::endl;
 
 		indices.push_back(index + 0);
 		indices.push_back(index + 1);

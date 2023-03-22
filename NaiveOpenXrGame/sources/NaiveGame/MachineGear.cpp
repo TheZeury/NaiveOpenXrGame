@@ -22,35 +22,35 @@ void Noxg::MachineGear::Redraw()
 
 	std::vector<Vertex> singlePieceVertices = {
 		// down
-		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, -0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, -1.f, 0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength, -0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength, -0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f, -1.f,  0.f }, { }, { } },
 		// up
-		Vertex{ { -0.5f * extentLength, 0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, 1.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, 0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, 1.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, 0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, 1.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f * extentLength, 0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, 1.f, 0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength,  0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength,  0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength,  0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength,  0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f,  1.f,  0.f }, { }, { } },
 		// front
-		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, 0.f, 1.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, -0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, 0.f, 1.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, 0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, 0.f, 1.f }, { }, { } },
-		Vertex{ { -0.5f * extentLength, 0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 0.f, 0.f, 1.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength, -0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength, -0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength,  0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength,  0.5f * extentLength,  0.5f * extentDepth }, { }, {  0.f,  0.f,  1.f }, { }, { } },
 		// back
-		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
-		Vertex{ { -0.5f * extentLength, 0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, 0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 0.f, 0.f, -1.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength,  0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength,  0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, {  0.f,  0.f, -1.f }, { }, { } },
 		// left
-		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f * extentLength, 0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f * extentLength, 0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { -1.f, 0.f, 0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength, -0.5f * extentLength,  0.5f * extentDepth }, { }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength,  0.5f * extentLength,  0.5f * extentDepth }, { }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength,  0.5f * extentLength, -0.5f * extentDepth }, { }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ { -0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, { -1.f,  0.f,  0.f }, { }, { } },
 		// right
-		Vertex{ { 0.5f * extentLength, -0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, 0.5f * extentLength, -0.5f * extentDepth }, { }, { }, { 1.f, 0.f, 0.f }, { }, { } },
-		Vertex{ { 0.5f * extentLength, 0.5f * extentLength, 0.5f * extentDepth }, { }, { }, { 1.f, 0.f, 0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength, -0.5f * extentLength,  0.5f * extentDepth }, { }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength, -0.5f * extentLength, -0.5f * extentDepth }, { }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength,  0.5f * extentLength, -0.5f * extentDepth }, { }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ {  0.5f * extentLength,  0.5f * extentLength,  0.5f * extentDepth }, { }, {  1.f,  0.f,  0.f }, { }, { } },
 	};
 	std::vector<uint32_t> singlePieceIndices = {
 		0 + 0,  1 + 0,  2 + 0,	// down
@@ -80,7 +80,6 @@ void Noxg::MachineGear::Redraw()
 		{
 			Vertex newVertex{
 				rotation * vertex.position,
-				vertex.color,
 				vertex.uv,
 				rotation * vertex.normal,
 				rotation * vertex.tangent,
@@ -95,7 +94,7 @@ void Noxg::MachineGear::Redraw()
 	}
 	
 	gameObject.lock()->models.clear();
-	gameObject.lock()->models.push_back(std::make_shared<MeshModel>(vertices, indices, texture.lock()));
+	gameObject.lock()->addModel(std::make_shared<MeshModel>(vertices, indices, texture.lock()));
 }
 
 std::vector<PxShape*> Noxg::MachineGear::getRecommendedColliders()

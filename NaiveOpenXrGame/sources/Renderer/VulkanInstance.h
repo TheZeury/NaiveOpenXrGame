@@ -5,6 +5,7 @@
 #include "Bricks/GameObject.h"
 #include "Bricks/Scene.h"
 #include "SwapChain.h"
+#include "UIElement.h"
 
 namespace Noxg
 {
@@ -45,6 +46,7 @@ namespace Noxg
 		virtual void RenderView(xr::CompositionLayerProjectionView projectionView, uint32_t view, uint32_t imageIndex, vk::Format format) override;
 
 		virtual void addScene(rf::Scene scene) override;
+
 		virtual hd::GameObject loadGameObjectFromFiles(std::string name) override;	// May creates multiple textures and models, but only a single gameObject.
 		virtual xr::GraphicsBindingVulkanKHR getGraphicsBinding() override;
 	public: // help functions.
@@ -58,11 +60,14 @@ namespace Noxg
 		vk::Queue queue;
 		vk::RenderPass renderPass;
 		vk::DescriptorPool descriptorPool;
-		vk::PipelineLayout pipelineLayout;
+		struct {
+			vk::PipelineLayout worldPipelineLayout;
+		} pipelineLayouts;
 		struct {
 			vk::Pipeline meshPipeline;
 			vk::Pipeline textPipeline;
 			vk::Pipeline wireframePipeline;
+			vk::Pipeline uiPipeline;
 		} pipelines;
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;
@@ -70,12 +75,12 @@ namespace Noxg
 		vk::Semaphore drawDone;
 		std::vector<vk::Fence> inFlights;
 		std::vector<hd::SwapChain> swapChains;
-		xr::DispatchLoaderDynamic dispather;
+		xr::DispatchLoaderDynamic dispatcher;
 
 #ifdef MIRROR_WINDOW
 		GLFWwindow* window = nullptr;
 		vk::SurfaceKHR mirrorSurface;
-		vk::SwapchainKHR mirrorVkSwaphain;
+		vk::SwapchainKHR mirrorVkSwapchain;
 		hd::SwapChain mirrorSwapchain;
 		vk::Semaphore mirrorImageAvailableSemaphore;
 		uint32_t mirrorView = 0;

@@ -6,8 +6,9 @@
 #include "XR/XrGrabable.h"
 #include "NaiveGame/MachineGear.h"
 #include "Renderer/MeshModel.h"
-#include "Renderer/CharactorBitmap.h"
+#include "Renderer/CharacterBitmap.h"
 #include "Renderer/TextModel.h"
+#include "Renderer/UIElement.h"
 
 import NoxgMath;
 
@@ -37,7 +38,7 @@ auto createModelObjectFromPhysicsShape(PxShape& shape, Noxg::hd::Material materi
 		PxBoxGeometry geometry;
 		shape.getBoxGeometry(geometry);
 		auto mesh = MeshBuilder::Box(geometry.halfExtents.x, geometry.halfExtents.y, geometry.halfExtents.z);
-		object->models.push_back(mesh.build(material));
+		object->addModel(mesh.build(material));
 		break;
 	}
 	case PxGeometryType::eSPHERE:
@@ -45,7 +46,7 @@ auto createModelObjectFromPhysicsShape(PxShape& shape, Noxg::hd::Material materi
 		PxSphereGeometry geometry;
 		shape.getSphereGeometry(geometry);
 		auto mesh = MeshBuilder::Icosphere(geometry.radius, 3);
-		object->models.push_back(mesh.build(material));
+		object->addModel(mesh.build(material));
 		break;
 	}
 	case PxGeometryType::ePLANE:
@@ -231,7 +232,7 @@ void Noxg::NaiveGame::mainLoop(std::stop_token st)
 				box->addComponent(rigid);
 
 				hd::GameObject boxModel = std::make_shared<GameObject>();
-				boxModel->models.push_back(leftHandBox->models[0]);
+				boxModel->addModel(leftHandBox->models[0]);
 				boxModel->transform->setLocalScale(leftHandBox->transform->getLocalScale());
 				box->transform->addChild(boxModel->transform);
 
@@ -291,7 +292,7 @@ void Noxg::NaiveGame::BuildScene()
 	sceneManager->Initialize(scene);
 	sceneManager->Initialize(physxDebugScene);
 	scene->debugScene = physxDebugScene;
-	scene->onlyDebug = false;
+	scene->onlyDebug = true;
 
 	{	// XR Origin
 		auto origin = std::make_shared<GameObject>();
@@ -312,10 +313,10 @@ void Noxg::NaiveGame::BuildScene()
 		auto tiles_normal = std::make_shared<Texture>("textures/GroundTile_normal.jpg");
 		auto tiles = std::make_shared<Material>(tiles_diffuse, tiles_normal);
 		std::vector<Vertex> vertices = {
-			{ { -100.f, 0.f, 100.f }, { }, { 100.f, 0.f }, { 0.f, 1.f, 0.f }, { }, { } },
-			{ { 100.f, 0.f, 100.f }, { }, { 0.f, 0.f }, { 0.f, 1.f, 0.f }, { }, { } },
-			{ { 100.f, 0.f, -100.f },{ }, { 0.f, 100.f }, { 0.f, 1.f, 0.f }, { }, { } },
-			{ { -100.f, 0.f, -100.f }, { }, { 100.f, 100.f }, { 0.f, 1.f, 0.f }, { }, { } },
+			{ { -100.f, 0.f,  100.f }, { 100.f,   0.f }, { 0.f, 1.f, 0.f }, { }, { } },
+			{ {  100.f, 0.f,  100.f }, {   0.f,   0.f }, { 0.f, 1.f, 0.f }, { }, { } },
+			{ {  100.f, 0.f, -100.f }, {   0.f, 100.f }, { 0.f, 1.f, 0.f }, { }, { } },
+			{ { -100.f, 0.f, -100.f }, { 100.f, 100.f }, { 0.f, 1.f, 0.f }, { }, { } },
 		};
 		std::vector<uint32_t> indices = {
 			0, 1, 2,
@@ -323,7 +324,7 @@ void Noxg::NaiveGame::BuildScene()
 		};
 		auto groundModel = std::make_shared<MeshModel>(vertices, indices, tiles);
 		auto ground = std::make_shared<GameObject>();
-		ground->models.push_back(groundModel);
+		ground->addModel(groundModel);
 
 		auto collider = std::make_shared<GameObject>();
 		collider->transform = std::make_shared<PhysicsTransform>(nullptr);
@@ -353,7 +354,7 @@ void Noxg::NaiveGame::BuildScene()
 
 		hd::GameObject rightHandModel = std::make_shared<GameObject>();
 		rightHandModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
-		rightHandModel->models.push_back(whiteCone);
+		rightHandModel->addModel(whiteCone);
 		rightHand->transform->addChild(rightHandModel->transform);
 
 		rightHandObject = rightHand;
@@ -377,7 +378,7 @@ void Noxg::NaiveGame::BuildScene()
 
 		hd::GameObject leftHandModel = std::make_shared<GameObject>();
 		leftHandModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
-		leftHandModel->models.push_back(blackCone);
+		leftHandModel->addModel(blackCone);
 		leftHand->transform->addChild(leftHandModel->transform);
 
 		/*hd::GameObject triggerObject = std::make_shared<GameObject>();
@@ -436,7 +437,7 @@ void Noxg::NaiveGame::BuildScene()
 		box->addComponent(grabable);
 
 		hd::GameObject boxModel = std::make_shared<GameObject>();
-		boxModel->models.push_back(whiteCube);
+		boxModel->addModel(whiteCube);
 		box->transform->addChild(boxModel->transform);
 
 		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
@@ -462,7 +463,7 @@ void Noxg::NaiveGame::BuildScene()
 		sphere->addComponent(grabable);
 
 		hd::GameObject sphereModel = std::make_shared<GameObject>();
-		sphereModel->models.push_back(whiteSphere);
+		sphereModel->addModel(whiteSphere);
 		sphere->transform->addChild(sphereModel->transform);
 
 		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
@@ -490,7 +491,7 @@ void Noxg::NaiveGame::BuildScene()
 		auto whiteCone = MeshBuilder::Cone(0.5f, 0.2f, 1.f, 12).build(neutrGray);
 
 		hd::GameObject coneModel = std::make_shared<GameObject>();
-		coneModel->models.push_back(whiteCone);
+		coneModel->addModel(whiteCone);
 		cone->transform->addChild(coneModel->transform);
 
 		auto shapeModel = createModelObjectFromPhysicsShape(*shape, limeGreen);
@@ -563,7 +564,7 @@ void Noxg::NaiveGame::BuildScene()
 				bullet->addComponent(rigid);
 
 				hd::GameObject bulletModel = std::make_shared<GameObject>();
-				bulletModel->models.push_back(blackSphere);
+				bulletModel->addModel(blackSphere);
 				bulletModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
 				bullet->transform->addChild(bulletModel->transform);
 
@@ -640,7 +641,7 @@ void Noxg::NaiveGame::BuildScene()
 
 		hd::GameObject selfControllerModel = std::make_shared<GameObject>();
 		selfControllerModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
-		selfControllerModel->models.push_back(whiteSphere);
+		selfControllerModel->addModel(whiteSphere);
 		selfController->transform->addChild(selfControllerModel->transform);
 
 		auto shapeModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
@@ -657,15 +658,32 @@ void Noxg::NaiveGame::BuildScene()
 	{	// Poem
 		auto poem = std::make_shared<GameObject>();
 		poem->transform->setLocalPosition({ -20.f, 20.f, -20.f });
-		auto bitmap = std::make_shared<CharactorBitmap>("fonts/Anonymous_Pro.ttf");
+		auto bitmap = std::make_shared<CharacterBitmap>("fonts/Anonymous_Pro.ttf");
 		std::string text = "I wandered lonely as a cloud\nThat floats on high o'er vales and hills,\nWhen all at once I saw a crowd,\nA host, of golden daffodils;\nBeside the lake, beneath the trees,\nFluttering and dancing in the breeze.\n";
 		text += "\nIt was the best of times, it was the worst of times,\nit was the age of wisdom, it was the age of foolishness,\nit was the epoch of belief, it was the epoch of incredulity,\nit was the season of Light, it was the season of Darkness,\nit was the spring of hope, it was the winter of despair,";
 		auto texture = std::make_shared<Texture>("textures/robert-lukeman-PH0HYjsf2n8-unsplash.jpg");
 		auto material = std::make_shared<Material>(texture);
 		auto poemText = std::make_shared<TextModel>(text, material, bitmap, 1.5f);
-		poem->texts.push_back(poemText);
+		poem->addText(poemText);
 
 		scene->addGameObject(poem);
+	}
+
+	{	// Greeting Panel
+		auto panelObject = std::make_shared<GameObject>();
+		panelObject->transform->setLocalPosition({ 0.f, 0.7f, -0.3f });
+		panelObject->transform->setLocalRotation({ 0.9239f, -0.3827f, 0.f, 0.f });
+		auto pannel = UIElement::PanelElement({ 0.2f, 0.3f }, std::make_shared<Texture>("textures/robert-lukeman-PH0HYjsf2n8-unsplash.jpg"));
+		panelObject->addUIElement(pannel);
+
+		auto greetingObject = std::make_shared<GameObject>();
+		greetingObject->transform->setLocalPosition({ 0.f, 0.f, 0.001f });
+		auto greeting = UIElement::TextElement("Hello UI", 0.03f, std::make_shared<CharacterBitmap>("fonts/Anonymous_Pro.ttf"));
+		greetingObject->addUIElement(greeting);
+		panelObject->transform->addChild(greetingObject->transform);
+
+		scene->addGameObject(panelObject);
+		scene->addGameObject(greetingObject);
 	}
 
 	sceneManager->Load(scene);

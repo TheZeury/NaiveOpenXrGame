@@ -41,10 +41,6 @@ Noxg::MeshModel::MeshModel(std::string path, hd::Material tex)
 				1.f - attrib.texcoords[2 * index.texcoord_index + 1],
 			};
 
-			vertex.color = {
-				1.f, 1.f, 1.f, 1.f
-			};
-
 			if (uniqueVertices.count(vertex) == 0)
 			{
 				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
@@ -312,35 +308,35 @@ Noxg::MeshBuilder Noxg::MeshBuilder::Box(float halfX, float halfY, float halfZ)
 	MeshBuilder mesh;
 	mesh.vertices = {
 		// down
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { }, { 0.f, 1.f }, {  0.f, -1.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { }, { 1.f, 1.f }, {  0.f, -1.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { }, { 1.f, 0.f }, {  0.f, -1.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { }, { 0.f, 0.f }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { 0.f, 1.f }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { 1.f, 1.f }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { 1.f, 0.f }, {  0.f, -1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { 0.f, 0.f }, {  0.f, -1.f,  0.f }, { }, { } },
 		// up
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { }, { 0.f, 1.f }, {  0.f,  1.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { }, { 1.f, 1.f }, {  0.f,  1.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { }, { 1.f, 0.f }, {  0.f,  1.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { }, { 0.f, 0.f }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { 0.f, 1.f }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { 1.f, 1.f }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { 1.f, 0.f }, {  0.f,  1.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { 0.f, 0.f }, {  0.f,  1.f,  0.f }, { }, { } },
 		// front
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { }, { 0.f, 1.f }, {  0.f,  0.f,  1.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { }, { 1.f, 1.f }, {  0.f,  0.f,  1.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { }, { 1.f, 0.f }, {  0.f,  0.f,  1.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { }, { 0.f, 0.f }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { 0.f, 1.f }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { 1.f, 1.f }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { 1.f, 0.f }, {  0.f,  0.f,  1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { 0.f, 0.f }, {  0.f,  0.f,  1.f }, { }, { } },
 		// back
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { }, { 0.f, 1.f }, {  0.f,  0.f, -1.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { }, { 1.f, 1.f }, {  0.f,  0.f, -1.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { }, { 1.f, 0.f }, {  0.f,  0.f, -1.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { }, { 0.f, 0.f }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { 0.f, 1.f }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { 1.f, 1.f }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { 1.f, 0.f }, {  0.f,  0.f, -1.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { 0.f, 0.f }, {  0.f,  0.f, -1.f }, { }, { } },
 		// left
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { }, { 0.f, 1.f }, { -1.f,  0.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { }, { 1.f, 1.f }, { -1.f,  0.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { }, { 1.f, 0.f }, { -1.f,  0.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { }, { 0.f, 0.f }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f,  1.f }, { 0.f, 1.f }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f,  1.f }, { 1.f, 1.f }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f,  1.f, -1.f }, { 1.f, 0.f }, { -1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{ -1.f, -1.f, -1.f }, { 0.f, 0.f }, { -1.f,  0.f,  0.f }, { }, { } },
 		// right
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { }, { 0.f, 1.f }, {  1.f,  0.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { }, { 1.f, 1.f }, {  1.f,  0.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { }, { 1.f, 0.f }, {  1.f,  0.f,  0.f }, { }, { } },
-		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { }, { 0.f, 0.f }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f,  1.f }, { 0.f, 1.f }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f, -1.f, -1.f }, { 1.f, 1.f }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f, -1.f }, { 1.f, 0.f }, {  1.f,  0.f,  0.f }, { }, { } },
+		Vertex{ glm::vec3{ halfX, halfY, halfZ } * glm::vec3{  1.f,  1.f,  1.f }, { 0.f, 0.f }, {  1.f,  0.f,  0.f }, { }, { } },
 	};
 	mesh.triangles = {
 		IndexedTriangle{ 0 +  0, 1 +  0, 2 +  0, },	// down
@@ -366,7 +362,7 @@ Noxg::MeshBuilder Noxg::MeshBuilder::UVSphere(float radius, uint32_t rings, uint
 	if (rings < 2) rings = 2;
 	if (segments < 3) segments = 3;
 
-	auto v0 = mesh.addVertex(Vertex{ {  0.f,  radius,  0.f }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } });
+	auto v0 = mesh.addVertex(Vertex{ {  0.f,  radius,  0.f }, { }, {  0.f,  1.f,  0.f }, { }, { } });
 
 	for (uint32_t i = 0; i < rings - 1; ++i)
 	{
@@ -377,11 +373,11 @@ Noxg::MeshBuilder Noxg::MeshBuilder::UVSphere(float radius, uint32_t rings, uint
 			auto x = glm::sin(phi) * glm::cos(theta);
 			auto y = glm::cos(phi);
 			auto z = glm::sin(phi) * glm::sin(theta);
-			mesh.addVertex(Vertex{ radius * glm::vec3{ x, y, z }, { }, { }, glm::normalize(glm::vec3{ x, y, z }), { }, { } });
+			mesh.addVertex(Vertex{ radius * glm::vec3{ x, y, z }, { }, glm::normalize(glm::vec3{ x, y, z }), { }, { } });
 		}
 	}
 
-	auto v1 = mesh.addVertex(Vertex{ {  0.f, -radius,  0.f }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } });
+	auto v1 = mesh.addVertex(Vertex{ {  0.f, -radius,  0.f }, { }, {  0.f, -1.f,  0.f }, { }, { } });
 
 	for (uint32_t i = 0; i < segments; ++i)
 	{
@@ -421,18 +417,18 @@ Noxg::MeshBuilder Noxg::MeshBuilder::Icosphere(float radius, uint32_t level)
 
 	// Icosahedron.
 	mesh.vertices = {
-		Vertex{ glm::normalize(glm::vec3{  0,  b, -a }), { }, { }, glm::normalize(glm::vec3{  0,  b, -a }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{  b,  a,  0 }), { }, { }, glm::normalize(glm::vec3{  b,  a,  0 }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{ -b,  a,  0 }), { }, { }, glm::normalize(glm::vec3{ -b,  a,  0 }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{  0,  b,  a }), { }, { }, glm::normalize(glm::vec3{  0,  b,  a }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{  0, -b,  a }), { }, { }, glm::normalize(glm::vec3{  0, -b,  a }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{ -a,  0,  b }), { }, { }, glm::normalize(glm::vec3{ -a,  0,  b }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{  0, -b, -a }), { }, { }, glm::normalize(glm::vec3{  0, -b, -a }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{  a,  0, -b }), { }, { }, glm::normalize(glm::vec3{  a,  0, -b }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{  a,  0,  b }), { }, { }, glm::normalize(glm::vec3{  a,  0,  b }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{ -a,  0, -b }), { }, { }, glm::normalize(glm::vec3{ -a,  0, -b }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{  b, -a,  0 }), { }, { }, glm::normalize(glm::vec3{  b, -a,  0 }), { }, { } },
-		Vertex{ glm::normalize(glm::vec3{ -b, -a,  0 }), { }, { }, glm::normalize(glm::vec3{ -b, -a,  0 }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  0,  b, -a }), { }, glm::normalize(glm::vec3{  0,  b, -a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  b,  a,  0 }), { }, glm::normalize(glm::vec3{  b,  a,  0 }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -b,  a,  0 }), { }, glm::normalize(glm::vec3{ -b,  a,  0 }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  0,  b,  a }), { }, glm::normalize(glm::vec3{  0,  b,  a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  0, -b,  a }), { }, glm::normalize(glm::vec3{  0, -b,  a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -a,  0,  b }), { }, glm::normalize(glm::vec3{ -a,  0,  b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  0, -b, -a }), { }, glm::normalize(glm::vec3{  0, -b, -a }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  a,  0, -b }), { }, glm::normalize(glm::vec3{  a,  0, -b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  a,  0,  b }), { }, glm::normalize(glm::vec3{  a,  0,  b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -a,  0, -b }), { }, glm::normalize(glm::vec3{ -a,  0, -b }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{  b, -a,  0 }), { }, glm::normalize(glm::vec3{  b, -a,  0 }), { }, { } },
+		Vertex{ glm::normalize(glm::vec3{ -b, -a,  0 }), { }, glm::normalize(glm::vec3{ -b, -a,  0 }), { }, { } },
 	};
 
 	std::vector<IndexedTriangle> readList = {
@@ -463,7 +459,7 @@ Noxg::MeshBuilder Noxg::MeshBuilder::Icosphere(float radius, uint32_t level)
 	auto midpoint = [](const Vertex& va, const Vertex& vb) 
 	{
 		auto position = glm::normalize((va.position + vb.position) / 2.f);
-		return Vertex{ position, { }, { }, position, { }, { } };
+		return Vertex{ position, { }, position, { }, { } };
 	};
 
 	while (level--)
@@ -516,7 +512,7 @@ Noxg::MeshBuilder Noxg::MeshBuilder::Cone(float bottomRadius, float topRadius, f
 		auto x = glm::cos(theta) * topRadius;
 		auto y = top;
 		auto z = glm::sin(theta) * topRadius;
-		mesh.vertices.push_back(Vertex{ glm::vec3{ x, y, z }, { }, { }, {  0.f,  1.f,  0.f }, { }, { } });
+		mesh.vertices.push_back(Vertex{ glm::vec3{ x, y, z }, { }, {  0.f,  1.f,  0.f }, { }, { } });
 	}
 	for (uint32_t i = 1; i < segments - 1; ++i)
 	{
@@ -530,7 +526,7 @@ Noxg::MeshBuilder Noxg::MeshBuilder::Cone(float bottomRadius, float topRadius, f
 		auto x = glm::cos(theta) * bottomRadius;
 		auto y = bottom;
 		auto z = glm::sin(theta) * bottomRadius;
-		mesh.vertices.push_back(Vertex{ glm::vec3{ x, y, z }, { }, { }, {  0.f, -1.f,  0.f }, { }, { } });
+		mesh.vertices.push_back(Vertex{ glm::vec3{ x, y, z }, { }, {  0.f, -1.f,  0.f }, { }, { } });
 	}
 	for (uint32_t i = 1; i < segments - 1; ++i)
 	{

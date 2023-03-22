@@ -105,13 +105,16 @@
     <ClInclude Include="sources\XR\XrGrabable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\Renderer\CharactorBitmap.h">
+    <ClInclude Include="sources\Renderer\CharacterBitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\Renderer\TextModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\Renderer\IModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Renderer\UIElement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -221,7 +224,7 @@
     <ClCompile Include="libraries\NoxgMath.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\Renderer\CharactorBitmap.cpp">
+    <ClCompile Include="sources\Renderer\CharacterBitmap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\Renderer\TextModel.cpp">
@@ -233,12 +236,17 @@
     <ClCompile Include="external\tinyobj.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\Renderer\UIElement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <None Include="shaders\shader.frag" />
-    <None Include="shaders\shader.vert" />
+    <None Include="shaders\mesh.frag" />
+    <None Include="shaders\mesh.vert" />
     <None Include="shaders\text.frag" />
     <None Include="shaders\text.vert" />
+    <None Include="shaders\ui.vert" />
+    <None Include="shaders\ui.frag" />
   </ItemGroup>
 </Project>
