@@ -106,32 +106,50 @@
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">
       <Project>{f284cff0-ad5a-30b4-b78a-83ce9a8125d5}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\FastXml.vcxproj">
-      <Project>{fa3ee492-3fda-3152-a465-4fa9e8bec56f}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\FastXml.vcxproj">
+      <Project>{bbe94119-8d1f-39bf-a691-1a2fae30c29e}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysX.vcxproj">
-      <Project>{249b9ce1-f2b9-3ef2-8747-80de5a2e58d0}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\LowLevel.vcxproj">
+      <Project>{c576e6b2-7668-3ffb-86ed-c244cf23e2ec}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXCharacterKinematic.vcxproj">
-      <Project>{e45ec887-8677-330f-82ce-dc07dcea4bdd}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\LowLevelAABB.vcxproj">
+      <Project>{72048b58-0def-350b-b2fa-20c89d9d92ee}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXCommon.vcxproj">
-      <Project>{eaec76ab-e6b6-3149-9ab9-e9c780eaf3b5}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\LowLevelDynamics.vcxproj">
+      <Project>{068860db-8aee-39e6-8ff1-2987bad42cdd}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXCooking.vcxproj">
-      <Project>{064f6fad-e54a-3ce3-aac5-4be93f517912}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysX.vcxproj">
+      <Project>{238bf3aa-d2e9-3e65-a373-6786b23914bd}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXFoundation.vcxproj">
-      <Project>{b603f618-9ac5-3631-b0df-ab61eb775923}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXCharacterKinematic.vcxproj">
+      <Project>{6cfad7d8-3199-3063-9f05-b07b2f0ca084}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXVehicle.vcxproj">
-      <Project>{56506ba1-7118-3890-8e17-07de67cddbe5}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXCommon.vcxproj">
+      <Project>{cd64d861-fee7-387c-8eb7-d2b813c37e8c}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\PhysXVehicle2.vcxproj">
-      <Project>{ea2a6333-74fa-3bd9-bb73-d73266e098d2}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXCooking.vcxproj">
+      <Project>{93c28660-cc3d-38a3-b489-5061b208b806}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\SDKs\SDKs\PhysX\physx\compiler\vc16win64\sdk_source_bin\SceneQuery.vcxproj">
-      <Project>{1d969c44-4c78-3576-8bb0-ae3f7c8cc633}</Project>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXExtensions.vcxproj">
+      <Project>{92de99b8-18cf-3fb4-bf35-c49e2c5033c6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXFoundation.vcxproj">
+      <Project>{4af6f8a3-2d0c-360c-b1f4-6107657541bb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXTask.vcxproj">
+      <Project>{a8d4e404-b723-35e9-9725-52da01a5f820}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXVehicle.vcxproj">
+      <Project>{60d9869f-756e-33ed-ab24-6cec143e7d5c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\PhysXVehicle2.vcxproj">
+      <Project>{5f9ee3ce-24c5-37e0-a5f4-e7546355c0eb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\SceneQuery.vcxproj">
+      <Project>{541733d5-58ca-3af5-8928-265d3d0baa2e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SDKs\PhysX\physx\compiler\vc17win64\sdk_source_bin\SimulationController.vcxproj">
+      <Project>{e7d3be3b-90c2-3817-955f-9d75df855451}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -184,19 +202,19 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\SettingsForVulkan.props" />
+    <Import Project="..\SettingsForVulkan.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\SettingsForVulkan.props" />
+    <Import Project="..\SettingsForVulkan.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\SettingsForVulkan.props" />
+    <Import Project="..\SettingsForVulkan.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\SettingsForVulkan.props" />
+    <Import Project="..\SettingsForVulkan.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -234,7 +252,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\sources;C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\sources;$(SolutionDir)\..\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableModules>true</EnableModules>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
@@ -256,7 +274,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\sources;C:\Users\cjrsacred\Documents\SDKs\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\sources;$(SolutionDir)\..\SDKs\PhysX\physx\include;C:\OpenXR-Hpp\include;C:\OpenXR-SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalModuleDependencies>$(VCToolsInstallDir)\modules\;%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
       <EnableModules>true</EnableModules>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>

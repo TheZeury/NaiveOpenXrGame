@@ -15,27 +15,27 @@ public:
 			{
 				pointable.lock()->controller = controller;
 				pointable.lock()->OnEnter();
-				enteredShapes.insert(pair.otherShape);
-				LOG_INFO("PhysX", std::format("Trigger Entered, total shapes: {}", enteredShapes.size()), 0);
+				enteredActors.insert(pair.otherActor);
+				LOG_INFO("PhysX", std::format("Trigger Entered, total shapes: {}", enteredActors.size()), 0);
 			}
 		}
 	};
 	virtual void OnExit(const PxTriggerPair& pair) override 
 	{ 
-		if(enteredShapes.count(pair.otherShape) != 0)
+		if(enteredActors.count(pair.otherActor) != 0)
 		{
 			auto pointable = reinterpret_cast<Noxg::rf::RigidActor*>(pair.otherActor->userData)->lock()->pointable.lock();
 			pointable->OnExit();
 			// pointable->controller.reset(); // Don't reset. It's possible that another controller is pointing at the same object.
-			enteredShapes.erase(pair.otherShape);
-			LOG_INFO("PhysX", std::format("Trigger Exited, total shapes: {}", enteredShapes.size()), 0);
+			enteredActors.erase(pair.otherActor);
+			LOG_INFO("PhysX", std::format("Trigger Exited, total shapes: {}", enteredActors.size()), 0);
 		}
 	};
 
-	std::unordered_set<PxShape*>& enteredShapes;
+	std::unordered_set<PxActor*>& enteredActors;
 	Noxg::rf::XrControllerActions controller;
 
-	XrPointerTriggerCallback(std::unordered_set<PxShape*>& enteredShapes, Noxg::rf::XrControllerActions controller) : enteredShapes{ enteredShapes }, controller{ controller } { }
+	XrPointerTriggerCallback(std::unordered_set<PxActor*>& enteredActors, Noxg::rf::XrControllerActions controller) : enteredActors{ enteredActors }, controller{ controller } { }
 };
 
 Noxg::XrPointer::XrPointer(rf::XrControllerActions controller, const PxSphereGeometry& geometry, rf::PhysicsEngineInstance physics) : controller{ controller }, shapeGeometry{ geometry }, physics{ physics }
@@ -45,7 +45,7 @@ Noxg::XrPointer::XrPointer(rf::XrControllerActions controller, const PxSphereGeo
 	shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 	shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
 	shape->setLocalPose(PxTransform{ PxVec3{ 0.f, -0.05f, 0.f }, PxQuat{ PxIdentity } });
-	ITriggerCallback* triggerCallback = new XrPointerTriggerCallback{ enteredShapes, this->controller };
+	ITriggerCallback* triggerCallback = new XrPointerTriggerCallback{ enteredActors, this->controller };
 	shape->userData = triggerCallback;
 }
 
@@ -93,9 +93,9 @@ auto Noxg::XrPointer::fetchShape() -> PxShape*
 Noxg::rf::XrPointable Noxg::XrPointer::getPointableObject()
 {
 	// return an arbitrary pointable object from the entered shapes.
-	if (enteredShapes.size() == 0) return rf::XrPointable();
-	auto shape = *enteredShapes.begin();
-	auto rigid = reinterpret_cast<rf::RigidActor*>(shape->getActor()->userData);
+	if (enteredActors.size() == 0) return rf::XrPointable();
+	auto actor = *enteredActors.begin();
+	auto rigid = reinterpret_cast<rf::RigidActor*>(actor->userData);
 	if (rigid->expired()) return rf::XrPointable();
 	auto pointable = rigid->lock()->pointable;
 	if (pointable.expired()) return rf::XrPointable();

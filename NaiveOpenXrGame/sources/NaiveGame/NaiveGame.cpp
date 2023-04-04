@@ -23,6 +23,19 @@ Noxg::rf::RigidDynamic selfControllerRigid;
 Noxg::hd::XrControllerActions rightHandAction;
 Noxg::hd::XrControllerActions leftHandAction;
 
+struct SpaceSlider : public Noxg::Slider<float> {
+	std::tuple<glm::vec3, glm::vec3> ends;
+	Noxg::rf::ITransform transform;
+	auto updatePosition() -> void override
+	{
+		auto pos = glm::mix(std::get<0>(ends), std::get<1>(ends), rawValue);
+		transform.lock()->setLocalPosition(pos);
+	}
+	SpaceSlider(std::tuple<glm::vec3, glm::vec3> ends = { }, Noxg::rf::ITransform transform = { }) : ends(ends), transform(transform) { }
+} valueControl;
+
+glm::vec3 enterPos;
+
 //Noxg::hd::GameObject leftHandBox;
 //Noxg::hd::MachineGear leftHandGear;
 
@@ -737,47 +750,52 @@ void Noxg::NaiveGame::BuildScene()
 
 	{	// Slider
 		auto sliderParent = std::make_shared<GameObject>();
-		sliderParent->transform->setLocalPosition({ 0.f, 0.5f, -0.3f });
+		sliderParent->transform->setLocalPosition({ 0.f, 0.7f, -0.3f });
 		sliderParent->transform->setLocalRotation({ 0.9239f, -0.3827f, 0.f, 0.f });
 		auto slider = std::make_shared<GameObject>();
-		sliderParent->transform->addChild(slider->transform);
 		auto model = MeshBuilder::Icosphere(0.01f, 3).build(pureWhite);
 		slider->addModel(model);
 
-		auto rigid = std::make_shared<RigidStatic>();
+		auto rigid = std::make_shared<RigidDynamic>();
 		slider->transform = std::make_shared<PhysicsTransform>(nullptr);
+		slider->transform->setLocalPosition({ 0.f, -0.03f, 0.01f });
+		sliderParent->transform->addChild(slider->transform);
 		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.01f), NaiveGameSimulationFilters::CommonUIHovering);
 		rigid->addShape(shape);
 		slider->addComponent(rigid);
 
-		struct SpaceSlider : public Slider<float> {
-			std::tuple<glm::vec3, glm::vec3> ends;
-			rf::ITransform transform;
-			auto updatePosition() -> void override 
-			{
-				auto pos = glm::mix(std::get<0>(ends), std::get<1>(ends), rawValue);
-				transform.lock()->setLocalPosition(pos);
-			}
-			SpaceSlider(std::tuple<glm::vec3, glm::vec3> ends, rf::ITransform transform) : ends(ends), transform(transform) { }
-		} valueControl{ std::tuple(glm::vec3{ -0.1f, 0.f, 0.f }, glm::vec3{ 0.1f, 0.f, 0.f }), slider->transform };
+		valueControl = SpaceSlider{ std::tuple(glm::vec3{ -0.1f, -0.03f, 0.01f }, glm::vec3{ 0.1f, -0.03f, 0.01f }), slider->transform };
+		valueControl.setRaw(0.5f);
 
 		auto pointable = std::make_shared<XrPointable>();
-		auto frameCalculation = [&valueControl](hd::XrControllerActions controller)
+		auto OnPointed = [&](hd::XrControllerActions controller)
 		{
-			auto value = std::clamp(controller->position().x, -0.1f, 0.1f);
+			enterPos = controller->gameObject.lock()->transform->getLocalPosition() + ((std::get<0>(valueControl.ends) - std::get<1>(valueControl.ends)) * valueControl.getRaw());
+		};
+		auto frameCalculation = [&](hd::XrControllerActions controller)
+		{
+			auto value = std::clamp((controller->gameObject.lock()->transform->getLocalPosition() - enterPos).x, 0.0f, 0.2f) * 5.f;
 			valueControl.setValue(value);
 		};
+		pointable->OnPointFunction = OnPointed;
 		pointable->PointingFrameCalculateFunction = frameCalculation;
 		rigid->pointable = pointable;
 		slider->addComponent(pointable);
-		// Good night. I'm tired. I'll continue tomorrow.
-		// Copilot: I'm tired too. I'll continue tomorrow.
+		
+		auto stickObject = std::make_shared<GameObject>(); 
+		stickObject->transform->setLocalPosition({ 0.f,  -0.03f, 0.01f });
+		stickObject->transform->setLocalRotation(cnv<glm::quat>(PxShortestRotation({ 0.f, 1.f, 0.f }, { 1.f, 0.f, 0.f })));
+		stickObject->addModel(MeshBuilder::Cone(0.002, 0.002, 0.2, 6).build(neutrGray));
+		sliderParent->transform->addChild(stickObject->transform);
 
 		auto shapeModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
 		slider->transform->addChild(shapeModel->transform);
+
 		
 		scene->addGameObject(sliderParent);
 		scene->addGameObject(slider);
+		scene->addGameObject(stickObject);
+		rigid->switchGravity(false);
 
 		physxDebugScene->addGameObject(shapeModel);
 	}

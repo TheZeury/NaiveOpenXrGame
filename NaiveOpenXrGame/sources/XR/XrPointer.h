@@ -22,7 +22,7 @@ namespace Noxg
 		rf::XrControllerActions controller;
 		const PxSphereGeometry& shapeGeometry;
 		PxShape* shape;
-		std::unordered_set<PxShape*> enteredShapes;
+		std::unordered_set<PxActor*> enteredActors;
 
 	public:
 		auto fetchShape() -> PxShape*;
