@@ -9,6 +9,7 @@ class EventCallback : public PxSimulationEventCallback
 	virtual void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs) { }
 	virtual void onTrigger(PxTriggerPair* pairs, PxU32 count)
 	{
+		// This function has a hidden danger: It doesn't check if `pair.triggerShape->userData` is a `ITriggerCallback*` or not.
 		for (size_t i = 0; i < count; ++i)
 		{
 			const auto& pair = pairs[i];

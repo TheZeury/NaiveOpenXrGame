@@ -51,7 +51,6 @@ void Noxg::XrGrabber::CalculateFrame()
 	{
 		if (ctrlr->gripClicked())
 		{
-			LOG_INFO("PhysX", "Grab tried.", 0);
 			PxOverlapBuffer overlapBuffer;
 			const auto& matrix = gameObject.lock()->transform->getGlobalMatrix();
 			PxTransform transform{ *((PxMat44*)(&matrix)) };

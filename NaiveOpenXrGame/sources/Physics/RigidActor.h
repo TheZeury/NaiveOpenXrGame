@@ -2,6 +2,7 @@
 
 #include "mainCommon.h"
 #include "Bricks/GameComponent.h"
+#include "XR/XrPointable.h"
 
 namespace Noxg
 {
@@ -11,6 +12,8 @@ namespace Noxg
 	{
 	public:
 		virtual void addShape(PxShape* shape) = 0;
+
+		rf::XrPointable pointable;
 	};
 }
 

@@ -63,7 +63,7 @@ vk::RenderPassBeginInfo Noxg::SwapChain::getRenderPassBeginInfo(uint32_t imageIn
 {
 	assert(renderPass != nullptr);
 	std::array<vk::ClearValue, 2> clearValues = {
-		vk::ClearValue{ vk::ClearColorValue{ std::array<float, 4>{ 0.1f, 0.1f, 0.4f, 1.f } } },
+		vk::ClearValue{ vk::ClearColorValue{ std::array<float, 4>{ 0.3f, 0.4f, 0.7f, 1.f } } },
 		vk::ClearValue{ vk::ClearDepthStencilValue{ 1.f, 0 } },
 	};
 	vk::RenderPassBeginInfo renderPassInfo(renderPass, framebuffers[imageIndex], { { }, { rect.extent.width, rect.extent.height } }, clearValues);

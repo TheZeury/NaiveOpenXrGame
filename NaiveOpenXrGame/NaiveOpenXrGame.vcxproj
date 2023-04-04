@@ -40,6 +40,7 @@
     <ClInclude Include="sources\renderer\SwapChain.h" />
     <ClInclude Include="sources\Renderer\TextModel.h" />
     <ClInclude Include="sources\Renderer\UIElement.h" />
+    <ClInclude Include="sources\UI\Slider.h" />
     <ClInclude Include="sources\XR\OpenXrInstance.h" />
     <ClInclude Include="sources\NaiveGame\NaiveGame.h" />
     <ClInclude Include="sources\physics\PhysicsTransform.h" />
@@ -53,6 +54,8 @@
     <ClInclude Include="sources\XR\XrGrabable.h" />
     <ClInclude Include="sources\XR\XrGrabber.h" />
     <ClInclude Include="sources\XR\XrInstance.h" />
+    <ClInclude Include="sources\Xr\XrPointable.h" />
+    <ClInclude Include="sources\XR\XrPointer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\modules\std.compat.ixx" />
@@ -82,6 +85,7 @@
     <ClCompile Include="sources\renderer\SwapChain.cpp" />
     <ClCompile Include="sources\Renderer\TextModel.cpp" />
     <ClCompile Include="sources\Renderer\UIElement.cpp" />
+    <ClCompile Include="sources\UI\Slider.cpp" />
     <ClCompile Include="sources\XR\OpenXrInstance.cpp" />
     <ClCompile Include="sources\NaiveGame\NaiveGame.cpp" />
     <ClCompile Include="sources\physics\PhysicsTransform.cpp" />
@@ -95,6 +99,8 @@
     <ClCompile Include="sources\XR\XrGrabable.cpp" />
     <ClCompile Include="sources\XR\XrGrabber.cpp" />
     <ClCompile Include="sources\XR\XrInstance.cpp" />
+    <ClCompile Include="sources\Xr\XrPointable.cpp" />
+    <ClCompile Include="sources\XR\XrPointer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\OpenXR-SDK\win64\src\loader\openxr_loader.vcxproj">

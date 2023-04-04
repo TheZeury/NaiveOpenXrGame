@@ -10,7 +10,7 @@
 namespace Noxg
 {
 	MAKE_HANDLE(VulkanInstance);
-
+	
 	class VulkanInstance : public GraphicsInstance
 	{
 	public:
@@ -68,6 +68,7 @@ namespace Noxg
 			vk::Pipeline textPipeline;
 			vk::Pipeline wireframePipeline;
 			vk::Pipeline uiPipeline;
+			vk::Pipeline shadowPipeline;
 		} pipelines;
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;

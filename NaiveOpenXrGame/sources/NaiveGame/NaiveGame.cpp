@@ -9,6 +9,8 @@
 #include "Renderer/CharacterBitmap.h"
 #include "Renderer/TextModel.h"
 #include "Renderer/UIElement.h"
+#include "XR/XrPointer.h"
+#include "UI/Slider.h"
 
 import NoxgMath;
 
@@ -292,7 +294,7 @@ void Noxg::NaiveGame::BuildScene()
 	sceneManager->Initialize(scene);
 	sceneManager->Initialize(physxDebugScene);
 	scene->debugScene = physxDebugScene;
-	scene->onlyDebug = true;
+	scene->onlyDebug = false;
 
 	{	// XR Origin
 		auto origin = std::make_shared<GameObject>();
@@ -350,16 +352,33 @@ void Noxg::NaiveGame::BuildScene()
 		hd::XrGrabber grabber = std::make_shared<XrGrabber>(rightHandAction, PxBoxGeometry(0.1f, 0.1f, 0.1f));
 		rightHand->addComponent(grabber);
 
-		auto whiteCone = MeshBuilder::Cone(0.5f, 0.1f, 1.f, 16).build(neutrGray);
+		hd::XrPointer pointer = std::make_shared<XrPointer>(rightHandAction, PxSphereGeometry(0.01f), physicsEngineInstance);
+		rightHand->addComponent(pointer);
+
+		auto shape = pointer->fetchShape();
+
+		auto triggerObject = std::make_shared<GameObject>();
+		triggerObject->transform = std::make_shared<PhysicsTransform>(nullptr);
+		hd::RigidStatic rigid = std::make_shared<RigidStatic>();
+		rigid->addShape(shape);
+		triggerObject->addComponent(rigid);
+		rightHand->transform->addChild(triggerObject->transform);
+
+		auto whiteCone = MeshBuilder::Cone(0.1f, 0.5f, 1.f, 16).build(neutrGray);
 
 		hd::GameObject rightHandModel = std::make_shared<GameObject>();
 		rightHandModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
 		rightHandModel->addModel(whiteCone);
 		rightHand->transform->addChild(rightHandModel->transform);
 
+		hd::GameObject pointerModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
+		rightHand->transform->addChild(pointerModel->transform);
+
 		rightHandObject = rightHand;
 		scene->addGameObject(rightHand);
+		scene->addGameObject(triggerObject);
 		scene->addGameObject(rightHandModel);
+		physxDebugScene->addGameObject(pointerModel);
 	}
 
 	{	// Left hand.
@@ -374,12 +393,27 @@ void Noxg::NaiveGame::BuildScene()
 		hd::XrGrabber grabber = std::make_shared<XrGrabber>(leftHandAction, PxBoxGeometry(0.1f, 0.1f, 0.1f));
 		leftHand->addComponent(grabber);
 
-		auto blackCone = MeshBuilder::Cone(0.5f, 0.1f, 1.f, 16).build(pureBlack);
+		hd::XrPointer pointer = std::make_shared<XrPointer>(leftHandAction, PxSphereGeometry(0.01f), physicsEngineInstance);
+		leftHand->addComponent(pointer);
+
+		auto shape = pointer->fetchShape();
+
+		auto triggerObject = std::make_shared<GameObject>();
+		triggerObject->transform = std::make_shared<PhysicsTransform>(nullptr);
+		hd::RigidStatic rigid = std::make_shared<RigidStatic>();
+		rigid->addShape(shape);
+		triggerObject->addComponent(rigid);
+		leftHand->transform->addChild(triggerObject->transform);
+
+		auto blackCone = MeshBuilder::Cone(0.1f, 0.5f, 1.f, 16).build(pureBlack);
 
 		hd::GameObject leftHandModel = std::make_shared<GameObject>();
 		leftHandModel->transform->setLocalScale({ 0.1f, 0.1f, 0.1f });
 		leftHandModel->addModel(blackCone);
 		leftHand->transform->addChild(leftHandModel->transform);
+
+		hd::GameObject pointerModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
+		leftHand->transform->addChild(pointerModel->transform);
 
 		/*hd::GameObject triggerObject = std::make_shared<GameObject>();
 		triggerObject->transform = std::make_shared<PhysicsTransform>(nullptr);
@@ -404,8 +438,9 @@ void Noxg::NaiveGame::BuildScene()
 
 		leftHandObject = leftHand;
 		scene->addGameObject(leftHand);
-		//scene->addGameObject(triggerObject);
+		scene->addGameObject(triggerObject);
 		scene->addGameObject(leftHandModel);
+		physxDebugScene->addGameObject(pointerModel);
 	}
 
 	{	// Steed.
@@ -581,6 +616,20 @@ void Noxg::NaiveGame::BuildScene()
 		rigid->grabable = grabable;
 		revolver->addComponent(grabable);
 
+		auto pointable = std::make_shared<XrPointable>();
+		auto OnEnter = [](hd::XrControllerActions controller)
+		{
+			controller->vibrate();
+		}; 
+		auto OnExit = [](hd::XrControllerActions controller)
+		{
+			controller->vibrate();
+		};
+		pointable->OnEnterFunction = OnEnter;
+		pointable->OnExitFunction = OnExit;
+		rigid->pointable = pointable;
+		revolver->addComponent(pointable);
+
 		hd::GameObject revolverModel = graphicsInstance->loadGameObjectFromFiles("revolver");
 		revolverModel->transform->setLocalPosition({ 0.0f, 0.f, 0.01f });
 		revolverModel->transform->setLocalScale({ 2.54f, 2.54f, 2.54f });	// 0.01 inch to m
@@ -684,6 +733,53 @@ void Noxg::NaiveGame::BuildScene()
 
 		scene->addGameObject(panelObject);
 		scene->addGameObject(greetingObject);
+	}
+
+	{	// Slider
+		auto sliderParent = std::make_shared<GameObject>();
+		sliderParent->transform->setLocalPosition({ 0.f, 0.5f, -0.3f });
+		sliderParent->transform->setLocalRotation({ 0.9239f, -0.3827f, 0.f, 0.f });
+		auto slider = std::make_shared<GameObject>();
+		sliderParent->transform->addChild(slider->transform);
+		auto model = MeshBuilder::Icosphere(0.01f, 3).build(pureWhite);
+		slider->addModel(model);
+
+		auto rigid = std::make_shared<RigidStatic>();
+		slider->transform = std::make_shared<PhysicsTransform>(nullptr);
+		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.01f), NaiveGameSimulationFilters::CommonUIHovering);
+		rigid->addShape(shape);
+		slider->addComponent(rigid);
+
+		struct SpaceSlider : public Slider<float> {
+			std::tuple<glm::vec3, glm::vec3> ends;
+			rf::ITransform transform;
+			auto updatePosition() -> void override 
+			{
+				auto pos = glm::mix(std::get<0>(ends), std::get<1>(ends), rawValue);
+				transform.lock()->setLocalPosition(pos);
+			}
+			SpaceSlider(std::tuple<glm::vec3, glm::vec3> ends, rf::ITransform transform) : ends(ends), transform(transform) { }
+		} valueControl{ std::tuple(glm::vec3{ -0.1f, 0.f, 0.f }, glm::vec3{ 0.1f, 0.f, 0.f }), slider->transform };
+
+		auto pointable = std::make_shared<XrPointable>();
+		auto frameCalculation = [&valueControl](hd::XrControllerActions controller)
+		{
+			auto value = std::clamp(controller->position().x, -0.1f, 0.1f);
+			valueControl.setValue(value);
+		};
+		pointable->PointingFrameCalculateFunction = frameCalculation;
+		rigid->pointable = pointable;
+		slider->addComponent(pointable);
+		// Good night. I'm tired. I'll continue tomorrow.
+		// Copilot: I'm tired too. I'll continue tomorrow.
+
+		auto shapeModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
+		slider->transform->addChild(shapeModel->transform);
+		
+		scene->addGameObject(sliderParent);
+		scene->addGameObject(slider);
+
+		physxDebugScene->addGameObject(shapeModel);
 	}
 
 	sceneManager->Load(scene);

@@ -1,10 +1,5 @@
 #include "XrGrabable.h"
 
-void Noxg::XrGrabable::Enable()
-{
-	
-}
-
 void Noxg::XrGrabable::OnGrab()
 {
 	if(freeGrabbing)
