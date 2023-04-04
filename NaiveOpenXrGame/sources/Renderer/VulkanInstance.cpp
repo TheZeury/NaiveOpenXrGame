@@ -682,10 +682,10 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 
 		scenes.push_back(scene);
 
-		haveText |= !(scene->onlyDebug || scene->texts.empty());
-		haveMesh |= !(scene->onlyDebug || scene->models.empty());
+		haveText |= !(scene->debugType == DebugType::eDebugOnly || scene->texts.empty());
+		haveMesh |= !(scene->debugType == DebugType::eDebugOnly || scene->models.empty());
 		haveUI |= !(scene->uiElements.empty());	// No `scene->onlyDebug` like above because we till want to have UI even in debug view.
-		haveDebug |= !(scene->debugScene == nullptr || scene->debugScene->models.empty());
+		haveDebug |= debugOn(scene->debugType) && !(scene->debugScene == nullptr || scene->debugScene->models.empty());
 
 		if (!scene->cameraTransform.expired())
 		{
@@ -705,7 +705,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		// Draw something.
 		for (auto scene : scenes)
 		{
-			if (scene->onlyDebug || scene->texts.empty()) continue;
+			if (scene->debugType == DebugType::eDebugOnly || scene->texts.empty()) continue;
 
 			XrMatrix4x4f matView;		// V
 			if (scene->cameraTransform.expired())
@@ -760,7 +760,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		// Draw something.
 		for (auto scene : scenes)
 		{
-			if (scene->onlyDebug || scene->models.empty()) continue;
+			if (scene->debugType == DebugType::eDebugOnly || scene->models.empty()) continue;
 
 			XrMatrix4x4f matView;		// V
 			if (scene->cameraTransform.expired())
@@ -868,6 +868,7 @@ void Noxg::VulkanInstance::RenderView(xr::CompositionLayerProjectionView project
 		// Draw something.
 		for (auto scene : scenes)
 		{
+			if (!debugOn(scene->debugType)) continue;
 			scene = scene->debugScene;
 			if (scene == nullptr || scene->models.empty()) continue;
 

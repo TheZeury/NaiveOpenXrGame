@@ -307,9 +307,10 @@ void Noxg::NaiveGame::BuildScene()
 	sceneManager->Initialize(scene);
 	sceneManager->Initialize(physxDebugScene);
 	scene->debugScene = physxDebugScene;
-	scene->onlyDebug = false;
+	scene->debugType = DebugType::eMixed;
 
-	{	// XR Origin
+	// XR Origin
+	{
 		auto origin = std::make_shared<GameObject>();
 		auto camera = std::make_shared<GameObject>();
 		origin->transform->addChild(camera->transform);
@@ -323,7 +324,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->cameraTransform = camera->transform;
 	}
 
-	{	// Ground.
+	// Ground.
+	{
 		auto tiles_diffuse = std::make_shared<Texture>("textures/GroundTile_diffuse.jpg");
 		auto tiles_normal = std::make_shared<Texture>("textures/GroundTile_normal.jpg");
 		auto tiles = std::make_shared<Material>(tiles_diffuse, tiles_normal);
@@ -353,7 +355,8 @@ void Noxg::NaiveGame::BuildScene()
 		scene->addGameObject(collider);
 	}
 
-	{	// Right hand.
+	// Right hand.
+	{
 		hd::GameObject rightHand = std::make_shared<GameObject>();
 		if (!xrOriginObject.expired())
 		{
@@ -394,7 +397,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->addGameObject(pointerModel);
 	}
 
-	{	// Left hand.
+	// Left hand.
+	{
 		hd::GameObject leftHand = std::make_shared<GameObject>();
 		if (!xrOriginObject.expired())
 		{
@@ -456,7 +460,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->addGameObject(pointerModel);
 	}
 
-	{	// Steed.
+	// Steed.
+	{
 		hd::GameObject steed = std::make_shared<GameObject>();
 		//steed->transform = std::make_shared<PhysicsTransform>(nullptr);
 		steed->transform->setLocalPosition({ -1.f, 0.f, -.5f });
@@ -471,7 +476,8 @@ void Noxg::NaiveGame::BuildScene()
 		scene->addGameObject(steedModel);
 	}
 
-	{	// Cube
+	// Cube
+	{
 		hd::GameObject box = std::make_shared<GameObject>();
 		box->transform = std::make_shared<PhysicsTransform>(nullptr);
 		box->transform->setLocalPosition({ -1.f, 1.f, -5.f });
@@ -497,7 +503,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->addGameObject(shapeModel);
 	}
 
-	{	// Sphere
+	// Sphere
+	{
 		hd::GameObject sphere = std::make_shared<GameObject>();
 		sphere->transform = std::make_shared<PhysicsTransform>(nullptr);
 		sphere->transform->setLocalPosition({ 1.f, 1.f, -5.f });
@@ -523,7 +530,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->addGameObject(shapeModel);
 	}
 
-	{	// Cone
+	// Cone
+	{
 		hd::GameObject cone = std::make_shared<GameObject>();
 		cone->transform = std::make_shared<PhysicsTransform>(nullptr);
 		cone->transform->setLocalPosition({ 3.f, 1.f, -5.f });
@@ -551,7 +559,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->addGameObject(shapeModel);
 	}
 
-	{	// Wooden Table
+	// Wooden Table
+	{
 		hd::GameObject table = std::make_shared<GameObject>();
 		table->transform = std::make_shared<PhysicsTransform>(nullptr);
 		table->transform->setLocalPosition({ 1.f, 0.f, 0.f });
@@ -573,7 +582,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->addGameObject(shapeModel);
 	}
 
-	{	// Revolver
+	// Revolver
+	{
 		hd::GameObject revolver = std::make_shared<GameObject>(); 
 		revolverObject = revolver;
 		revolver->transform = std::make_shared<PhysicsTransform>(nullptr);
@@ -657,7 +667,8 @@ void Noxg::NaiveGame::BuildScene()
 		physxDebugScene->addGameObject(shapeModel);
 	}
 
-	{	// Self Controller ( Provide movement )
+	// Self Controller ( Provide movement )
+	{
 		hd::GameObject selfController = std::make_shared<GameObject>();
 		selfControllerObject = selfController;
 		selfController->transform = std::make_shared<PhysicsTransform>(nullptr);
@@ -717,7 +728,8 @@ void Noxg::NaiveGame::BuildScene()
 		
 	}
 
-	{	// Poem
+	// Poem
+	{
 		auto poem = std::make_shared<GameObject>();
 		poem->transform->setLocalPosition({ -20.f, 20.f, -20.f });
 		auto bitmap = std::make_shared<CharacterBitmap>("fonts/Anonymous_Pro.ttf");
@@ -731,7 +743,8 @@ void Noxg::NaiveGame::BuildScene()
 		scene->addGameObject(poem);
 	}
 
-	{	// Greeting Panel
+	// Greeting Panel
+	{
 		auto panelObject = std::make_shared<GameObject>();
 		panelObject->transform->setLocalPosition({ 0.f, 0.7f, -0.3f });
 		panelObject->transform->setLocalRotation({ 0.9239f, -0.3827f, 0.f, 0.f });
@@ -746,62 +759,140 @@ void Noxg::NaiveGame::BuildScene()
 
 		scene->addGameObject(panelObject);
 		scene->addGameObject(greetingObject);
+
+		// Slider
+		{
+			auto sliderParent = std::make_shared<GameObject>();
+			panelObject->transform->addChild(sliderParent->transform);
+			auto slider = std::make_shared<GameObject>();
+			auto model = MeshBuilder::Icosphere(0.01f, 3).build(pureWhite);
+			slider->addModel(model);
+
+			auto rigid = std::make_shared<RigidDynamic>();
+			slider->transform = std::make_shared<PhysicsTransform>(nullptr);
+			slider->transform->setLocalPosition({ 0.f, -0.03f, 0.01f });
+			sliderParent->transform->addChild(slider->transform);
+			auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.01f), NaiveGameSimulationFilters::CommonUIHovering);
+			rigid->addShape(shape);
+			slider->addComponent(rigid);
+
+			valueControl = SpaceSlider{ std::tuple(glm::vec3{ -0.1f, -0.03f, 0.01f }, glm::vec3{ 0.1f, -0.03f, 0.01f }), slider->transform };
+			valueControl.setRaw(0.5f);
+
+			auto pointable = std::make_shared<XrPointable>();
+			auto OnPointed = [&](hd::XrControllerActions controller)
+			{
+				enterPos = controller->gameObject.lock()->transform->getLocalPosition() + ((std::get<0>(valueControl.ends) - std::get<1>(valueControl.ends)) * valueControl.getRaw());
+			};
+			auto frameCalculation = [&](hd::XrControllerActions controller)
+			{
+				auto value = std::clamp((controller->gameObject.lock()->transform->getLocalPosition() - enterPos).x, 0.0f, 0.2f) * 5.f;
+				valueControl.setValue(value);
+			};
+			pointable->OnPointFunction = OnPointed;
+			pointable->PointingFrameCalculateFunction = frameCalculation;
+			rigid->pointable = pointable;
+			slider->addComponent(pointable);
+
+			auto stickObject = std::make_shared<GameObject>();
+			stickObject->transform->setLocalPosition({ 0.f,  -0.03f, 0.01f });
+			stickObject->transform->setLocalRotation(cnv<glm::quat>(PxShortestRotation({ 0.f, 1.f, 0.f }, { 1.f, 0.f, 0.f })));
+			stickObject->addModel(MeshBuilder::Cone(0.002, 0.002, 0.2, 6).build(neutrGray));
+			sliderParent->transform->addChild(stickObject->transform);
+
+			auto shapeModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
+			slider->transform->addChild(shapeModel->transform);
+
+
+			scene->addGameObject(sliderParent);
+			scene->addGameObject(slider);
+			scene->addGameObject(stickObject);
+			rigid->switchGravity(false);
+
+			physxDebugScene->addGameObject(shapeModel);
+		}
+
+		// Button(Collider On/Off)
+		{
+			auto buttonParent = std::make_shared<GameObject>();
+			buttonParent->transform->setLocalPosition({ 0.f, -0.09f, 0.f });
+			panelObject->transform->addChild(buttonParent->transform);
+			auto button = std::make_shared<GameObject>();
+			auto model = MeshBuilder::Box(0.03f, 0.01f, 0.005f).build(pureWhite);
+			button->addModel(model);
+			button->transform = std::make_shared<PhysicsTransform>(nullptr);
+			button->transform->setLocalPosition({ 0.f, 0.f, 0.005f });
+			buttonParent->transform->addChild(button->transform);
+
+			auto rigid = std::make_shared<RigidDynamic>();
+			auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.03f, 0.01f, 0.005f), NaiveGameSimulationFilters::CommonUIHovering);
+			rigid->addShape(shape);
+			button->addComponent(rigid);
+
+			auto pointable = std::make_shared<XrPointable>();
+			auto OnPointed = [&](hd::XrControllerActions controller)
+			{
+				++scene->debugType;
+			};
+			pointable->OnPointFunction = OnPointed;
+			rigid->pointable = pointable;
+			button->addComponent(pointable);
+
+			auto shapeModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
+			button->transform->addChild(shapeModel->transform);
+
+			auto textObject = std::make_shared<GameObject>();
+			textObject->transform->setLocalPosition({ 0.f, 0.f, 0.011f });
+			auto text = UIElement::TextElement("Collider", 0.01f, std::make_shared<CharacterBitmap>("fonts/Anonymous_Pro.ttf"));
+			textObject->addUIElement(text);
+			buttonParent->transform->addChild(textObject->transform);
+
+			scene->addGameObject(buttonParent);
+			scene->addGameObject(button);
+			scene->addGameObject(textObject);
+			rigid->switchGravity(false);
+
+			physxDebugScene->addGameObject(shapeModel);
+		}
+
 	}
 
-	{	// Slider
-		auto sliderParent = std::make_shared<GameObject>();
-		sliderParent->transform->setLocalPosition({ 0.f, 0.7f, -0.3f });
-		sliderParent->transform->setLocalRotation({ 0.9239f, -0.3827f, 0.f, 0.f });
-		auto slider = std::make_shared<GameObject>();
-		auto model = MeshBuilder::Icosphere(0.01f, 3).build(pureWhite);
-		slider->addModel(model);
-
+	/*/ Button(Collider On/Off)
+	{
+		auto buttonParent = std::make_shared<GameObject>();
+		buttonParent->transform->setLocalPosition({ 0.f, 0.7f, -0.3f });
+		buttonParent->transform->setLocalRotation({ 0.9239f, -0.3827f, 0.f, 0.f });
+		auto button = std::make_shared<GameObject>();
+		auto model = MeshBuilder::Box(0.03f, 0.01f, 0.005f).build(pureWhite);
+		button->addModel(model);
+		button->transform = std::make_shared<PhysicsTransform>(nullptr);
+		button->transform->setLocalPosition({ 0.f, -0.09f, 0.005f });
+		buttonParent->transform->addChild(button->transform);
+		
 		auto rigid = std::make_shared<RigidDynamic>();
-		slider->transform = std::make_shared<PhysicsTransform>(nullptr);
-		slider->transform->setLocalPosition({ 0.f, -0.03f, 0.01f });
-		sliderParent->transform->addChild(slider->transform);
-		auto shape = physicsEngineInstance->createShape(PxSphereGeometry(0.01f), NaiveGameSimulationFilters::CommonUIHovering);
+		auto shape = physicsEngineInstance->createShape(PxBoxGeometry(0.03f, 0.01f, 0.005f), NaiveGameSimulationFilters::CommonUIHovering);
 		rigid->addShape(shape);
-		slider->addComponent(rigid);
-
-		valueControl = SpaceSlider{ std::tuple(glm::vec3{ -0.1f, -0.03f, 0.01f }, glm::vec3{ 0.1f, -0.03f, 0.01f }), slider->transform };
-		valueControl.setRaw(0.5f);
+		button->addComponent(rigid);
 
 		auto pointable = std::make_shared<XrPointable>();
 		auto OnPointed = [&](hd::XrControllerActions controller)
 		{
-			enterPos = controller->gameObject.lock()->transform->getLocalPosition() + ((std::get<0>(valueControl.ends) - std::get<1>(valueControl.ends)) * valueControl.getRaw());
-		};
-		auto frameCalculation = [&](hd::XrControllerActions controller)
-		{
-			auto value = std::clamp((controller->gameObject.lock()->transform->getLocalPosition() - enterPos).x, 0.0f, 0.2f) * 5.f;
-			valueControl.setValue(value);
+			++scene->debugType;
 		};
 		pointable->OnPointFunction = OnPointed;
-		pointable->PointingFrameCalculateFunction = frameCalculation;
 		rigid->pointable = pointable;
-		slider->addComponent(pointable);
-		
-		auto stickObject = std::make_shared<GameObject>(); 
-		stickObject->transform->setLocalPosition({ 0.f,  -0.03f, 0.01f });
-		stickObject->transform->setLocalRotation(cnv<glm::quat>(PxShortestRotation({ 0.f, 1.f, 0.f }, { 1.f, 0.f, 0.f })));
-		stickObject->addModel(MeshBuilder::Cone(0.002, 0.002, 0.2, 6).build(neutrGray));
-		sliderParent->transform->addChild(stickObject->transform);
+		button->addComponent(pointable);
 
 		auto shapeModel = createModelObjectFromPhysicsShape(*shape, cyanBlue);
-		slider->transform->addChild(shapeModel->transform);
+		button->transform->addChild(shapeModel->transform);
 
-		
-		scene->addGameObject(sliderParent);
-		scene->addGameObject(slider);
-		scene->addGameObject(stickObject);
+		scene->addGameObject(buttonParent);
+		scene->addGameObject(button);
 		rigid->switchGravity(false);
 
 		physxDebugScene->addGameObject(shapeModel);
-	}
-
+	}*/
+	
 	sceneManager->Load(scene);
 	sceneManager->Mobilize(scene);
-	//sceneManager->Load(physxDebugScene);
-	//sceneManager->Mobilize(physxDebugScene);
 }

@@ -8,6 +8,51 @@ namespace Noxg
 {
 	class SceneManager;
 
+	enum class DebugType
+	{
+		eDebugOff,
+		eDebugOnly,
+		eMixed,
+	};
+
+	// Overload prefix ++ for DebugType to roll between three states.
+	inline DebugType& operator++(DebugType& dt)
+	{
+		switch (dt)
+		{
+		case DebugType::eDebugOff:
+			dt = DebugType::eDebugOnly;
+			break;
+		case DebugType::eDebugOnly:
+			dt = DebugType::eMixed;
+			break;
+		case DebugType::eMixed:
+			dt = DebugType::eDebugOff;
+			break;
+		}
+		return dt;
+	}
+
+	// Overload postfix ++ for DebugType to roll between three states.
+	inline DebugType operator++(DebugType& dt, int)
+	{
+		DebugType result = dt;
+		++dt;
+		return result;
+	}
+
+	// member function. if debug only or mixed return true.
+	inline bool debugOn(DebugType dt)
+	{
+		return dt == DebugType::eDebugOnly || dt == DebugType::eMixed;
+	}
+
+	// member function. if debug off or mixed return true.
+	inline bool display(DebugType dt)
+	{
+		return dt == DebugType::eDebugOff || dt == DebugType::eMixed;
+	}
+
 	MAKE_HANDLE(Scene);
 
 	class Scene : public std::enable_shared_from_this<Scene>
@@ -40,7 +85,7 @@ namespace Noxg
 		std::unordered_set<hd::GameObject> gameObjects;
 		rf::ITransform cameraTransform;
 		hd::Scene debugScene;
-		bool onlyDebug = false;
+		DebugType debugType = DebugType::eDebugOff;
 
 		std::set<std::pair<hd::MeshModel, hd::ITransform>> models;
 		std::set<std::pair<hd::TextModel, hd::ITransform>> texts;
